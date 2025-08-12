@@ -1,0 +1,135 @@
+import { Node, Edge } from 'reactflow'
+
+// Node Types
+export enum NodeType {
+  TRIGGER = 'trigger',
+  ACTION = 'action',
+  LOGIC = 'logic',
+}
+
+// Trigger Types
+export enum TriggerType {
+  MANUAL = 'manual',
+  WEBHOOK = 'webhook',
+  SCHEDULE = 'schedule',
+  EMAIL = 'email',
+}
+
+// Action Types
+export enum ActionType {
+  HTTP = 'http',
+  EMAIL = 'email',
+  DATABASE = 'database',
+  TRANSFORM = 'transform',
+  DELAY = 'delay',
+}
+
+// Logic Types
+export enum LogicType {
+  IF = 'if',
+  SWITCH = 'switch',
+  LOOP = 'loop',
+  FILTER = 'filter',
+}
+
+// Base Node Data
+export interface BaseNodeData {
+  label: string
+  description?: string
+  nodeType: NodeType
+  config: Record<string, any>
+  outputs?: Record<string, any>
+  error?: string
+}
+
+// Specific Node Data Types
+export interface TriggerNodeData extends BaseNodeData {
+  nodeType: NodeType.TRIGGER
+  triggerType: TriggerType
+}
+
+export interface ActionNodeData extends BaseNodeData {
+  nodeType: NodeType.ACTION
+  actionType: ActionType
+}
+
+export interface LogicNodeData extends BaseNodeData {
+  nodeType: NodeType.LOGIC
+  logicType: LogicType
+}
+
+export type WorkflowNodeData = TriggerNodeData | ActionNodeData | LogicNodeData
+
+export type WorkflowNode = Node<WorkflowNodeData>
+export type WorkflowEdge = Edge
+
+// Workflow Definition
+export interface Workflow {
+  id: string
+  name: string
+  description?: string
+  nodes: WorkflowNode[]
+  edges: WorkflowEdge[]
+  variables?: Record<string, any>
+  createdAt: Date
+  updatedAt: Date
+  isActive: boolean
+}
+
+// Execution
+export interface WorkflowExecution {
+  id: string
+  workflowId: string
+  status: 'running' | 'completed' | 'failed' | 'cancelled'
+  startedAt: Date
+  completedAt?: Date
+  error?: string
+  logs: ExecutionLog[]
+  nodeOutputs: Record<string, any>
+}
+
+export interface ExecutionLog {
+  timestamp: Date
+  nodeId: string
+  message: string
+  level: 'info' | 'warning' | 'error'
+  data?: any
+}
+
+// Node Configuration Schemas
+export interface HttpNodeConfig {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+  url: string
+  headers?: Record<string, string>
+  body?: any
+  authentication?: {
+    type: 'none' | 'bearer' | 'basic' | 'apiKey'
+    value?: string
+  }
+}
+
+export interface EmailNodeConfig {
+  to: string[]
+  subject: string
+  body: string
+  from?: string
+  attachments?: string[]
+}
+
+export interface ScheduleNodeConfig {
+  cron: string
+  timezone?: string
+}
+
+export interface IfNodeConfig {
+  condition: {
+    field: string
+    operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan'
+    value: any
+  }
+}
+
+export interface LoopNodeConfig {
+  items: string // Path to array in data
+  maxIterations?: number
+}
