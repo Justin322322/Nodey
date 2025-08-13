@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getWorkflowById } from '@/server/services/workflow-registry'
+import { WorkflowExecutor } from '@/server/services/workflow-executor'
+import { saveWorkflowExecution } from '@/server/services/workflow-registry'
 
 // In-memory storage for webhook data (in production, use a database)
 const webhookData = new Map<string, any[]>()
@@ -37,12 +40,20 @@ export async function POST(
     existingData.push(webhookEntry)
     webhookData.set(workflowId, existingData)
     
-    // In a real implementation, this would trigger workflow execution
-    // For now, just acknowledge receipt
+    // Attempt to load workflow and kick off execution asynchronously
+    const workflow = getWorkflowById(workflowId)
+    if (workflow) {
+      // Fire-and-forget execution (no streaming)
+      ;(async () => {
+        const executor = new WorkflowExecutor(workflow)
+        const execution = await executor.execute()
+        saveWorkflowExecution(workflowId, execution)
+      })().catch(() => {})
+    }
     
     return NextResponse.json({
       success: true,
-      message: 'Webhook received',
+      message: workflow ? 'Webhook received; execution started' : 'Webhook received; no workflow registered',
       id: webhookEntry.id,
     }, { status: 200 })
   } catch (error) {

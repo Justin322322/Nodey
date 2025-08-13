@@ -101,6 +101,15 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     
     localStorage.setItem('workflows', JSON.stringify(workflows))
     set({ workflow: updatedWorkflow })
+
+    // Also sync to server registry so webhook routes can access it
+    try {
+      await fetch('/api/workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedWorkflow),
+      })
+    } catch {}
   },
   
   // Node operations

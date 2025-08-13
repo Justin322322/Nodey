@@ -154,7 +154,7 @@ export function WorkflowEditor() {
           <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="rgba(100,116,139,0.5)" />
           <Controls />
           <MiniMap nodeStrokeWidth={3} zoomable pannable style={{ background: '#eef2f7', border: '1px solid #e2e8f0', borderRadius: 8 }} />
-          <div className="absolute bottom-3 left-16 z-50 rounded-md border bg-white/95 px-3 py-2 text-xs text-gray-700 shadow">
+          <div className="absolute bottom-3 left-16 z-50 rounded-md bg-white/95 px-3 py-2 text-xs text-gray-700 shadow-md">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <span className="inline-block w-4 h-4" style={{ background: '#10b981', borderRadius: 0 }} />

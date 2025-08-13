@@ -23,12 +23,18 @@ Add small UX improvements and tracking docs without changing architecture:
 - Type consistency for dates crossing the network:
   - Consider `string | Date` or client hydration for `WorkflowExecution.startedAt/completedAt`
 - Webhook to execution bridge:
-  - Trigger workflow execution on POST /api/webhooks/[workflowId]
+  - Trigger workflow execution on POST /api/webhooks/[workflowId] (Implemented via in-memory registry and async execution)
 - Error boundaries:
   - Add segment-level `error.tsx` and `not-found.tsx` where meaningful
 - Persistence backend:
   - Replace LocalStorage with server persistence
 - Tests:
   - Add unit tests for import and HTTP auth config changes; integration smoke
+  - Add route handler validation tests for `/api/execute-workflow` and webhook route
+
+## Notes
+
+- Logs are not streamed in real-time; they are shown after execution completes.
+- Workflows are synced to an in-memory server registry on save and before execution.
 
 

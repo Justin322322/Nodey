@@ -9,36 +9,20 @@ import { useToast } from '@/components/ui/toaster'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import Link from 'next/link'
 import Silk from '@/components/ui/Silk/Silk'
-import WelcomeOverlay from '@/components/ui/welcome-overlay'
 
 function WorkflowsInner() {
   const router = useRouter()
   const [workflows, setWorkflows] = useState<Workflow[]>([])
   const { toast } = useToast()
   const [deleteTarget, setDeleteTarget] = useState<Workflow | null>(null)
-  const [mounted, setMounted] = useState(false)
-  const [showWelcome, setShowWelcome] = useState(false)
+  
   
   useEffect(() => {
     const savedWorkflows = JSON.parse(localStorage.getItem('workflows') || '[]')
     setWorkflows(savedWorkflows)
   }, [])
   
-  useEffect(() => {
-    setMounted(true)
-  }, [])
   
-  // Show splash only once per session while on /workflows (does not reappear on refresh/navigations within this page)
-  useEffect(() => {
-    if (!mounted) return
-    try {
-      const seen = sessionStorage.getItem('nodey_workflows_splash_shown') === '1'
-      if (!seen) {
-        setShowWelcome(true)
-        sessionStorage.setItem('nodey_workflows_splash_shown', '1')
-      }
-    } catch {}
-  }, [mounted])
   
   const handleCreateNew = () => {
     router.push('/editor')
@@ -118,9 +102,6 @@ function WorkflowsInner() {
   
   return (
     <main className="relative min-h-screen overflow-hidden">
-      {/* Welcome overlay (text-only splash) */}
-      <WelcomeOverlay visible={mounted && showWelcome} onHidden={() => setShowWelcome(false)} />
-
       <div className={`relative z-10`}>
         <div className={`container mx-auto px-6 py-24`}>
           <Link

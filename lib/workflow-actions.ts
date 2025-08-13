@@ -7,6 +7,14 @@ import { Workflow, WorkflowExecution } from '@/types/workflow'
 
 export async function executeWorkflow(workflow: Workflow, options?: { startNodeId?: string }): Promise<WorkflowExecution> {
   // Call a serverless route to execute workflow to avoid importing server code in client
+  // Also sync the latest workflow to server registry so webhooks can find it
+  try {
+    await fetch('/api/workflows', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(workflow),
+    })
+  } catch {}
   const response = await fetch('/api/execute-workflow', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

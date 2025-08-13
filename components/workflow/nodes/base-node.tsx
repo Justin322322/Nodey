@@ -64,6 +64,17 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
             <div className={cn("truncate", isPreview ? "text-[13px] font-medium text-gray-900" : "text-sm font-medium text-gray-900")}>{data.label}</div>
           </div>
           {!isPreview && (
+            hasError ? (
+              <div className="shrink-0 pointer-events-none flex items-center gap-1 text-red-600 text-xs bg-white rounded-full px-2 py-0.5 border border-red-200">
+                <AlertCircle className="w-3 h-3" /> Error
+              </div>
+            ) : hasOutput ? (
+              <div className="shrink-0 pointer-events-none flex items-center gap-1 text-green-600 text-xs bg-white rounded-full px-2 py-0.5 border border-green-200">
+                <CheckCircle2 className="w-3 h-3" /> Done
+              </div>
+            ) : null
+          )}
+          {!isPreview && (
           <div className="flex items-center gap-1 z-10 text-gray-500">
             <button
               className="rounded p-1 hover:bg-gray-100 hover:text-gray-700"
@@ -84,19 +95,7 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
           </div>
           )}
         </div>
-        {!isPreview && (
-          <div className="absolute right-2 top-1 pointer-events-none">
-            {hasError ? (
-              <div className="flex items-center gap-1 text-red-600 text-xs bg-white rounded-full px-2 py-0.5 border border-red-200">
-                <AlertCircle className="w-3 h-3" /> Error
-              </div>
-            ) : hasOutput ? (
-              <div className="flex items-center gap-1 text-green-600 text-xs bg-white rounded-full px-2 py-0.5 border border-green-200">
-                <CheckCircle2 className="w-3 h-3" /> Done
-              </div>
-            ) : null}
-          </div>
-        )}
+        
       </div>
 
       {/* Body */}

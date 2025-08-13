@@ -9,7 +9,7 @@ A simplified n8n-like application for building workflow automations with a visua
   - **Triggers**: Manual, Webhook, Schedule, Email
   - **Actions**: HTTP Request, Send Email, Database, Transform Data, Delay
   - **Logic**: If/Else, Switch, Loop, Filter
-- **Workflow Execution** - Run workflows and see real-time logs
+- **Workflow Execution** - Run workflows and see logs after execution completes
 - **Persistence** - Save and manage multiple workflows
 - **Integrations** - HTTP webhooks and API calls
 
@@ -72,6 +72,8 @@ curl -X POST http://localhost:3000/api/webhooks/[workflowId] \
   -H "Content-Type: application/json" \
   -d '{"event": "test", "data": {"key": "value"}}'
 ```
+
+Note: Save your workflow from the editor at least once to sync it to the server registry so webhooks can trigger it.
 
 ### Managing Workflows
 
