@@ -1,7 +1,7 @@
-/* eslint-disable react/no-unknown-property */
 "use client";
 
-import React, { forwardRef, useMemo, useRef, useLayoutEffect, useState, useEffect } from "react";
+/* eslint-disable react/no-unknown-property */
+import React, { forwardRef, useMemo, useRef, useLayoutEffect } from "react";
 import { Canvas, useFrame, useThree, RootState } from "@react-three/fiber";
 import { Color, Mesh, ShaderMaterial } from "three";
 import { IUniform } from "three";
@@ -143,11 +143,6 @@ const Silk: React.FC<SilkProps> = ({
   rotation = 0,
 }) => {
   const meshRef = useRef<Mesh>(null);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const uniforms = useMemo<SilkUniforms>(
     () => ({
@@ -161,18 +156,8 @@ const Silk: React.FC<SilkProps> = ({
     [speed, scale, noiseIntensity, color, rotation],
   );
 
-  if (!isMounted) {
-    return <div className="w-full h-full bg-gradient-to-br from-indigo-50 to-white" />;
-  }
-
   return (
-    <Canvas
-      dpr={[1, 1.5]} // Slightly better quality but still optimized
-      frameloop="always" // Continuous animation
-      className="absolute inset-0 h-full w-full"
-      style={{ width: '100%', height: '100%' }}
-      performance={{ min: 0.5 }} // Lower performance threshold
-    >
+    <Canvas dpr={[1, 2]} frameloop="always">
       <SilkPlane ref={meshRef} uniforms={uniforms} />
     </Canvas>
   );

@@ -58,6 +58,32 @@
 /* Default React Flow node wrapper (kept minimal, our nodes draw themselves) */
 .react-flow__node { font-size: 12px; background-color: transparent; border: none; padding: 0; box-shadow: none; }
 
+/* Mobile optimizations for ReactFlow */
+@media (max-width: 1024px) {
+  .react-flow__attribution { display: none !important; }
+  
+  /* Use standard handle size on mobile */
+  
+  /* Better mobile zoom behavior */
+  .react-flow__viewport {
+    touch-action: pan-x pan-y !important;
+  }
+  
+  /* Hide some controls on small screens */
+  .react-flow__controls {
+    bottom: 80px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Use standard handle size on small screens */
+  
+  /* Optimize node spacing */
+  .react-flow__node {
+    font-size: 14px !important;
+  }
+}
+
 /* Override for the landing feature workflow – nodes are custom glass cards */
 /* Feature workflow preview: keep neutral RF wrapper; glass nodes define look */
 .feature-workflow-canvas .react-flow__node { border: none; padding: 0; background: transparent; box-shadow: none; }
@@ -158,10 +184,12 @@
 
 /* Variable Proximity font support */
 .variable-proximity-demo {
+  font-family: var(--font-inter), Inter, sans-serif;
   font-feature-settings: "kern" 1, "liga" 1;
   font-variation-settings: 'wght' 400;
   transition: font-variation-settings 0.1s ease-out;
   color: #ffffff;
+  font-weight: normal; /* Ensure weight doesn't override variation settings */
 }
 
 /* Modern ReactFlow styling for feature workflow */
@@ -302,4 +330,4 @@
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* (removed welcome overlay styles) */
+/* Mobile Sheet Animations - Now using standard Tailwind animations */

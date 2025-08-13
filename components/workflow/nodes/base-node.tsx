@@ -38,7 +38,7 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
   return (
     <div
       className={cn(
-        "group px-0 py-0 rounded-md min-w-[220px] overflow-hidden",
+        "group px-0 py-0 rounded-md min-w-[220px] sm:min-w-[240px] overflow-hidden touch-manipulation",
         isPreview ? "shadow-sm bg-white/90" : "shadow-md bg-white",
         selected && !isPreview ? "shadow-[0_0_0_3px_rgba(59,130,246,0.25)]" : "",
         hasError && !isPreview && "shadow-[0_0_0_3px_rgba(239,68,68,0.25)]"
@@ -48,7 +48,7 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
         <Handle
           type="target"
           position={Position.Left}
-          className={cn(isPreview ? "w-4 h-4" : "w-6 h-6")}
+          className={cn("w-6 h-6 sm:w-6 sm:h-6")}
           style={{ background: '#10b981', zIndex: 30, borderRadius: isPreview ? 6 : 0, opacity: isPreview ? 0 : 1 }}
         />
       )}
@@ -56,46 +56,59 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
       {/* Header */}
       <div className={cn("relative", isPreview ? "border-b border-gray-100" : "border-b border-gray-200") }>
         <div className="absolute left-0 top-0 bottom-0" style={{ width: isPreview ? 2 : 4, backgroundColor: color }} />
-        <div className={cn("flex items-center gap-2 pl-3 pr-2", isPreview ? "h-9" : "h-10") }>
-          <div className={cn(isPreview ? "w-6 h-6" : "w-7 h-7", "rounded flex items-center justify-center")} style={{ color: color, backgroundColor: '#FFFFFF' }}>
+        <div className={cn("flex items-center gap-2 pl-3 pr-2", isPreview ? "h-9" : "h-10 sm:h-12") }>
+          <div className={cn(isPreview ? "w-6 h-6" : "w-7 h-7 sm:w-8 sm:h-8", "rounded flex items-center justify-center")} style={{ color: color, backgroundColor: '#FFFFFF' }}>
             {icon}
           </div>
           <div className="flex-1 min-w-0">
-            <div className={cn("truncate", isPreview ? "text-[13px] font-medium text-gray-900" : "text-sm font-medium text-gray-900")}>{data.label}</div>
+            <div className={cn("truncate", isPreview ? "text-[13px] font-medium text-gray-900" : "text-sm sm:text-base font-medium text-gray-900")}>{data.label}</div>
           </div>
-          {!isPreview && (
-            hasError ? (
-              <div className="shrink-0 pointer-events-none flex items-center gap-1 text-red-600 text-xs bg-white rounded-full px-2 py-0.5 border border-red-200">
-                <AlertCircle className="w-3 h-3" /> Error
-              </div>
-            ) : hasOutput ? (
-              <div className="shrink-0 pointer-events-none flex items-center gap-1 text-green-600 text-xs bg-white rounded-full px-2 py-0.5 border border-green-200">
-                <CheckCircle2 className="w-3 h-3" /> Done
-              </div>
-            ) : null
-          )}
           {!isPreview && (
           <div className="flex items-center gap-1 z-10 text-gray-500">
             <button
-              className="rounded p-1 hover:bg-gray-100 hover:text-gray-700"
+              className="rounded p-1.5 sm:p-2 hover:bg-gray-100 hover:text-gray-700 touch-manipulation"
               onClick={(e) => { e.stopPropagation(); setSelectedNodeId(nodeId) }}
               title="Configure"
             >
-              <Settings2 className="w-4 h-4" />
+              <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button
-              className="rounded p-1 hover:bg-gray-100 hover:text-gray-700"
+              className="rounded p-1.5 sm:p-2 hover:bg-gray-100 hover:text-gray-700 touch-manipulation"
               onMouseDown={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); requestDeleteNode(nodeId) }}
               title="Delete"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
           )}
         </div>
-        
+        {!isPreview && (
+          <div className="absolute right-1 top-1 sm:right-2 sm:top-1 pointer-events-none z-20">
+            {hasError ? (
+              <>
+                {/* Mobile: Simple dot indicator */}
+                <div className="w-2 h-2 bg-red-500 rounded-full sm:hidden"></div>
+                {/* Desktop: Full badge */}
+                <div className="hidden sm:flex items-center gap-1 text-red-600 text-xs bg-white rounded-full px-2 py-0.5 border border-red-200 shadow-sm">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>Error</span>
+                </div>
+              </>
+            ) : hasOutput ? (
+              <>
+                {/* Mobile: Simple dot indicator */}
+                <div className="w-2 h-2 bg-green-500 rounded-full sm:hidden"></div>
+                {/* Desktop: Full badge */}
+                <div className="hidden sm:flex items-center gap-1 text-green-600 text-xs bg-white rounded-full px-2 py-0.5 border border-green-200 shadow-sm">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Done</span>
+                </div>
+              </>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* Body */}
@@ -123,14 +136,14 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
               id="true"
               type="source"
               position={Position.Right}
-              className={cn(isPreview ? "w-4 h-4" : "w-6 h-6")}
+              className={cn("w-6 h-6 sm:w-6 sm:h-6")}
               style={{ background: '#3b82f6', zIndex: 30, borderRadius: 9999, top: isPreview ? 16 : 18, opacity: isPreview ? 0 : 1 }}
             />
             <Handle
               id="false"
               type="source"
               position={Position.Right}
-              className={cn(isPreview ? "w-4 h-4" : "w-6 h-6")}
+              className={cn("w-6 h-6 sm:w-6 sm:h-6")}
               style={{ background: '#94a3b8', zIndex: 30, borderRadius: 9999, top: isPreview ? 40 : 46, opacity: isPreview ? 0 : 1 }}
             />
             {!isPreview && (
@@ -144,7 +157,7 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
           <Handle
             type="source"
             position={Position.Right}
-            className={cn(isPreview ? "w-4 h-4" : "w-6 h-6")}
+            className={cn("w-6 h-6 sm:w-6 sm:h-6")}
             style={{ background: '#3b82f6', zIndex: 30, borderRadius: 9999, opacity: isPreview ? 0 : 1 }}
           />
         )

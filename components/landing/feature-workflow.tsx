@@ -3,7 +3,7 @@
  */
 "use client"
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import ReactFlow, { 
   ReactFlowProvider, 
   useReactFlow, 
@@ -45,7 +45,7 @@ function GlassFeatureNode({ data, selected }: { data: FeatureNodeData; selected?
         className={cn(
           "w-96 h-40 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-xl",
           "transition-all duration-300 hover:bg-white/15 hover:border-white/30 hover:shadow-xl",
-          "cursor-pointer shadow-sm relative overflow-hidden",
+          "cursor-pointer shadow-sm relative overflow-hidden max-w-full",
           isHovered && "scale-[1.02] shadow-white/10"
         )}
       >
@@ -94,6 +94,7 @@ function GlassFeatureNode({ data, selected }: { data: FeatureNodeData; selected?
 function InnerFeatureFlow() {
   const { fitView } = useReactFlow()
   const [isPlaying, setIsPlaying] = useState(true)
+  const containerRef = useRef<HTMLDivElement>(null)
   
   const edgeTypes = useMemo(() => ({
     electric: ElectricEdge,
@@ -219,40 +220,70 @@ function InnerFeatureFlow() {
   ], [isPlaying])
 
   useEffect(() => {
+    // Initial fit with longer timeout to ensure layout is complete
     const timer = setTimeout(() => {
       try {
         fitView({ padding: 0.1, includeHiddenNodes: true })
       } catch {}
-    }, 100)
-    return () => clearTimeout(timer)
+    }, 250)
+    
+    // Re-fit on window resize
+    const handleResize = () => {
+      setTimeout(() => {
+        try {
+          fitView({ padding: 0.1, includeHiddenNodes: true })
+        } catch {}
+      }, 100)
+    }
+    
+    window.addEventListener('resize', handleResize)
+    
+    // ResizeObserver to detect container size changes
+    let resizeObserver: ResizeObserver | null = null
+    if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize()
+      })
+      resizeObserver.observe(containerRef.current)
+    }
+    
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', handleResize)
+      if (resizeObserver) {
+        resizeObserver.disconnect()
+      }
+    }
   }, [fitView])
 
   return (
-    <div className="relative h-[28rem] w-full">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        panOnScroll={false}
-        panOnDrag={false}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-        zoomOnScroll={false}
-        zoomOnPinch={false}
-        zoomOnDoubleClick={false}
-        proOptions={{ hideAttribution: true }}
-        className="feature-workflow-canvas"
-      >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={32}
-          size={1}
-          color="rgba(255, 255, 255, 0.05)"
-        />
-      </ReactFlow>
+    <div ref={containerRef} className="relative h-[20rem] sm:h-[28rem] w-full overflow-hidden">
+      <div className="w-full h-full">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          panOnScroll={false}
+          panOnDrag={false}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          zoomOnScroll={false}
+          zoomOnPinch={false}
+          zoomOnDoubleClick={false}
+          proOptions={{ hideAttribution: true }}
+          className="feature-workflow-canvas w-full h-full"
+        >
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={24}
+            size={0.9}
+            color="rgba(255, 255, 255, 0.06)"
+          />
+        </ReactFlow>
+      </div>
 
       <div className="absolute top-4 right-4 z-30">
         <button
@@ -278,16 +309,16 @@ function InnerFeatureFlow() {
 
 export default function FeatureWorkflowSection() {
   return (
-    <section className="relative py-20 overflow-hidden">
-      <div className="container mx-auto px-6">
-        <div className="mx-auto max-w-4xl text-center mb-12">
-          <h2 className="text-3xl font-bold text-white">From idea to automation</h2>
-          <p className="mt-3 text-white/60">
+    <section className="relative py-14 sm:py-20 overflow-x-hidden">
+      <div className="container mx-auto px-4 sm:px-6 w-full">
+        <div className="mx-auto max-w-4xl text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">From idea to AUTOMATION</h2>
+          <p className="mt-2 sm:mt-3 text-white/60">
             See how Nodey's features work together seamlessly
           </p>
         </div>
 
-        <div className="relative mx-auto max-w-[90rem] rounded-xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden">
+        <div className="relative mx-auto w-full max-w-[90rem] rounded-lg sm:rounded-xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden">
           <ReactFlowProvider>
             <InnerFeatureFlow />
           </ReactFlowProvider>

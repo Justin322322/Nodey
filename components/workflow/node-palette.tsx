@@ -115,9 +115,10 @@ const nodeTemplates: NodeTemplate[] = [
 
 interface NodePaletteProps {
   onNodeDrag: (event: React.DragEvent, nodeTemplate: NodeTemplate) => void
+  onNodeAdded?: () => void // Callback for when a node is added (to close mobile modal)
 }
 
-export function NodePalette({ onNodeDrag }: NodePaletteProps) {
+export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
   const { addNode, addEdges } = useWorkflowStore()
   const { toast } = useToast()
   const [open, setOpen] = useState<{[k: string]: boolean}>({
@@ -184,6 +185,47 @@ export function NodePalette({ onNodeDrag }: NodePaletteProps) {
     built.nodes.forEach(n => addNode(n))
     addEdges(built.edges)
     toast({ title: 'Template added', description: tpl.label, variant: 'success' })
+    onNodeAdded?.() // Close mobile modal after adding template
+  }
+
+  const insertSingleNode = (nodeTemplate: NodeTemplate) => {
+    const id = uuidv4()
+    const base = {
+      id,
+      type: nodeTemplate.type.toLowerCase(),
+      position: { x: 180, y: 140 },
+    } as const
+    let data: WorkflowNode['data']
+    if (nodeTemplate.type === NodeType.TRIGGER) {
+      data = {
+        label: nodeTemplate.label,
+        nodeType: NodeType.TRIGGER,
+        triggerType: nodeTemplate.subType as TriggerType,
+        config: nodeTemplate.subType === TriggerType.SCHEDULE ? { cron: '0 0 * * *' } : {},
+      }
+    } else if (nodeTemplate.type === NodeType.ACTION) {
+      data = {
+        label: nodeTemplate.label,
+        nodeType: NodeType.ACTION,
+        actionType: nodeTemplate.subType as ActionType,
+        config: nodeTemplate.subType === ActionType.HTTP
+          ? { method: 'GET', url: '' }
+          : nodeTemplate.subType === ActionType.EMAIL
+          ? { to: [], subject: '', body: '' }
+          : {},
+      }
+    } else {
+      data = {
+        label: nodeTemplate.label,
+        nodeType: NodeType.LOGIC,
+        logicType: nodeTemplate.subType as LogicType,
+        config: {},
+      }
+    }
+    const node: WorkflowNode = { ...base, data } as WorkflowNode
+    addNode(node)
+    toast({ title: 'Node added', description: nodeTemplate.label, variant: 'success' })
+    onNodeAdded?.() // Close mobile modal after adding single node
   }
   const triggerNodes = nodeTemplates.filter(n => n.type === NodeType.TRIGGER)
   const actionNodes = nodeTemplates.filter(n => n.type === NodeType.ACTION)
@@ -206,21 +248,18 @@ export function NodePalette({ onNodeDrag }: NodePaletteProps) {
     <div className="text-xs text-gray-500 mt-1">{text}</div>
   )
 
-  return (
-    <div className="bg-white text-gray-900 border-r border-gray-200 w-72 overflow-y-auto">
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 px-4 py-3">
-        <h3 className="text-base font-semibold">Add Nodes</h3>
-      </div>
-      <div className="p-4">
 
-        {/* Templates */}
-        <div className="mb-2">
-          <SectionHeader title="Templates" />
-          <div className={`grid transition-all duration-200 ${open.Templates ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'} overflow-hidden`}>
-            <div className="overflow-hidden">
-              <div className="space-y-2">
-                {templates.map((t) => (
-                  <div key={t.key} className="p-3 border border-gray-200 rounded-md">
+
+  const renderPaletteContent = () => (
+    <>
+      {/* Templates */}
+      <div className="mb-2">
+        <SectionHeader title="Templates" />
+        <div className={`grid transition-all duration-200 ${open.Templates ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'} overflow-hidden`}>
+          <div className="overflow-hidden">
+            <div className="space-y-2">
+              {templates.map((t) => (
+                                  <div key={t.key} className="p-3 border border-gray-200 rounded-md hover:border-purple-500 hover:bg-purple-50 active:bg-purple-100 transition-colors cursor-pointer" onClick={() => insertTemplate(t.key)}>
                     <div className="flex items-center gap-2">
                       <div className="text-purple-600"><Rocket className="w-5 h-5" /></div>
                       <div className="flex-1">
@@ -229,107 +268,131 @@ export function NodePalette({ onNodeDrag }: NodePaletteProps) {
                       </div>
                     </div>
                     <div className="mt-2">
-                      <Button size="sm" onClick={() => insertTemplate(t.key)} className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50">Insert</Button>
+                      <Button size="sm" onClick={(e) => { e.stopPropagation(); insertTemplate(t.key); }} className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50">Insert</Button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="my-3 h-px bg-gray-200" />
-
-        {/* Triggers */}
-        <div className="mb-2">
-          <SectionHeader title="Triggers" />
-          <div className={`grid transition-all duration-200 ${open.Triggers ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'} overflow-hidden`}>
-            <div className="overflow-hidden">
-              <div className="space-y-2">
-                {triggerNodes.map((node) => (
-                  <div
-                    key={`${node.type}-${node.subType}`}
-                    className="p-3 border border-gray-200 rounded-md cursor-move hover:border-green-500 hover:bg-green-50 transition-colors"
-                    draggable
-                    onDragStart={(e) => onNodeDrag(e, node)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="text-green-600">{node.icon}</div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{node.label}</div>
-                        <div className="text-xs text-gray-500">{node.description}</div>
-                        {node.subType === TriggerType.WEBHOOK && connectionGuide('Connect to an action (e.g., HTTP) to process incoming events.')}
-                        {node.subType === TriggerType.SCHEDULE && connectionGuide('Connect to any action to run it on a schedule.')}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="my-3 h-px bg-gray-200" />
-
-        {/* Actions */}
-        <div className="mb-2">
-          <SectionHeader title="Actions" />
-          <div className={`grid transition-all duration-200 ${open.Actions ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'} overflow-hidden`}>
-            <div className="overflow-hidden">
-              <div className="space-y-2">
-                {actionNodes.map((node) => (
-                  <div
-                    key={`${node.type}-${node.subType}`}
-                    className="p-3 border border-gray-200 rounded-md cursor-move hover:border-blue-500 hover:bg-blue-50 transition-colors"
-                    draggable
-                    onDragStart={(e) => onNodeDrag(e, node)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="text-blue-600">{node.icon}</div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{node.label}</div>
-                        <div className="text-xs text-gray-500">{node.description}</div>
-                        {node.subType === ActionType.HTTP && connectionGuide('Connect from a trigger or logic node to call external APIs.')}
-                        {node.subType === ActionType.EMAIL && connectionGuide('Connect from any node to send a notification email.')}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="my-3 h-px bg-gray-200" />
-
-        {/* Logic */}
-        <div className="mb-2">
-          <SectionHeader title="Logic" />
-          <div className={`grid transition-all duration-200 ${open.Logic ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'} overflow-hidden`}>
-            <div className="overflow-hidden">
-              <div className="space-y-2">
-                {logicNodes.map((node) => (
-                  <div
-                    key={`${node.type}-${node.subType}`}
-                    className="p-3 border border-gray-200 rounded-md cursor-move hover:border-amber-500 hover:bg-amber-50 transition-colors"
-                    draggable
-                    onDragStart={(e) => onNodeDrag(e, node)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="text-amber-600">{node.icon}</div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{node.label}</div>
-                        <div className="text-xs text-gray-500">{node.description}</div>
-                        {node.subType === LogicType.IF && connectionGuide('Connect after an action to branch based on its result.')}
-                        {node.subType === LogicType.LOOP && connectionGuide('Connect after a node that outputs an array to iterate items.')}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
+      <div className="my-3 h-px bg-gray-200" />
+
+      {/* Triggers */}
+      <div className="mb-2">
+        <SectionHeader title="Triggers" />
+        <div className={`grid transition-all duration-200 ${open.Triggers ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'} overflow-hidden`}>
+          <div className="overflow-hidden">
+            <div className="space-y-2">
+              {triggerNodes.map((node) => (
+                <div
+                  key={`${node.type}-${node.subType}`}
+                  className="p-3 border border-gray-200 rounded-md cursor-move hover:border-green-500 hover:bg-green-50 active:bg-green-100 transition-colors"
+                  draggable
+                  onDragStart={(e) => onNodeDrag(e, node)}
+                  onClick={() => insertSingleNode(node)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') insertSingleNode(node) }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="text-green-600">{node.icon}</div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{node.label}</div>
+                      <div className="text-xs text-gray-500">{node.description}</div>
+                      {node.subType === TriggerType.WEBHOOK && connectionGuide('Connect to an action (e.g., HTTP) to process incoming events.')}
+                      {node.subType === TriggerType.SCHEDULE && connectionGuide('Connect to any action to run it on a schedule.')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="my-3 h-px bg-gray-200" />
+
+      {/* Actions */}
+      <div className="mb-2">
+        <SectionHeader title="Actions" />
+        <div className={`grid transition-all duration-200 ${open.Actions ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'} overflow-hidden`}>
+          <div className="overflow-hidden">
+            <div className="space-y-2">
+              {actionNodes.map((node) => (
+                <div
+                  key={`${node.type}-${node.subType}`}
+                  className="p-3 border border-gray-200 rounded-md cursor-move hover:border-blue-500 hover:bg-blue-50 active:bg-blue-100 transition-colors"
+                  draggable
+                  onDragStart={(e) => onNodeDrag(e, node)}
+                  onClick={() => insertSingleNode(node)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') insertSingleNode(node) }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="text-blue-600">{node.icon}</div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{node.label}</div>
+                      <div className="text-xs text-gray-500">{node.description}</div>
+                      {node.subType === ActionType.HTTP && connectionGuide('Connect from a trigger or logic node to call external APIs.')}
+                      {node.subType === ActionType.EMAIL && connectionGuide('Connect from any node to send a notification email.')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="my-3 h-px bg-gray-200" />
+
+      {/* Logic */}
+      <div className="mb-2">
+        <SectionHeader title="Logic" />
+        <div className={`grid transition-all duration-200 ${open.Logic ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'} overflow-hidden`}>
+          <div className="overflow-hidden">
+            <div className="space-y-2">
+              {logicNodes.map((node) => (
+                <div
+                  key={`${node.type}-${node.subType}`}
+                  className="p-3 border border-gray-200 rounded-md cursor-move hover:border-amber-500 hover:bg-amber-50 active:bg-amber-100 transition-colors"
+                  draggable
+                  onDragStart={(e) => onNodeDrag(e, node)}
+                  onClick={() => insertSingleNode(node)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') insertSingleNode(node) }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="text-amber-600">{node.icon}</div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{node.label}</div>
+                      <div className="text-xs text-gray-500">{node.description}</div>
+                      {node.subType === LogicType.IF && connectionGuide('Connect after an action to branch based on its result.')}
+                      {node.subType === LogicType.LOOP && connectionGuide('Connect after a node that outputs an array to iterate items.')}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+
+  return (
+    <div className="bg-white text-gray-900 border-r border-gray-200 w-full md:w-72 overflow-y-auto">
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+        <h3 className="text-base font-semibold">Add Nodes</h3>
+      </div>
+      <div className="p-4">
+        {renderPaletteContent()}
+      </div>
     </div>
   )
+
+
 }
 
 export type { NodeTemplate }

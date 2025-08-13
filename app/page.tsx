@@ -15,24 +15,24 @@ const FeatureWorkflowSection = lazy(() => import('@/components/landing/feature-w
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <div className="relative z-10">
+    <main className="relative min-h-screen overflow-x-hidden">
+      <div className="relative z-10 w-full">
         {/* Hero section */}
         <section className="relative">
-          <div className="container mx-auto px-6 py-28">
+          <div className="container mx-auto px-4 sm:px-6 py-20 sm:py-28">
             <div className="relative mx-auto max-w-4xl text-center z-10">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/80 backdrop-blur">
                 <span>Local‑first workflow automation</span>
               </div>
-              <div className="mt-6 text-5xl font-semibold tracking-tight text-white sm:text-6xl font-sans">
-                <Suspense fallback={<div className="h-20">Build automations at the speed of thought</div>}>
+              <div className="mt-6 text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-white font-sans">
+                <Suspense fallback={<div className="h-16 sm:h-20">Build automations at the speed of thought</div>}>
                   <HeroProximityTitle />
                 </Suspense>
               </div>
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/80">
+              <p className="mx-auto mt-5 max-w-2xl text-sm sm:text-base leading-6 sm:leading-7 text-white/80 px-4 sm:px-0">
                 Nodey is a focused, friction‑free workflow editor. Drag, connect, ship. Your data lives in your browser, your logic is portable, and your ideas go from sketch to ship in minutes.
               </p>
-              <div className="mt-8 flex items-center justify-center gap-3">
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <WelcomeLink
                   href="/editor"
                   className={landingButtonVariants({ intent: 'primary', size: 'lg' })}
@@ -49,8 +49,8 @@ export default function LandingPage() {
               </div>
             </div>
             {/* Live ReactFlow preview */}
-            <div className="mx-auto mt-16 max-w-5xl rounded-xl border border-white/10 bg-white/5 p-2 shadow-[0_10px_40px_rgba(0,0,0,0.2)] backdrop-blur">
-              <Suspense fallback={<div className="h-72 bg-white/5 rounded-lg animate-pulse" />}>
+            <div className="mx-auto mt-10 sm:mt-16 lg:mt-20 w-full max-w-6xl lg:max-w-7xl rounded-lg sm:rounded-xl border border-white/10 bg-white/5 p-1.5 sm:p-2 lg:p-3 shadow-[0_10px_40px_rgba(0,0,0,0.2)] backdrop-blur overflow-hidden">
+              <Suspense fallback={<div className="h-64 sm:h-72 lg:h-96 xl:h-[28rem] bg-white/5 rounded-lg animate-pulse" />}>
                 <LandingFlowPreview />
               </Suspense>
             </div>
@@ -58,7 +58,7 @@ export default function LandingPage() {
         </section>
 
         {/* Feature workflow section (Interactive workflow demonstration) */}
-        <Suspense fallback={<div className="h-20" />}>
+        <Suspense fallback={<div className="h-16 sm:h-20" />}>
           <FeatureWorkflowSection />
         </Suspense>
 

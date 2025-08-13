@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import ReactFlow, { ReactFlowProvider, useReactFlow } from 'reactflow'
 import { Background, BackgroundVariant } from '@reactflow/background'
 import 'reactflow/dist/style.css'
@@ -35,6 +35,7 @@ function MeteorsOverlay({ count = 10 }: { count?: number }) {
 
 function InnerPreview() {
   const { fitView } = useReactFlow()
+  const containerRef = useRef<HTMLDivElement>(null)
   const nodeTypes = useMemo(() => ({
     trigger: TriggerNode,
     action: ActionNode,
@@ -135,10 +136,13 @@ function InnerPreview() {
       columns[l].push(n.id)
     }
 
-    const xSpacing = 300
-    const ySpacing = 132
-    const yTopMargin = 40
-    const xLeftMargin = 40
+    // Responsive spacing based on container size
+    const isLargeScreen = typeof window !== 'undefined' && window.innerWidth >= 1024
+    const xSpacing = isLargeScreen ? 380 : 350
+    const ySpacing = isLargeScreen ? 160 : 140
+    const yTopMargin = isLargeScreen ? 60 : 50
+    const xLeftMargin = isLargeScreen ? 80 : 60
+    
     const sorted = Object.keys(columns).map(Number).sort((a, b) => a - b)
     for (const l of sorted) {
       const ids = columns[l]
@@ -154,46 +158,80 @@ function InnerPreview() {
   }, [baseNodes, edges])
 
   useEffect(() => {
-    // ensure the preview always fits within the frame
+    // Initial fit with longer timeout to ensure layout is complete
     const timer = setTimeout(() => {
       try {
-        fitView({ padding: 0.15, includeHiddenNodes: true })
+        // Responsive padding based on screen size
+        const isLargeScreen = window.innerWidth >= 1024
+        const padding = isLargeScreen ? 0.1 : 0.15
+        fitView({ padding, includeHiddenNodes: true })
       } catch {}
-    }, 0)
-    return () => clearTimeout(timer)
+    }, 250)
+    
+    // Re-fit on window resize
+    const handleResize = () => {
+      setTimeout(() => {
+        try {
+          const isLargeScreen = window.innerWidth >= 1024
+          const padding = isLargeScreen ? 0.1 : 0.15
+          fitView({ padding, includeHiddenNodes: true })
+        } catch {}
+      }, 100)
+    }
+    
+    window.addEventListener('resize', handleResize)
+    
+    // ResizeObserver to detect container size changes
+    let resizeObserver: ResizeObserver | null = null
+    if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize()
+      })
+      resizeObserver.observe(containerRef.current)
+    }
+    
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', handleResize)
+      if (resizeObserver) {
+        resizeObserver.disconnect()
+      }
+    }
   }, [fitView, nodes])
 
   return (
-    <div className="relative h-96 w-full overflow-hidden rounded-xl border bg-white shadow-sm">
+    <div ref={containerRef} className="relative h-64 sm:h-96 lg:h-96 xl:h-[28rem] w-full overflow-hidden rounded-lg sm:rounded-xl border bg-white shadow-sm">
       {/* background effect from Aceternity UI (meteors-inspired) */}
       <MeteorsOverlay count={12} />
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        panOnScroll={false}
-        panOnDrag={false}
-        nodesFocusable={false}
-        edgesFocusable={false}
-        zoomOnScroll={false}
-        zoomOnPinch={false}
-        zoomOnDoubleClick={false}
-        minZoom={0.6}
-        maxZoom={1.2}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-        proOptions={{ hideAttribution: true }}
-        className="relative z-10 landing-flow cursor-default select-none"
-      >
-        <Background variant={BackgroundVariant.Dots} gap={22} size={1.8} color="rgba(71,85,105,0.5)" />
-      </ReactFlow>
+      <div className="w-full h-full">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          panOnScroll={false}
+          panOnDrag={false}
+          nodesFocusable={false}
+          edgesFocusable={false}
+          zoomOnScroll={false}
+          zoomOnPinch={false}
+          zoomOnDoubleClick={false}
+          minZoom={0.4}
+          maxZoom={1.4}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          proOptions={{ hideAttribution: true }}
+          className="relative z-10 landing-flow cursor-default select-none w-full h-full"
+        >
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1.4} color="rgba(71,85,105,0.5)" />
+        </ReactFlow>
+      </div>
       {/* guide */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-6 top-6 rounded-full border bg-white/80 px-2 py-1 text-[10px] text-gray-600 shadow-sm">
+        <div className="absolute left-3 sm:left-6 lg:left-8 top-3 sm:top-6 lg:top-8 rounded-full border bg-white/80 px-3 py-1.5 text-[10px] sm:text-[11px] text-gray-600 shadow-sm">
           Preview
         </div>
         {/* bottom label removed per request */}

@@ -16,10 +16,10 @@ const webhookPayloadSchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { workflowId: string } }
+  { params }: { params: Promise<{ workflowId: string }> }
 ) {
   try {
-    const { workflowId } = params
+    const { workflowId } = await params
     
     // Parse request body
     const body = await req.json()
@@ -74,9 +74,9 @@ export async function POST(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { workflowId: string } }
+  { params }: { params: Promise<{ workflowId: string }> }
 ) {
-  const { workflowId } = params
+  const { workflowId } = await params
   const data = webhookData.get(workflowId) || []
   
   return NextResponse.json({

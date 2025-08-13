@@ -7,6 +7,7 @@ import { WorkflowToolbar } from '@/components/workflow/workflow-toolbar'
 import { ExecutionLog } from '@/components/workflow/execution-log'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { Workflow } from '@/types/workflow'
+import { EditorSkeleton } from '@/components/loading/editor-skeleton'
 
 
 function EditorInner() {
@@ -42,7 +43,7 @@ function EditorInner() {
               <WorkflowEditor />
             </WorkflowEditorProvider>
           </div>
-          <div className="w-96 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 border-l border-gray-600">
+          <div className="hidden sm:block w-96 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 border-l border-gray-600">
             <ExecutionLog />
           </div>
         </div>
@@ -52,7 +53,7 @@ function EditorInner() {
 
 export default function EditorPage() {
   return (
-    <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<EditorSkeleton />}>
       <EditorInner />
     </Suspense>
   )

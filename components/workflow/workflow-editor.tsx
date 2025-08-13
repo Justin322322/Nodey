@@ -12,6 +12,9 @@ import { NodePalette, NodeTemplate } from './node-palette'
 import { NodeConfigPanel } from './node-config-panel'
 import { TriggerNode, ActionNode, LogicNode } from './nodes'
 import FlowEdge from './edges/flow-edge'
+import { Button } from '@/components/ui/button'
+import { MobileSheet } from '@/components/ui/mobile-sheet'
+import { Plus } from 'lucide-react'
 import { 
   WorkflowNode, 
   NodeType, 
@@ -36,6 +39,7 @@ const edgeTypes = {
 export function WorkflowEditor() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [reactFlowInstance, setInstance] = useState<ReactFlowInstance | null>(null)
+  const [isPaletteOpen, setIsPaletteOpen] = useState<boolean>(false)
   const {
     nodes,
     edges,
@@ -132,7 +136,9 @@ export function WorkflowEditor() {
   
   return (
     <div className="flex h-full">
-      <NodePalette onNodeDrag={onNodeDrag} />
+      <div className="hidden md:block">
+        <NodePalette onNodeDrag={onNodeDrag} />
+      </div>
       
       <div className="flex-1 relative bg-slate-100" ref={reactFlowWrapper}>
         <ReactFlow
@@ -152,9 +158,13 @@ export function WorkflowEditor() {
           fitView
         >
           <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="rgba(100,116,139,0.5)" />
-          <Controls />
-          <MiniMap nodeStrokeWidth={3} zoomable pannable style={{ background: '#eef2f7', border: '1px solid #e2e8f0', borderRadius: 8 }} />
-          <div className="absolute bottom-3 left-16 z-50 rounded-md bg-white/95 px-3 py-2 text-xs text-gray-700 shadow-md">
+          <div className="hidden md:block">
+            <Controls />
+          </div>
+          <div className="hidden md:block">
+            <MiniMap nodeStrokeWidth={3} zoomable pannable style={{ background: '#eef2f7', border: '1px solid #e2e8f0', borderRadius: 8 }} />
+          </div>
+          <div className="absolute bottom-3 left-16 z-50 rounded-md bg-white px-3 py-2 text-xs text-gray-700 shadow-md hidden sm:block">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <span className="inline-block w-4 h-4" style={{ background: '#10b981', borderRadius: 0 }} />
@@ -170,6 +180,30 @@ export function WorkflowEditor() {
         </ReactFlow>
         
         <NodeConfigPanel />
+
+        {/* Mobile Add Node Button */}
+        <Button
+          variant="default"
+          size="sm"
+          className="fixed bottom-4 left-4 z-50 sm:hidden bg-green-600 hover:bg-green-500 text-white shadow-lg"
+          aria-label="Add node"
+          onClick={() => setIsPaletteOpen(true)}
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          Add Node
+        </Button>
+
+        {/* Mobile Node Palette Sheet */}
+        <div className="sm:hidden">
+          <MobileSheet 
+            open={isPaletteOpen}
+            onOpenChange={setIsPaletteOpen}
+            title="Add Nodes"
+            description="Drag & drop or tap any node to add it to your workflow"
+          >
+            <NodePalette onNodeDrag={onNodeDrag} onNodeAdded={() => setIsPaletteOpen(false)} />
+          </MobileSheet>
+        </div>
       </div>
     </div>
   )

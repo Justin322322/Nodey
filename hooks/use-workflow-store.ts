@@ -39,6 +39,8 @@ interface WorkflowStore {
   pendingDeleteNodeId: string | null
   requestDeleteNode: (nodeId: string) => void
   clearPendingDelete: () => void
+  isLogsDialogOpen: boolean
+  setLogsDialogOpen: (open: boolean) => void
 }
 
 export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
@@ -51,6 +53,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   executionLogs: [],
   selectedNodeId: null,
   pendingDeleteNodeId: null,
+  isLogsDialogOpen: false,
   
   // Workflow management
   setWorkflow: (workflow) => {
@@ -237,4 +240,5 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   },
   requestDeleteNode: (nodeId) => set({ pendingDeleteNodeId: nodeId }),
   clearPendingDelete: () => set({ pendingDeleteNodeId: null }),
+  setLogsDialogOpen: (open) => set({ isLogsDialogOpen: open }),
 }))

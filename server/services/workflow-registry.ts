@@ -18,8 +18,3 @@ export function saveWorkflowExecution(workflowId: string, execution: WorkflowExe
   workflowExecutions.set(workflowId, list)
 }
 
-export function getWorkflowExecutions(workflowId: string): WorkflowExecution[] {
-  return workflowExecutions.get(workflowId) || []
-}
-
-

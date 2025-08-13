@@ -1,10 +1,12 @@
 "use client"
 
-import { Play, Save, Plus, Settings, StopCircle, List, PlayCircle, ChevronRight } from 'lucide-react'
+import { Play, Save, Plus, Settings, StopCircle, List, PlayCircle, ChevronRight, MoreHorizontal } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { useToast } from '@/components/ui/toaster'
+import { MobileActionSheet } from '@/components/ui/mobile-sheet'
+import { useState } from 'react'
 
 export function WorkflowToolbar() {
   const router = useRouter()
@@ -15,9 +17,11 @@ export function WorkflowToolbar() {
     executeWorkflow, 
     stopExecution,
     isExecuting,
-    selectedNodeId
+    selectedNodeId,
+    setLogsDialogOpen
   } = useWorkflowStore()
   const { toast } = useToast()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   
   const handleNew = () => {
     if (confirm('Create a new workflow? Any unsaved changes will be lost.')) {
@@ -41,11 +45,27 @@ export function WorkflowToolbar() {
     if (!result) return
     const status = result.status
     if (status === 'completed') {
-      toast({ title: 'Execution completed', variant: 'success' })
+      toast({ 
+        title: 'Execution completed', 
+        description: 'Workflow executed successfully',
+        variant: 'success',
+        clickable: true,
+        onClick: () => setLogsDialogOpen(true)
+      })
     } else if (status === 'failed') {
-      toast({ title: 'Execution failed', description: result.error || undefined, variant: 'destructive' })
+      toast({ 
+        title: 'Execution failed', 
+        description: result.error || 'Check logs for details',
+        variant: 'destructive',
+        clickable: true,
+        onClick: () => setLogsDialogOpen(true)
+      })
     } else if (status === 'cancelled') {
-      toast({ title: 'Execution cancelled' })
+      toast({ 
+        title: 'Execution cancelled',
+        clickable: true,
+        onClick: () => setLogsDialogOpen(true)
+      })
     }
   }
   
@@ -56,20 +76,36 @@ export function WorkflowToolbar() {
     if (!result) return
     const status = result.status
     if (status === 'completed') {
-      toast({ title: 'Execution completed', variant: 'success' })
+      toast({ 
+        title: 'Execution completed', 
+        description: 'Workflow executed successfully from selected node',
+        variant: 'success',
+        clickable: true,
+        onClick: () => setLogsDialogOpen(true)
+      })
     } else if (status === 'failed') {
-      toast({ title: 'Execution failed', description: result.error || undefined, variant: 'destructive' })
+      toast({ 
+        title: 'Execution failed', 
+        description: result.error || 'Check logs for details',
+        variant: 'destructive',
+        clickable: true,
+        onClick: () => setLogsDialogOpen(true)
+      })
     } else if (status === 'cancelled') {
-      toast({ title: 'Execution cancelled' })
+      toast({ 
+        title: 'Execution cancelled',
+        clickable: true,
+        onClick: () => setLogsDialogOpen(true)
+      })
     }
   }
   
   return (
     <div className="h-16 border-b border-gray-200 bg-white px-4 flex items-center justify-between">
-      <div className="flex items-center gap-2 text-sm text-gray-600">
-        <button className="hover:text-gray-900 transition-colors" onClick={handleViewList}>Workflows</button>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
-        <span className="text-gray-900 font-medium">{workflow?.name || 'Untitled Workflow'}</span>
+      <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0">
+        <button className="hover:text-gray-900 transition-colors hidden sm:inline" onClick={handleViewList}>Workflows</button>
+        <ChevronRight className="w-4 h-4 text-gray-400 hidden sm:block" />
+        <span className="text-gray-900 font-medium truncate max-w-[60vw] sm:max-w-none">{workflow?.name || 'Untitled Workflow'}</span>
       </div>
       
       <div className="flex items-center gap-2">
@@ -77,7 +113,8 @@ export function WorkflowToolbar() {
           variant="outline"
           size="sm"
           onClick={handleViewList}
-          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 hidden sm:inline-flex"
+          aria-label="All Workflows"
         >
           <List className="w-4 h-4 mr-1" />
           All Workflows
@@ -88,7 +125,8 @@ export function WorkflowToolbar() {
           size="sm"
           onClick={handleNew}
           disabled={isExecuting}
-          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
+          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 hidden sm:inline-flex"
+          aria-label="Create New Workflow"
         >
           <Plus className="w-4 h-4 mr-1" />
           New
@@ -99,7 +137,8 @@ export function WorkflowToolbar() {
           size="sm"
           onClick={handleSave}
           disabled={isExecuting || !workflow}
-          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
+          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 hidden sm:inline-flex"
+          aria-label="Save Workflow"
         >
           <Save className="w-4 h-4 mr-1" />
           Save
@@ -109,7 +148,8 @@ export function WorkflowToolbar() {
           variant="outline"
           size="sm"
           disabled={!workflow}
-          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
+          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 hidden sm:inline-flex"
+          aria-label="Workflow Settings"
         >
           <Settings className="w-4 h-4 mr-1" />
           Settings
@@ -128,6 +168,7 @@ export function WorkflowToolbar() {
               }
             }}
             className=""
+            aria-label="Stop Execution"
           >
             <StopCircle className="w-4 h-4 mr-1" />
             Stop
@@ -139,22 +180,88 @@ export function WorkflowToolbar() {
             onClick={handleExecute}
             disabled={!workflow || (workflow.nodes.length === 0)}
             className="bg-blue-600 hover:bg-blue-500 text-white border-blue-500 disabled:opacity-50"
+            aria-label="Run Workflow"
           >
             <Play className="w-4 h-4 mr-1" />
             Run
           </Button>
         )}
 
+        {/* Mobile quick Save */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleSave}
+          disabled={isExecuting || !workflow}
+          className="sm:hidden border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
+          aria-label="Save Workflow"
+        >
+          <Save className="w-4 h-4" />
+        </Button>
+
         <Button
           variant="outline"
           size="sm"
           onClick={handleRunFromSelected}
           disabled={!workflow || !selectedNodeId || isExecuting}
-          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50"
+          className="border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 hidden sm:inline-flex"
+          aria-label="Run from selected node"
         >
           <PlayCircle className="w-4 h-4 mr-1" />
           Run from node
         </Button>
+
+        <MobileActionSheet 
+          open={mobileMenuOpen}
+          onOpenChange={setMobileMenuOpen}
+          title="Actions"
+          trigger={
+            <Button
+              variant="outline"
+              size="icon"
+              className="sm:hidden border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              aria-label="More actions"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          }
+          actions={[
+            {
+              label: 'All Workflows',
+              icon: <List className="w-4 h-4" />,
+              onClick: handleViewList
+            },
+            {
+              label: 'New Workflow',
+              icon: <Plus className="w-4 h-4" />,
+              onClick: handleNew,
+              disabled: isExecuting
+            },
+            {
+              label: 'Save',
+              icon: <Save className="w-4 h-4" />,
+              onClick: handleSave,
+              disabled: isExecuting || !workflow
+            },
+            {
+              label: 'View Logs',
+              icon: <List className="w-4 h-4" />,
+              onClick: () => setLogsDialogOpen(true)
+            },
+            {
+              label: 'Run from Node',
+              icon: <PlayCircle className="w-4 h-4" />,
+              onClick: handleRunFromSelected,
+              disabled: !workflow || !selectedNodeId || isExecuting
+            },
+            {
+              label: 'Settings',
+              icon: <Settings className="w-4 h-4" />,
+              onClick: () => {},
+              disabled: !workflow
+            }
+          ]}
+        />
       </div>
     </div>
   )

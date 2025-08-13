@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
+import { MobileSheet } from '@/components/ui/mobile-sheet'
 import { useToast } from '@/components/ui/toaster'
 import { WorkflowNode, NodeType, ActionType, TriggerType, HttpNodeConfig, EmailNodeConfig, ScheduleNodeConfig } from '@/types/workflow'
 
@@ -15,6 +16,18 @@ export function NodeConfigPanel() {
   const { nodes, selectedNodeId, setSelectedNodeId, updateNode, deleteNode, pendingDeleteNodeId, clearPendingDelete } = useWorkflowStore()
   const { toast } = useToast()
   const [confirmOpen, setConfirmOpen] = useState<boolean>(false)
+  const [isMobile, setIsMobile] = useState<boolean>(false)
+
+  // Detect screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 640) // 640px is the 'sm' breakpoint
+    }
+    
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
 
   // Open confirm dialog if a delete was requested from node header
   useEffect(() => {
@@ -28,13 +41,13 @@ export function NodeConfigPanel() {
     }
   }, [pendingDeleteNodeId])
   
-  // If a delete has been requested but no node is selected, show dialog only and no side panel
-  if (!selectedNodeId && pendingDeleteNodeId) {
+  // If a delete has been requested, show dialog only and no side panel
+  if (pendingDeleteNodeId) {
     return (
       <Dialog open={true} onOpenChange={(open) => { if (!open) { setConfirmOpen(false); clearPendingDelete() } }}>
-        <DialogContent className="bg-white text-gray-900 border border-gray-200 shadow-xl">
+        <DialogContent className="border-gray-200 bg-white text-gray-900 sm:max-w-md sm:!top-1/3 sm:!left-1/2 sm:!-translate-x-1/2 sm:!translate-y-0">
           <DialogHeader>
-            <DialogTitle>Delete node?</DialogTitle>
+            <DialogTitle className="text-gray-900">Delete node?</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-gray-600">
             This will remove the node and its connections. This action cannot be undone.
@@ -43,13 +56,14 @@ export function NodeConfigPanel() {
             <Button
               variant="outline"
               onClick={() => { setConfirmOpen(false); clearPendingDelete() }}
-              className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 min-h-[44px] touch-manipulation"
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={() => { if (pendingDeleteNodeId) deleteNode(pendingDeleteNodeId); clearPendingDelete(); toast({ title: 'Node deleted', description: 'The node and its connections were removed.', variant: 'success' }) }}
+              className="bg-red-600 hover:bg-red-500 text-white border-red-500 min-h-[44px] touch-manipulation"
             >
               Delete
             </Button>
@@ -288,139 +302,190 @@ export function NodeConfigPanel() {
     )
   }
   
-  return (
-    <div className="absolute top-0 right-0 w-80 h-full bg-white text-gray-900 border-l border-gray-200 shadow-lg overflow-y-auto">
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-base font-semibold">Configure Node</h3>
-          <div className="flex items-center gap-2">
-            <Dialog open={confirmOpen || Boolean(pendingDeleteNodeId)} onOpenChange={(open) => { setConfirmOpen(open); if (!open) clearPendingDelete() }}>
-              <DialogTrigger asChild>
-                <Button variant="destructive" size="sm">Delete</Button>
-              </DialogTrigger>
-              <DialogContent className="bg-white text-gray-900 border border-gray-200 shadow-xl">
-                <DialogHeader>
-                  <DialogTitle>Delete node?</DialogTitle>
-                </DialogHeader>
-                <div className="text-sm text-gray-600">
-                  This will remove the node and its connections. This action cannot be undone.
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => { setConfirmOpen(false); clearPendingDelete() }} className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50">Cancel</Button>
-                  <Button variant="destructive" onClick={handleDelete}>Delete</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-        {!pendingDeleteNodeId && (
-          <p className="text-sm text-gray-500 mt-1">{selectedNode.data.label}</p>
-        )}
+  const renderConfigContent = () => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Node Name</Label>
+        <Input
+          value={selectedNode.data.label}
+          onChange={(e) => updateNode(nodeId, { label: e.target.value })}
+          className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+        />
       </div>
       
-      {!pendingDeleteNodeId && (
-      <div className="p-4 space-y-4">
-        <div className="space-y-2">
-          <Label>Node Name</Label>
-          <Input
-            value={selectedNode.data.label}
-            onChange={(e) => updateNode(nodeId, { label: e.target.value })}
-            className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label>Description</Label>
-          <Input
-            value={selectedNode.data.description || ''}
-            onChange={(e) => updateNode(nodeId, { description: e.target.value })}
-            placeholder="Optional description"
-            className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
-          />
-        </div>
-        
-        <div className="border-t pt-4">
-          <h4 className="font-medium mb-3">Node Configuration</h4>
-          {renderConfig()}
-        </div>
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <Input
+          value={selectedNode.data.description || ''}
+          onChange={(e) => updateNode(nodeId, { description: e.target.value })}
+          placeholder="Optional description"
+          className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+        />
+      </div>
+      
+      <div className="border-t pt-4">
+        <h4 className="font-medium mb-3">Node Configuration</h4>
+        {renderConfig()}
+      </div>
 
-        <div className="border-t pt-4">
-          <h4 className="font-medium mb-3">Execution Settings</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Timeout (ms)</Label>
-              <Input
-                type="number"
-                value={selectedNode.data.runSettings?.timeoutMs ?? ''}
-                onChange={(e) => updateNode(nodeId, {
-                  runSettings: {
-                    ...selectedNode.data.runSettings,
-                    timeoutMs: Number(e.target.value || 0) || undefined,
-                  },
-                })}
-                placeholder="30000"
-                className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Retries</Label>
-              <Input
-                type="number"
-                value={selectedNode.data.runSettings?.retryCount ?? ''}
-                onChange={(e) => updateNode(nodeId, {
-                  runSettings: {
-                    ...selectedNode.data.runSettings,
-                    retryCount: Number(e.target.value || 0) || undefined,
-                  },
-                })}
-                placeholder="0"
-                className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Retry delay (ms)</Label>
-              <Input
-                type="number"
-                value={selectedNode.data.runSettings?.retryDelayMs ?? ''}
-                onChange={(e) => updateNode(nodeId, {
-                  runSettings: {
-                    ...selectedNode.data.runSettings,
-                    retryDelayMs: Number(e.target.value || 0) || undefined,
-                  },
-                })}
-                placeholder="0"
-                className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-6">
-              <input
-                id="continueOnFail"
-                type="checkbox"
-                className="h-4 w-4"
-                checked={Boolean(selectedNode.data.runSettings?.continueOnFail)}
-                onChange={(e) => updateNode(nodeId, {
-                  runSettings: {
-                    ...selectedNode.data.runSettings,
-                    continueOnFail: e.target.checked,
-                  },
-                })}
-              />
-              <Label htmlFor="continueOnFail">Continue on fail</Label>
+      <div className="border-t pt-4">
+        <h4 className="font-medium mb-3">Execution Settings</h4>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label>Timeout (ms)</Label>
+            <Input
+              type="number"
+              value={selectedNode.data.runSettings?.timeoutMs ?? ''}
+              onChange={(e) => updateNode(nodeId, {
+                runSettings: {
+                  ...selectedNode.data.runSettings,
+                  timeoutMs: Number(e.target.value || 0) || undefined,
+                },
+              })}
+              placeholder="30000"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>Retries</Label>
+            <Input
+              type="number"
+              value={selectedNode.data.runSettings?.retryCount ?? ''}
+              onChange={(e) => updateNode(nodeId, {
+                runSettings: {
+                  ...selectedNode.data.runSettings,
+                  retryCount: Number(e.target.value || 0) || undefined,
+                },
+              })}
+              placeholder="0"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>Retry delay (ms)</Label>
+            <Input
+              type="number"
+              value={selectedNode.data.runSettings?.retryDelayMs ?? ''}
+              onChange={(e) => updateNode(nodeId, {
+                runSettings: {
+                  ...selectedNode.data.runSettings,
+                  retryDelayMs: Number(e.target.value || 0) || undefined,
+                },
+              })}
+              placeholder="0"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-6">
+            <input
+              id="continueOnFail"
+              type="checkbox"
+              className="h-4 w-4"
+              checked={Boolean(selectedNode.data.runSettings?.continueOnFail)}
+              onChange={(e) => updateNode(nodeId, {
+                runSettings: {
+                  ...selectedNode.data.runSettings,
+                  continueOnFail: e.target.checked,
+                },
+              })}
+            />
+            <Label htmlFor="continueOnFail">Continue on fail</Label>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Use labels "true" and "false" on connections from IF nodes to control branching.
+        </p>
+      </div>
+
+      {/* Mobile Actions */}
+      <div className="border-t pt-4 sm:hidden">
+        <div className="flex gap-2">
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            className="flex-1"
+            onClick={() => setConfirmOpen(true)}
+          >
+            Delete Node
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      {/* Mobile Sheet - Only render on mobile */}
+      {isMobile && (
+        <MobileSheet 
+          open={Boolean(selectedNodeId) && !pendingDeleteNodeId}
+          onOpenChange={(open) => !open && handleClose()}
+          title="Configure Node"
+          description={selectedNode?.data.label}
+        >
+          {renderConfigContent()}
+        </MobileSheet>
+      )}
+
+      {/* Desktop Sidebar */}
+      {!isMobile && selectedNodeId && !pendingDeleteNodeId && (
+        <div className="absolute top-0 right-0 w-80 h-full bg-white text-gray-900 border-l border-gray-200 shadow-lg overflow-y-auto z-50">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-base font-semibold">Configure Node</h3>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={() => setConfirmOpen(true)}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Use labels "true" and "false" on connections from IF nodes to control branching.
-          </p>
+          <p className="text-sm text-gray-500 mt-1">{selectedNode.data.label}</p>
+        </div>
+        
+        <div className="p-4">
+          {renderConfigContent()}
         </div>
       </div>
       )}
-    </div>
+
+      {/* Shared Delete Confirmation Dialog */}
+      <Dialog open={confirmOpen || Boolean(pendingDeleteNodeId)} onOpenChange={(open) => { setConfirmOpen(open); if (!open) clearPendingDelete() }}>
+        <DialogContent className="border-gray-200 bg-white text-gray-900 sm:max-w-md sm:!top-1/3 sm:!left-1/2 sm:!-translate-x-1/2 sm:!translate-y-0">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900">Delete node?</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-gray-600">
+            This will remove the node and its connections. This action cannot be undone.
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => { setConfirmOpen(false); clearPendingDelete() }} 
+              className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 min-h-[44px] touch-manipulation"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              className="min-h-[44px] touch-manipulation"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

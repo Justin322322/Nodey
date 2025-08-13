@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/toaster'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import Link from 'next/link'
 import Silk from '@/components/ui/Silk/Silk'
+import { WorkflowsSkeleton } from '@/components/loading/workflows-skeleton'
 
 function WorkflowsInner() {
   const router = useRouter()
@@ -231,11 +232,11 @@ function WorkflowsInner() {
       </div>
 
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <DialogContent className="border-white/10 bg-white/10 backdrop-blur-lg text-white">
+        <DialogContent className="border-gray-200 bg-white text-gray-900 sm:max-w-md sm:!top-1/3 sm:!left-1/2 sm:!-translate-x-1/2 sm:!translate-y-0">
           <DialogHeader>
-            <DialogTitle className="text-white">Delete workflow?</DialogTitle>
+            <DialogTitle className="text-gray-900">Delete workflow?</DialogTitle>
           </DialogHeader>
-          <div className="text-sm text-white/80">
+          <div className="text-sm text-gray-600">
             {deleteTarget ? (
               <>This will permanently delete "{deleteTarget.name}" and cannot be undone.</>
             ) : null}
@@ -244,14 +245,14 @@ function WorkflowsInner() {
             <Button
               variant="outline"
               onClick={() => setDeleteTarget(null)}
-              className="border-white/20 bg-white/10 text-white/80 hover:bg-white/15 hover:text-white"
+              className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 min-h-[44px] touch-manipulation"
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-500 text-white border-red-500"
+              className="bg-red-600 hover:bg-red-500 text-white border-red-500 min-h-[44px] touch-manipulation"
             >
               Delete
             </Button>
@@ -264,7 +265,7 @@ function WorkflowsInner() {
 
 export default function WorkflowsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white/80">Loading...</div>}>
+    <Suspense fallback={<WorkflowsSkeleton />}>
       <WorkflowsInner />
     </Suspense>
   )
