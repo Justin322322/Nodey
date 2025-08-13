@@ -34,10 +34,10 @@ function EditorInner() {
 
   
   return (
-    <div className="h-screen bg-gray-900 flex flex-col">
+    <div className="h-screen bg-white flex flex-col">
         <WorkflowToolbar />
         <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 border-r border-gray-600">
+          <div className="flex-1 border-r border-gray-200">
             <WorkflowEditorProvider>
               <WorkflowEditor />
             </WorkflowEditorProvider>

@@ -57,23 +57,23 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
       <div className={cn("relative", isPreview ? "border-b border-gray-100" : "border-b border-gray-200") }>
         <div className="absolute left-0 top-0 bottom-0" style={{ width: isPreview ? 2 : 4, backgroundColor: color }} />
         <div className={cn("flex items-center gap-2 pl-3 pr-2", isPreview ? "h-9" : "h-10") }>
-          <div className={cn(isPreview ? "w-6 h-6" : "w-7 h-7", "rounded flex items-center justify-center text-gray-800")} style={{ color: color, backgroundColor: '#FFFFFF' }}>
+          <div className={cn(isPreview ? "w-6 h-6" : "w-7 h-7", "rounded flex items-center justify-center")} style={{ color: color, backgroundColor: '#FFFFFF' }}>
             {icon}
           </div>
           <div className="flex-1 min-w-0">
             <div className={cn("truncate", isPreview ? "text-[13px] font-medium text-gray-900" : "text-sm font-medium text-gray-900")}>{data.label}</div>
           </div>
           {!isPreview && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 z-10 text-gray-500">
             <button
-              className="rounded p-1 hover:bg-gray-100"
+              className="rounded p-1 hover:bg-gray-100 hover:text-gray-700"
               onClick={(e) => { e.stopPropagation(); setSelectedNodeId(nodeId) }}
               title="Configure"
             >
               <Settings2 className="w-4 h-4" />
             </button>
             <button
-              className="rounded p-1 hover:bg-gray-100"
+              className="rounded p-1 hover:bg-gray-100 hover:text-gray-700"
               onMouseDown={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); requestDeleteNode(nodeId) }}

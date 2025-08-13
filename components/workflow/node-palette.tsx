@@ -208,8 +208,10 @@ export function NodePalette({ onNodeDrag }: NodePaletteProps) {
 
   return (
     <div className="bg-white text-gray-900 border-r border-gray-200 w-72 overflow-y-auto">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 px-4 py-3">
+        <h3 className="text-base font-semibold">Add Nodes</h3>
+      </div>
       <div className="p-4">
-        <h3 className="text-lg font-semibold mb-4">Add Nodes</h3>
 
         {/* Templates */}
         <div className="mb-2">
@@ -227,7 +229,7 @@ export function NodePalette({ onNodeDrag }: NodePaletteProps) {
                       </div>
                     </div>
                     <div className="mt-2">
-                      <Button size="sm" onClick={() => insertTemplate(t.key)}>Insert</Button>
+                      <Button size="sm" onClick={() => insertTemplate(t.key)} className="bg-white text-gray-900 border border-gray-300 hover:bg-gray-50">Insert</Button>
                     </div>
                   </div>
                 ))}

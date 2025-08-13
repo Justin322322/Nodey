@@ -80,6 +80,9 @@
   box-shadow: none;
 }
 
+/* Ensure node action buttons (configure/delete) remain visible */
+.react-flow__node .group:hover .opacity-0 { opacity: 1 !important; }
+
 /* Ensure inputs/selects in the editor are bright on white regardless of theme */
 .workbench-flow ~ .react-flow__panel,
 .workbench-flow input,
@@ -120,8 +123,8 @@
 
 /* Shared dotted background matching the workbench */
 .workbench-bg {
-  background-color: #ffffff;
-  background-image: radial-gradient(rgba(71,85,105,0.5) 1px, transparent 1px);
+  background-color: #f1f5f9; /* slate-100 */
+  background-image: radial-gradient(rgba(71,85,105,0.6) 1px, transparent 1px);
   background-size: 22px 22px;
   background-position: -1px -1px;
 }

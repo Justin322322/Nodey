@@ -32,7 +32,7 @@ export function NodeConfigPanel() {
   if (!selectedNodeId && pendingDeleteNodeId) {
     return (
       <Dialog open={true} onOpenChange={(open) => { if (!open) { setConfirmOpen(false); clearPendingDelete() } }}>
-        <DialogContent>
+        <DialogContent className="bg-white text-gray-900 border border-gray-200 shadow-xl">
           <DialogHeader>
             <DialogTitle>Delete node?</DialogTitle>
           </DialogHeader>
@@ -40,8 +40,19 @@ export function NodeConfigPanel() {
             This will remove the node and its connections. This action cannot be undone.
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setConfirmOpen(false); clearPendingDelete() }}>Cancel</Button>
-            <Button variant="destructive" onClick={() => { if (pendingDeleteNodeId) deleteNode(pendingDeleteNodeId); clearPendingDelete(); toast({ title: 'Node deleted', description: 'The node and its connections were removed.', variant: 'success' }) }}>Delete</Button>
+            <Button
+              variant="outline"
+              onClick={() => { setConfirmOpen(false); clearPendingDelete() }}
+              className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => { if (pendingDeleteNodeId) deleteNode(pendingDeleteNodeId); clearPendingDelete(); toast({ title: 'Node deleted', description: 'The node and its connections were removed.', variant: 'success' }) }}
+            >
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -279,15 +290,15 @@ export function NodeConfigPanel() {
   
   return (
     <div className="absolute top-0 right-0 w-80 h-full bg-white text-gray-900 border-l border-gray-200 shadow-lg overflow-y-auto">
-      <div className="p-4 border-b border-gray-200">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 p-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-lg font-semibold">Configure Node</h3>
+          <h3 className="text-base font-semibold">Configure Node</h3>
           <div className="flex items-center gap-2">
             <Dialog open={confirmOpen || Boolean(pendingDeleteNodeId)} onOpenChange={(open) => { setConfirmOpen(open); if (!open) clearPendingDelete() }}>
               <DialogTrigger asChild>
                 <Button variant="destructive" size="sm">Delete</Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="bg-white text-gray-900 border border-gray-200 shadow-xl">
                 <DialogHeader>
                   <DialogTitle>Delete node?</DialogTitle>
                 </DialogHeader>
@@ -295,7 +306,7 @@ export function NodeConfigPanel() {
                   This will remove the node and its connections. This action cannot be undone.
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => { setConfirmOpen(false); clearPendingDelete() }}>Cancel</Button>
+                  <Button variant="outline" onClick={() => { setConfirmOpen(false); clearPendingDelete() }} className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50">Cancel</Button>
                   <Button variant="destructive" onClick={handleDelete}>Delete</Button>
                 </DialogFooter>
               </DialogContent>

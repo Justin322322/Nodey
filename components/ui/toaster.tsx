@@ -66,16 +66,16 @@ export function ToasterProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={cn(
-              "pointer-events-auto w-full rounded-md border p-4 shadow-lg bg-white",
+              "pointer-events-auto w-full rounded-md border p-4 shadow-lg bg-white text-gray-900",
               t.variant === "success" && "border-green-200",
               t.variant === "destructive" && "border-red-200"
             )}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <div className="text-sm font-medium">{t.title}</div>
+                <div className="text-sm font-medium text-gray-900">{t.title}</div>
                 {t.description && (
-                  <div className="mt-1 text-sm text-gray-600">{t.description}</div>
+                  <div className="mt-1 text-sm text-gray-700">{t.description}</div>
                 )}
               </div>
               <button
