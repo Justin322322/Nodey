@@ -33,13 +33,23 @@ export enum LogicType {
 }
 
 // Base Node Data
-export interface BaseNodeData {
+// Base node data (exported as type to avoid unused-export noise when only extended)
+type BaseNodeData = {
   label: string
   description?: string
   nodeType: NodeType
   config: Record<string, any>
   outputs?: Record<string, any>
   error?: string
+  // non-interactive, simplified rendering for marketing previews
+  isPreview?: boolean
+  // n8n-like per-node execution settings
+  runSettings?: {
+    timeoutMs?: number // max time per node before timing out
+    retryCount?: number // number of retries on failure
+    retryDelayMs?: number // delay between retries
+    continueOnFail?: boolean // proceed even if the node fails
+  }
 }
 
 // Specific Node Data Types

@@ -1,27 +1,47 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Edit3, Trash2, FileJson, Upload } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Plus, Edit3, Trash2, FileJson, Upload, ArrowLeft } from 'lucide-react'
+import { Button, landingButtonVariants } from '@/components/ui/button'
 import { Workflow } from '@/types/workflow'
 import { useToast } from '@/components/ui/toaster'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import Link from 'next/link'
+import Silk from '@/components/ui/Silk/Silk'
+import WelcomeOverlay from '@/components/ui/welcome-overlay'
 
-export default function WorkflowsPage() {
+function WorkflowsInner() {
   const router = useRouter()
   const [workflows, setWorkflows] = useState<Workflow[]>([])
   const { toast } = useToast()
   const [deleteTarget, setDeleteTarget] = useState<Workflow | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(false)
   
   useEffect(() => {
-    // Load workflows from localStorage
     const savedWorkflows = JSON.parse(localStorage.getItem('workflows') || '[]')
     setWorkflows(savedWorkflows)
   }, [])
   
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  
+  // Show splash only once per session while on /workflows (does not reappear on refresh/navigations within this page)
+  useEffect(() => {
+    if (!mounted) return
+    try {
+      const seen = sessionStorage.getItem('nodey_workflows_splash_shown') === '1'
+      if (!seen) {
+        setShowWelcome(true)
+        sessionStorage.setItem('nodey_workflows_splash_shown', '1')
+      }
+    } catch {}
+  }, [mounted])
+  
   const handleCreateNew = () => {
-    router.push('/')
+    router.push('/editor')
   }
   
   const handleImportClick = () => {
@@ -34,12 +54,10 @@ export default function WorkflowsPage() {
       try {
         const text = await file.text()
         const imported = JSON.parse(text)
-        // Basic validation
         if (!imported || typeof imported !== 'object' || !imported.nodes || !imported.edges) {
           alert('Invalid workflow file')
           return
         }
-        // Ensure required fields
         const workflow: Workflow = {
           id: imported.id || crypto.randomUUID(),
           name: imported.name || 'Imported Workflow',
@@ -69,7 +87,7 @@ export default function WorkflowsPage() {
   }
   
   const handleEdit = (workflowId: string) => {
-    router.push(`/?workflowId=${workflowId}`)
+    router.push(`/editor?workflowId=${workflowId}`)
   }
   
   const requestDelete = (workflow: Workflow) => setDeleteTarget(workflow)
@@ -91,9 +109,7 @@ export default function WorkflowsPage() {
   const handleExport = (workflow: Workflow) => {
     const dataStr = JSON.stringify(workflow, null, 2)
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-    
     const exportFileDefaultName = `${workflow.name.replace(/\s+/g, '-').toLowerCase()}.json`
-    
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
     linkElement.setAttribute('download', exportFileDefaultName)
@@ -101,114 +117,174 @@ export default function WorkflowsPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium leading-6 text-gray-900">
-                  Workflows
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Manage your automation workflows
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={handleCreateNew}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Workflow
-                </Button>
-                <Button variant="outline" onClick={handleImportClick}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          {workflows.length === 0 ? (
-            <div className="text-center py-12">
-              <FileJson className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No workflows</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Get started by creating a new workflow.
-              </p>
-              <div className="mt-6">
-                <Button onClick={handleCreateNew}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Workflow
-                </Button>
+    <main className="relative min-h-screen overflow-hidden">
+      {/* Welcome overlay (text-only splash) */}
+      <WelcomeOverlay visible={mounted && showWelcome} onHidden={() => setShowWelcome(false)} />
+
+      <div className={`relative z-10`}>
+        <div className={`container mx-auto px-6 py-24`}>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
+
+          <div className="mx-auto max-w-5xl">
+            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur p-6 shadow-[0_10px_40px_rgba(0,0,0,0.2)]">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-semibold text-white">Workflows</h1>
+                  <p className="mt-1 text-white/70">Manage your automation workflows</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleCreateNew}
+                    className={landingButtonVariants({ intent: 'primary', size: 'md' })}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> New Workflow
+                  </button>
+                  <button
+                    onClick={handleImportClick}
+                    className={landingButtonVariants({ intent: 'secondary', size: 'md' })}
+                  >
+                    <Upload className="mr-2 h-4 w-4" /> Import
+                  </button>
+                </div>
               </div>
             </div>
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {workflows.map((workflow) => (
-                <li key={workflow.id} className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {workflow.name}
-                        </p>
-                        {workflow.description && (
-                          <p className="text-sm text-gray-500">
-                            {workflow.description}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-400 mt-1">
-                          {workflow.nodes.length} nodes • {workflow.edges.length} connections
+
+            {workflows.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="relative mx-auto max-w-md rounded-2xl border border-white/10 bg-white/5 p-12 backdrop-blur">
+                  <div className="absolute inset-0 glass-card-shimmer pointer-events-none opacity-0" />
+                  <FileJson className="h-16 w-16 text-white/50 mx-auto mb-6" />
+                  <h3 className="text-2xl font-semibold text-white mb-2">No workflows yet</h3>
+                  <p className="text-white/70 mb-8">Create your first workflow to get started</p>
+                  <button
+                    onClick={handleCreateNew}
+                    className={landingButtonVariants({ intent: 'primary', size: 'md' })}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Create Workflow
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className={`mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6`}>
+                {workflows.map((workflow) => (
+                  <div key={workflow.id} className="group relative rounded-2xl border border-white/15 bg-white/5 backdrop-blur-xl p-6 transition-all duration-300 hover:bg-white/15 hover:border-white/30 shadow-[0_10px_40px_rgba(0,0,0,0.2)]">
+                    <div className="absolute inset-0 glass-card-shimmer pointer-events-none opacity-0 group-hover:opacity-100" />
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-xl border border-white/15 bg-white/10 flex items-center justify-center flex-shrink-0">
+                        <Edit3 className="w-5 h-5 text-white/80" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-semibold text-white truncate">{workflow.name}</h3>
+                        <p className="mt-1 text-xs text-white/70 line-clamp-2">
+                          {workflow.description || 'Automate processes with visual workflow design. Connect nodes and control data flow seamlessly.'}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                       <Button
+
+                    <div className="mt-5 flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block w-2 h-2 rounded-full ${workflow.isActive ? 'bg-green-400' : 'bg-white/40'}`} />
+                        <span className={workflow.isActive ? 'text-green-300' : 'text-white/60'}>
+                          {workflow.isActive ? 'active' : 'inactive'}
+                        </span>
+                      </div>
+                      <div className="text-white/50">#{workflow.id.slice(0, 8)}</div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-3 gap-3 text-[11px]">
+                      <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                        <div className="text-white/60 mb-1">Nodes</div>
+                        <div className="text-white font-semibold">{workflow.nodes.length}</div>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                        <div className="text-white/60 mb-1">Connections</div>
+                        <div className="text-white font-semibold">{workflow.edges.length}</div>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                        <div className="text-white/60 mb-1">Updated</div>
+                        <div className="text-white font-semibold">{new Date(workflow.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex items-center gap-2 pt-4 border-t border-white/10">
+                      <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(workflow.id)}
+                        className="border-white/20 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white text-xs flex-1"
                       >
-                        <Edit3 className="w-4 h-4" />
+                        <Edit3 className="w-3 h-3 mr-2" /> Edit
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleExport(workflow)}
+                        className="border-white/20 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white text-xs"
+                        aria-label="Export"
                       >
-                        <FileJson className="w-4 h-4" />
+                        <FileJson className="w-3 h-3" />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => requestDelete(workflow)}
+                        className="border-red-400/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200 text-xs"
+                        aria-label="Delete"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <DialogContent>
+        <DialogContent className="border-white/10 bg-white/10 backdrop-blur-lg text-white">
           <DialogHeader>
-            <DialogTitle>Delete workflow?</DialogTitle>
+            <DialogTitle className="text-white">Delete workflow?</DialogTitle>
           </DialogHeader>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-white/80">
             {deleteTarget ? (
-              <>
-                This will permanently delete "{deleteTarget.name}" and cannot be undone.
-              </>
+              <>This will permanently delete "{deleteTarget.name}" and cannot be undone.</>
             ) : null}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              className="border-white/20 bg-white/10 text-white/80 hover:bg-white/15 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-500 text-white border-red-500"
+            >
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </main>
+  )
+}
+
+export default function WorkflowsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white/80">Loading...</div>}>
+      <WorkflowsInner />
+    </Suspense>
   )
 }

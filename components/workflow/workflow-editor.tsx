@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react'
 import ReactFlow, { ReactFlowProvider, ReactFlowInstance, Node } from 'reactflow'
-import { Background } from '@reactflow/background'
+import { Background, BackgroundVariant } from '@reactflow/background'
 import { Controls } from '@reactflow/controls'
 import { MiniMap } from '@reactflow/minimap'
 import 'reactflow/dist/style.css'
@@ -134,7 +134,7 @@ export function WorkflowEditor() {
     <div className="flex h-full">
       <NodePalette onNodeDrag={onNodeDrag} />
       
-      <div className="flex-1 relative" ref={reactFlowWrapper}>
+      <div className="flex-1 relative bg-white" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -147,11 +147,13 @@ export function WorkflowEditor() {
           onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          deleteKeyCode={['Delete', 'Backspace'] as any}
+          className="workbench-flow"
           fitView
         >
-          <Background variant={"dots" as any} gap={12} size={1} />
+          <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="rgba(100,116,139,0.3)" />
           <Controls />
-          <MiniMap />
+          <MiniMap nodeStrokeWidth={3} zoomable pannable />
           <div className="absolute bottom-3 left-16 z-50 rounded-md border bg-white/95 px-3 py-2 text-xs text-gray-700 shadow">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">

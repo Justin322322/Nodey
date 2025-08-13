@@ -37,23 +37,29 @@ export class WorkflowExecutor {
     }
   }
   
-  async execute(): Promise<WorkflowExecution> {
+  async execute(options?: { startNodeId?: string }): Promise<WorkflowExecution> {
     try {
       this.log('info', 'workflow-start', `Starting workflow: ${this.workflow.name}`)
       
-      // Find all trigger nodes
-      const triggerNodes = this.workflow.nodes.filter(
-        node => node.data.nodeType === NodeType.TRIGGER
-      )
-      
-      if (triggerNodes.length === 0) {
-        throw new Error('No trigger nodes found in workflow')
-      }
-      
-      // Execute each trigger node and its downstream nodes
-      for (const triggerNode of triggerNodes) {
-        if (this.abortController.signal.aborted) break
-        await this.executeNode(triggerNode)
+      if (options?.startNodeId) {
+        const startNode = this.workflow.nodes.find(n => n.id === options.startNodeId)
+        if (!startNode) throw new Error('Start node not found')
+        await this.executeNode(startNode)
+      } else {
+        // Find all trigger nodes
+        const triggerNodes = this.workflow.nodes.filter(
+          node => node.data.nodeType === NodeType.TRIGGER
+        )
+        
+        if (triggerNodes.length === 0) {
+          throw new Error('No trigger nodes found in workflow')
+        }
+        
+        // Execute each trigger node and its downstream nodes
+        for (const triggerNode of triggerNodes) {
+          if (this.abortController.signal.aborted) break
+          await this.executeNode(triggerNode)
+        }
       }
       
       this.execution.status = 'completed'
@@ -86,18 +92,45 @@ export class WorkflowExecutor {
     
     try {
       let output: any
-      
-      // Execute based on node type
-      switch (node.data.nodeType) {
-        case NodeType.TRIGGER:
-          output = await this.executeTriggerNode(node)
+      const runSettings = node.data.runSettings || {}
+      const timeoutMs = runSettings.timeoutMs ?? 30000
+      const retryCount = runSettings.retryCount ?? 0
+      const retryDelayMs = runSettings.retryDelayMs ?? 0
+      const continueOnFail = runSettings.continueOnFail ?? false
+
+      const executeWithTimeout = async (): Promise<any> => {
+        // perform single attempt execution wrapped with timeout
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), timeoutMs)
+        try {
+          const result = await this.executeNodeCore(node, controller.signal)
+          return result
+        } finally {
+          clearTimeout(timer)
+        }
+      }
+
+      let attempt = 0
+      while (true) {
+        try {
+          output = await executeWithTimeout()
           break
-        case NodeType.ACTION:
-          output = await this.executeActionNode(node)
-          break
-        case NodeType.LOGIC:
-          output = await this.executeLogicNode(node)
-          break
+        } catch (err) {
+          attempt += 1
+          const message = err instanceof Error ? err.message : String(err)
+          this.log('error', node.id, `Attempt ${attempt} failed: ${message}`)
+          if (attempt > retryCount) {
+            if (continueOnFail) {
+              this.log('warning', node.id, 'continueOnFail enabled; proceeding downstream')
+              output = { __error: true, message }
+              break
+            }
+            throw err
+          }
+          if (retryDelayMs > 0) {
+            await new Promise((r) => setTimeout(r, retryDelayMs))
+          }
+        }
       }
       
       this.nodeOutputs[node.id] = output
@@ -107,9 +140,17 @@ export class WorkflowExecutor {
       const downstreamEdges = this.workflow.edges.filter(edge => edge.source === node.id)
       for (const edge of downstreamEdges) {
         const targetNode = this.workflow.nodes.find(n => n.id === edge.target)
-        if (targetNode) {
-          await this.executeNode(targetNode)
+        if (!targetNode) continue
+
+        // Branch routing for IF node using sourceHandle id 'true'/'false'
+        if (node.data.nodeType === NodeType.LOGIC && (node.data as any).logicType === LogicType.IF) {
+          const branch = (output?.branch ?? (output?.conditionMet ? 'true' : 'false')) as string
+          const sourceHandle = (edge as any).sourceHandle as string | undefined
+          if (sourceHandle && sourceHandle !== branch) {
+            continue
+          }
         }
+        await this.executeNode(targetNode)
       }
       
       return output
@@ -117,6 +158,20 @@ export class WorkflowExecutor {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       this.log('error', node.id, `Node execution failed: ${errorMsg}`)
       throw error
+    }
+  }
+
+  private async executeNodeCore(node: WorkflowNode, signal: AbortSignal): Promise<any> {
+    // Execute based on node type
+    switch (node.data.nodeType) {
+      case NodeType.TRIGGER:
+        return await this.executeTriggerNode(node)
+      case NodeType.ACTION:
+        return await this.executeActionNode(node)
+      case NodeType.LOGIC:
+        return await this.executeLogicNode(node)
+      default:
+        throw new Error('Unknown node type')
     }
   }
   

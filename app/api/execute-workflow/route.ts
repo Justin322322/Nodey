@@ -7,13 +7,13 @@ const executors = new Map<string, WorkflowExecutor>()
 
 export async function POST(req: NextRequest) {
   try {
-    const { workflow } = (await req.json()) as { workflow: Workflow }
+    const { workflow, options } = (await req.json()) as { workflow: Workflow, options?: { startNodeId?: string } }
     if (!workflow || !workflow.id) {
       return NextResponse.json({ error: 'Invalid workflow' }, { status: 400 })
     }
     const executor = new WorkflowExecutor(workflow)
     executors.set(workflow.id, executor)
-    const execution = await executor.execute()
+    const execution = await executor.execute(options)
     executors.delete(workflow.id)
     return NextResponse.json(execution)
   } catch (e) {

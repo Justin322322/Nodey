@@ -20,7 +20,7 @@ interface BaseNodeProps {
 }
 
 export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: true, source: true }, selected }: BaseNodeProps) => {
-  const { setSelectedNodeId, deleteNode, currentExecution } = useWorkflowStore()
+  const { setSelectedNodeId, requestDeleteNode, currentExecution } = useWorkflowStore()
 
   const subtypeLabel = useMemo(() => {
     if (data.nodeType === NodeType.TRIGGER) return (data as any).triggerType
@@ -33,33 +33,37 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
   const hasOutput = Boolean(currentExecution?.nodeOutputs?.[nodeId])
   const hasError = Boolean(data.error)
 
+  const isPreview = Boolean(data.isPreview)
+
   return (
     <div
       className={cn(
-        "group px-0 py-0 shadow-md rounded-md border-2 bg-white min-w-[220px] overflow-hidden",
-        selected ? "border-primary" : "border-gray-200",
-        hasError && "border-red-500"
+        "group px-0 py-0 rounded-md min-w-[220px] overflow-hidden",
+        isPreview ? "shadow-sm bg-white/90" : "shadow-md bg-white",
+        selected && !isPreview ? "shadow-[0_0_0_3px_rgba(59,130,246,0.25)]" : "",
+        hasError && !isPreview && "shadow-[0_0_0_3px_rgba(239,68,68,0.25)]"
       )}
     >
       {handles.target && (
         <Handle
           type="target"
           position={Position.Left}
-          className="w-4 h-4"
-          style={{ background: '#10b981', zIndex: 30, borderRadius: 0 }}
+          className={cn(isPreview ? "w-4 h-4" : "w-6 h-6")}
+          style={{ background: '#10b981', zIndex: 30, borderRadius: isPreview ? 6 : 0, opacity: isPreview ? 0 : 1 }}
         />
       )}
       
       {/* Header */}
-      <div className="relative border-b">
-        <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: color }} />
-        <div className="h-10 flex items-center gap-2 pl-3 pr-2">
-          <div className="w-7 h-7 rounded flex items-center justify-center" style={{ color: color, backgroundColor: '#0000000D' }}>
+      <div className={cn("relative", isPreview ? "border-b border-gray-100" : "border-b border-gray-200") }>
+        <div className="absolute left-0 top-0 bottom-0" style={{ width: isPreview ? 2 : 4, backgroundColor: color }} />
+        <div className={cn("flex items-center gap-2 pl-3 pr-2", isPreview ? "h-9" : "h-10") }>
+          <div className={cn(isPreview ? "w-6 h-6" : "w-7 h-7", "rounded flex items-center justify-center text-gray-800")} style={{ color: color, backgroundColor: '#FFFFFF' }}>
             {icon}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate">{data.label}</div>
+            <div className={cn("truncate", isPreview ? "text-[13px] font-medium text-gray-900" : "text-sm font-medium text-gray-900")}>{data.label}</div>
           </div>
+          {!isPreview && (
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               className="rounded p-1 hover:bg-gray-100"
@@ -70,33 +74,37 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
             </button>
             <button
               className="rounded p-1 hover:bg-gray-100"
-              onClick={(e) => { e.stopPropagation(); deleteNode(nodeId) }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); requestDeleteNode(nodeId) }}
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
+          )}
         </div>
-        {/* Status indicator moved to header top-right to avoid handle overlap */}
-        <div className="absolute right-2 top-1 pointer-events-none">
-          {hasError ? (
-            <div className="flex items-center gap-1 text-red-600 text-xs bg-white rounded-full px-2 py-0.5 border border-red-200">
-              <AlertCircle className="w-3 h-3" /> Error
-            </div>
-          ) : hasOutput ? (
-            <div className="flex items-center gap-1 text-green-600 text-xs bg-white rounded-full px-2 py-0.5 border border-green-200">
-              <CheckCircle2 className="w-3 h-3" /> Done
-            </div>
-          ) : null}
-        </div>
+        {!isPreview && (
+          <div className="absolute right-2 top-1 pointer-events-none">
+            {hasError ? (
+              <div className="flex items-center gap-1 text-red-600 text-xs bg-white rounded-full px-2 py-0.5 border border-red-200">
+                <AlertCircle className="w-3 h-3" /> Error
+              </div>
+            ) : hasOutput ? (
+              <div className="flex items-center gap-1 text-green-600 text-xs bg-white rounded-full px-2 py-0.5 border border-green-200">
+                <CheckCircle2 className="w-3 h-3" /> Done
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* Body */}
-      <div className="px-3 py-2">
+      <div className={cn("px-3", isPreview ? "py-1.5" : "py-2") }>
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-wide">
-          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{data.nodeType}</span>
+          <span className="rounded bg-white border border-gray-200 px-1.5 py-0.5 text-gray-800">{data.nodeType}</span>
           {subtypeText && (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{subtypeText}</span>
+            <span className="rounded bg-white border border-gray-200 px-1.5 py-0.5 text-gray-800">{subtypeText}</span>
           )}
         </div>
         {data.description && (
@@ -104,18 +112,43 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
             {data.description}
           </div>
         )}
-        {hasError && (
+        {!isPreview && hasError && (
           <div className="mt-2 text-xs text-red-600">{data.error}</div>
         )}
       </div>
       
       {handles.source && (
-        <Handle
-          type="source"
-          position={Position.Right}
-          className="w-4 h-4"
-          style={{ background: '#3b82f6', zIndex: 30, borderRadius: 9999 }}
-        />
+        data.nodeType === NodeType.LOGIC && (data as any).logicType === 'if' ? (
+          <>
+            <Handle
+              id="true"
+              type="source"
+              position={Position.Right}
+              className={cn(isPreview ? "w-4 h-4" : "w-6 h-6")}
+              style={{ background: '#3b82f6', zIndex: 30, borderRadius: 9999, top: isPreview ? 16 : 18, opacity: isPreview ? 0 : 1 }}
+            />
+            <Handle
+              id="false"
+              type="source"
+              position={Position.Right}
+              className={cn(isPreview ? "w-4 h-4" : "w-6 h-6")}
+              style={{ background: '#94a3b8', zIndex: 30, borderRadius: 9999, top: isPreview ? 40 : 46, opacity: isPreview ? 0 : 1 }}
+            />
+            {!isPreview && (
+              <>
+                <div className="absolute right-1 top-[6px] text-[10px] text-gray-500">T</div>
+                <div className="absolute right-1 top-[30px] text-[10px] text-gray-500">F</div>
+              </>
+            )}
+          </>
+        ) : (
+          <Handle
+            type="source"
+            position={Position.Right}
+            className={cn(isPreview ? "w-4 h-4" : "w-6 h-6")}
+            style={{ background: '#3b82f6', zIndex: 30, borderRadius: 9999, opacity: isPreview ? 0 : 1 }}
+          />
+        )
       )}
 
       {/* No labels for handles (n8n-style clean connectors) */}

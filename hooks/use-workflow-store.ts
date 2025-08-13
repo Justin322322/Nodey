@@ -30,12 +30,15 @@ interface WorkflowStore {
   isExecuting: boolean
   currentExecution: WorkflowExecution | null
   executionLogs: ExecutionLog[]
-  executeWorkflow: () => Promise<WorkflowExecution | undefined>
+  executeWorkflow: (options?: { startNodeId?: string }) => Promise<WorkflowExecution | undefined>
   stopExecution: () => Promise<boolean>
   
   // UI State
   selectedNodeId: string | null
   setSelectedNodeId: (nodeId: string | null) => void
+  pendingDeleteNodeId: string | null
+  requestDeleteNode: (nodeId: string) => void
+  clearPendingDelete: () => void
 }
 
 export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
@@ -47,6 +50,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   currentExecution: null,
   executionLogs: [],
   selectedNodeId: null,
+  pendingDeleteNodeId: null,
   
   // Workflow management
   setWorkflow: (workflow) => {
@@ -150,7 +154,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   },
   
   // Execution
-  executeWorkflow: async () => {
+  executeWorkflow: async (options) => {
     const { workflow, nodes, edges } = get()
     if (!workflow || get().isExecuting) return
     
@@ -166,7 +170,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     })
     
     try {
-      const execution = await executeWorkflowAction(workflowToExecute)
+      const execution = await executeWorkflowAction(workflowToExecute, options)
       
       set({
         currentExecution: execution,
@@ -222,4 +226,6 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   setSelectedNodeId: (nodeId) => {
     set({ selectedNodeId: nodeId })
   },
+  requestDeleteNode: (nodeId) => set({ pendingDeleteNodeId: nodeId }),
+  clearPendingDelete: () => set({ pendingDeleteNodeId: null }),
 }))

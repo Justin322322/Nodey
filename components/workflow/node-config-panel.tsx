@@ -1,6 +1,7 @@
 "use client"
 
 import { X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,21 +12,54 @@ import { useToast } from '@/components/ui/toaster'
 import { WorkflowNode, NodeType, ActionType, TriggerType, HttpNodeConfig, EmailNodeConfig, ScheduleNodeConfig } from '@/types/workflow'
 
 export function NodeConfigPanel() {
-  const { nodes, selectedNodeId, setSelectedNodeId, updateNode, deleteNode } = useWorkflowStore()
+  const { nodes, selectedNodeId, setSelectedNodeId, updateNode, deleteNode, pendingDeleteNodeId, clearPendingDelete } = useWorkflowStore()
   const { toast } = useToast()
-  const [confirmOpen, setConfirmOpen] = (require('react').useState as typeof import('react').useState<boolean>)(false)
+  const [confirmOpen, setConfirmOpen] = useState<boolean>(false)
+
+  // Open confirm dialog if a delete was requested from node header
+  useEffect(() => {
+    // If delete was requested from node header, force-close config panel selection and open only dialog
+    if (pendingDeleteNodeId) {
+      if (selectedNodeId && selectedNodeId !== pendingDeleteNodeId) {
+        setSelectedNodeId(null)
+      }
+      setConfirmOpen(true)
+      return
+    }
+  }, [pendingDeleteNodeId])
   
-  if (!selectedNodeId) return null
+  // If a delete has been requested but no node is selected, show dialog only and no side panel
+  if (!selectedNodeId && pendingDeleteNodeId) {
+    return (
+      <Dialog open={true} onOpenChange={(open) => { if (!open) { setConfirmOpen(false); clearPendingDelete() } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete node?</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-gray-600">
+            This will remove the node and its connections. This action cannot be undone.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setConfirmOpen(false); clearPendingDelete() }}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { if (pendingDeleteNodeId) deleteNode(pendingDeleteNodeId); clearPendingDelete(); toast({ title: 'Node deleted', description: 'The node and its connections were removed.', variant: 'success' }) }}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+  if (!selectedNodeId && !pendingDeleteNodeId) return null
   
-  const selectedNode = nodes.find(n => n.id === selectedNodeId) as WorkflowNode | undefined
+  const nodeId = selectedNodeId ?? pendingDeleteNodeId!
+  const selectedNode = nodes.find(n => n.id === nodeId) as WorkflowNode | undefined
   if (!selectedNode) return null
   
-  const handleClose = () => setSelectedNodeId(null)
+  const handleClose = () => { setSelectedNodeId(null); clearPendingDelete() }
   const handleDelete = () => {
-    if (!selectedNodeId) return
-    deleteNode(selectedNodeId)
+    if (!nodeId) return
+    deleteNode(nodeId)
     setSelectedNodeId(null)
     setConfirmOpen(false)
+    clearPendingDelete()
     toast({
       title: 'Node deleted',
       description: 'The node and its connections were removed.',
@@ -34,7 +68,7 @@ export function NodeConfigPanel() {
   }
   
   const handleConfigChange = (key: string, value: any) => {
-    updateNode(selectedNodeId, {
+    updateNode(nodeId, {
       config: {
         ...selectedNode.data.config,
         [key]: value
@@ -57,7 +91,7 @@ export function NodeConfigPanel() {
               value={config.method || 'GET'}
               onValueChange={(value) => handleConfigChange('method', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white text-gray-900 border-gray-300">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -76,6 +110,7 @@ export function NodeConfigPanel() {
               value={config.url || ''}
               onChange={(e) => handleConfigChange('url', e.target.value)}
               placeholder="https://api.example.com/endpoint"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
             />
           </div>
 
@@ -90,7 +125,7 @@ export function NodeConfigPanel() {
                 })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white text-gray-900 border-gray-300">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -120,6 +155,7 @@ export function NodeConfigPanel() {
                     ? 'Base64 encoded user:pass'
                     : 'API Key'
                 }
+                className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
               />
             </div>
           )}
@@ -127,7 +163,7 @@ export function NodeConfigPanel() {
           <div className="space-y-2">
             <Label>Headers (JSON)</Label>
             <textarea
-              className="w-full p-2 border rounded-md text-sm font-mono"
+              className="w-full p-2 border rounded-md text-sm font-mono bg-white text-gray-900 border-gray-300"
               rows={4}
               value={JSON.stringify(config.headers || {}, null, 2)}
               onChange={(e) => {
@@ -144,7 +180,7 @@ export function NodeConfigPanel() {
             <div className="space-y-2">
               <Label>Body (JSON)</Label>
               <textarea
-                className="w-full p-2 border rounded-md text-sm font-mono"
+                className="w-full p-2 border rounded-md text-sm font-mono bg-white text-gray-900 border-gray-300"
                 rows={6}
                 value={JSON.stringify(config.body || {}, null, 2)}
                 onChange={(e) => {
@@ -173,6 +209,7 @@ export function NodeConfigPanel() {
               value={config.to?.join(', ') || ''}
               onChange={(e) => handleConfigChange('to', e.target.value.split(',').map(s => s.trim()))}
               placeholder="user@example.com, another@example.com"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
             />
           </div>
           
@@ -182,13 +219,14 @@ export function NodeConfigPanel() {
               value={config.subject || ''}
               onChange={(e) => handleConfigChange('subject', e.target.value)}
               placeholder="Email subject"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
             />
           </div>
           
           <div className="space-y-2">
             <Label>Body</Label>
             <textarea
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md bg-white text-gray-900 border-gray-300"
               rows={6}
               value={config.body || ''}
               onChange={(e) => handleConfigChange('body', e.target.value)}
@@ -211,6 +249,7 @@ export function NodeConfigPanel() {
               value={config.cron || ''}
               onChange={(e) => handleConfigChange('cron', e.target.value)}
               placeholder="0 0 * * *"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
             />
             <p className="text-xs text-gray-500">
               Examples: "0 0 * * *" (daily at midnight), "*/5 * * * *" (every 5 minutes)
@@ -223,6 +262,7 @@ export function NodeConfigPanel() {
               value={config.timezone || 'UTC'}
               onChange={(e) => handleConfigChange('timezone', e.target.value)}
               placeholder="UTC"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
             />
           </div>
         </>
@@ -238,12 +278,12 @@ export function NodeConfigPanel() {
   }
   
   return (
-    <div className="absolute top-0 right-0 w-80 h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto">
+    <div className="absolute top-0 right-0 w-80 h-full bg-white text-gray-900 border-l border-gray-200 shadow-lg overflow-y-auto">
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-lg font-semibold">Configure Node</h3>
           <div className="flex items-center gap-2">
-            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <Dialog open={confirmOpen || Boolean(pendingDeleteNodeId)} onOpenChange={(open) => { setConfirmOpen(open); if (!open) clearPendingDelete() }}>
               <DialogTrigger asChild>
                 <Button variant="destructive" size="sm">Delete</Button>
               </DialogTrigger>
@@ -255,7 +295,7 @@ export function NodeConfigPanel() {
                   This will remove the node and its connections. This action cannot be undone.
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => { setConfirmOpen(false); clearPendingDelete() }}>Cancel</Button>
                   <Button variant="destructive" onClick={handleDelete}>Delete</Button>
                 </DialogFooter>
               </DialogContent>
@@ -269,15 +309,19 @@ export function NodeConfigPanel() {
             </Button>
           </div>
         </div>
-        <p className="text-sm text-gray-500 mt-1">{selectedNode.data.label}</p>
+        {!pendingDeleteNodeId && (
+          <p className="text-sm text-gray-500 mt-1">{selectedNode.data.label}</p>
+        )}
       </div>
       
+      {!pendingDeleteNodeId && (
       <div className="p-4 space-y-4">
         <div className="space-y-2">
           <Label>Node Name</Label>
           <Input
             value={selectedNode.data.label}
-            onChange={(e) => updateNode(selectedNodeId, { label: e.target.value })}
+            onChange={(e) => updateNode(nodeId, { label: e.target.value })}
+            className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
           />
         </div>
         
@@ -285,8 +329,9 @@ export function NodeConfigPanel() {
           <Label>Description</Label>
           <Input
             value={selectedNode.data.description || ''}
-            onChange={(e) => updateNode(selectedNodeId, { description: e.target.value })}
+            onChange={(e) => updateNode(nodeId, { description: e.target.value })}
             placeholder="Optional description"
+            className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
           />
         </div>
         
@@ -294,7 +339,77 @@ export function NodeConfigPanel() {
           <h4 className="font-medium mb-3">Node Configuration</h4>
           {renderConfig()}
         </div>
+
+        <div className="border-t pt-4">
+          <h4 className="font-medium mb-3">Execution Settings</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Timeout (ms)</Label>
+              <Input
+                type="number"
+                value={selectedNode.data.runSettings?.timeoutMs ?? ''}
+                onChange={(e) => updateNode(nodeId, {
+                  runSettings: {
+                    ...selectedNode.data.runSettings,
+                    timeoutMs: Number(e.target.value || 0) || undefined,
+                  },
+                })}
+                placeholder="30000"
+                className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Retries</Label>
+              <Input
+                type="number"
+                value={selectedNode.data.runSettings?.retryCount ?? ''}
+                onChange={(e) => updateNode(nodeId, {
+                  runSettings: {
+                    ...selectedNode.data.runSettings,
+                    retryCount: Number(e.target.value || 0) || undefined,
+                  },
+                })}
+                placeholder="0"
+                className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Retry delay (ms)</Label>
+              <Input
+                type="number"
+                value={selectedNode.data.runSettings?.retryDelayMs ?? ''}
+                onChange={(e) => updateNode(nodeId, {
+                  runSettings: {
+                    ...selectedNode.data.runSettings,
+                    retryDelayMs: Number(e.target.value || 0) || undefined,
+                  },
+                })}
+                placeholder="0"
+                className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+              />
+            </div>
+            <div className="flex items-center gap-2 mt-6">
+              <input
+                id="continueOnFail"
+                type="checkbox"
+                className="h-4 w-4"
+                checked={Boolean(selectedNode.data.runSettings?.continueOnFail)}
+                onChange={(e) => updateNode(nodeId, {
+                  runSettings: {
+                    ...selectedNode.data.runSettings,
+                    continueOnFail: e.target.checked,
+                  },
+                })}
+              />
+              <Label htmlFor="continueOnFail">Continue on fail</Label>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Use labels "true" and "false" on connections from IF nodes to control branching.
+          </p>
+        </div>
       </div>
+      )}
     </div>
   )
 }

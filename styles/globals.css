@@ -50,22 +50,45 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; }
 }
 
 /* React Flow styles */
-.react-flow__node {
-  font-size: 12px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  padding: 10px;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* Default React Flow node wrapper (kept minimal, our nodes draw themselves) */
+.react-flow__node { font-size: 12px; background-color: transparent; border: none; padding: 0; box-shadow: none; }
+
+/* Override for the landing feature workflow – nodes are custom glass cards */
+/* Feature workflow preview: keep neutral RF wrapper; glass nodes define look */
+.feature-workflow-canvas .react-flow__node { border: none; padding: 0; background: transparent; box-shadow: none; }
+
+/* Workbench (editor) flow: use our custom node visuals without the default RF card styles */
+.workbench-flow .react-flow__node {
+  border: none;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workbench-flow .react-flow__node.selected {
+  border: none;
+  box-shadow: none;
+}
+
+.workbench-flow .react-flow__handle {
+  border-width: 0;
+  box-shadow: none;
+}
+
+/* Ensure inputs/selects in the editor are bright on white regardless of theme */
+.workbench-flow ~ .react-flow__panel,
+.workbench-flow input,
+.workbench-flow textarea,
+.workbench-flow select,
+.workbench-flow .radix-select-content,
+.workbench-flow [role="combobox"] {
+  background-color: #ffffff;
+  color: #0f172a;
 }
 
 .react-flow__node.selected {
@@ -73,12 +96,7 @@
   box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
 }
 
-.react-flow__handle {
-  width: 10px;
-  height: 10px;
-  background-color: hsl(var(--primary));
-  border: 2px solid white;
-}
+.react-flow__handle { width: 12px; height: 12px; border: none; box-shadow: none; }
 
 .react-flow__edge-path {
   stroke: hsl(var(--border));
@@ -87,4 +105,252 @@
 
 .react-flow__edge.selected .react-flow__edge-path {
   stroke: hsl(var(--primary));
+}
+
+
+/* Landing flow preview: disable hand interactions */
+.landing-flow {
+  pointer-events: none;
+}
+.landing-flow .react-flow__controls,
+.landing-flow .react-flow__minimap,
+.landing-flow .react-flow__panel {
+  display: none;
+}
+
+/* Shared dotted background matching the workbench */
+.workbench-bg {
+  background-color: #ffffff;
+  background-image: radial-gradient(rgba(71,85,105,0.5) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: -1px -1px;
+}
+
+
+/* Decorative animations for landing */
+@keyframes meteor {
+  0% {
+    transform: translateX(0) translateY(0) rotate(-45deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-500px) translateY(500px) rotate(-45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes floaty {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Variable Proximity font support */
+.variable-proximity-demo {
+  font-feature-settings: "kern" 1, "liga" 1;
+  font-variation-settings: 'wght' 400;
+  transition: font-variation-settings 0.1s ease-out;
+  color: #ffffff;
+}
+
+/* Modern ReactFlow styling for feature workflow */
+.feature-workflow-canvas .react-flow__viewport {
+  transition: transform 0.3s ease;
+}
+
+.feature-workflow-canvas .react-flow__edge-path {
+  stroke-dasharray: 8,4;
+  animation: dash 20s linear infinite;
+}
+
+.feature-workflow-canvas .react-flow__edge.animated .react-flow__edge-path {
+  stroke-dasharray: 8,4;
+  animation: dash 3s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+/* Subtle shimmer overlay for glass cards */
+.glass-card-shimmer {
+  background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.12) 50%, transparent 65%);
+  background-size: 200% 100%;
+  animation: shimmer 2.8s ease-in-out infinite;
+  border-radius: 16px;
+}
+
+/* Electricity flow particle animations */
+.electricity-particle-1 {
+  animation: flow-path-1 4s linear infinite;
+}
+
+.electricity-particle-2 {
+  animation: flow-path-2 5s linear infinite 0.5s;
+}
+
+.electricity-particle-3 {
+  animation: flow-path-3 3.5s linear infinite 1s;
+}
+
+.electricity-particle-4 {
+  animation: flow-path-4 4.5s linear infinite 1.5s;
+}
+
+.electricity-particle-5 {
+  animation: flow-path-5 5.5s linear infinite 2s;
+}
+
+/* Particle flow paths - simulating movement along the workflow */
+@keyframes flow-path-1 {
+  0% { left: 5%; top: 45%; opacity: 0; }
+  10% { opacity: 1; }
+  25% { left: 20%; top: 35%; }
+  50% { left: 40%; top: 55%; }
+  75% { left: 60%; top: 35%; }
+  90% { opacity: 1; }
+  100% { left: 85%; top: 45%; opacity: 0; }
+}
+
+@keyframes flow-path-2 {
+  0% { left: 8%; top: 50%; opacity: 0; }
+  15% { opacity: 0.8; }
+  30% { left: 25%; top: 40%; }
+  55% { left: 45%; top: 60%; }
+  80% { left: 65%; top: 40%; }
+  95% { opacity: 0.8; }
+  100% { left: 88%; top: 50%; opacity: 0; }
+}
+
+@keyframes flow-path-3 {
+  0% { left: 3%; top: 48%; opacity: 0; }
+  12% { opacity: 1; }
+  28% { left: 18%; top: 38%; }
+  52% { left: 38%; top: 58%; }
+  78% { left: 58%; top: 38%; }
+  92% { opacity: 1; }
+  100% { left: 83%; top: 48%; opacity: 0; }
+}
+
+@keyframes flow-path-4 {
+  0% { left: 6%; top: 52%; opacity: 0; }
+  8% { opacity: 0.6; }
+  22% { left: 22%; top: 42%; }
+  48% { left: 42%; top: 62%; }
+  74% { left: 62%; top: 42%; }
+  88% { opacity: 0.6; }
+  100% { left: 86%; top: 52%; opacity: 0; }
+}
+
+@keyframes flow-path-5 {
+  0% { left: 4%; top: 46%; opacity: 0; }
+  18% { opacity: 0.4; }
+  35% { left: 24%; top: 36%; }
+  60% { left: 44%; top: 56%; }
+  85% { left: 64%; top: 36%; }
+  95% { opacity: 0.4; }
+  100% { left: 84%; top: 46%; opacity: 0; }
+}
+
+/* Page entrance animations */
+.page-entrance-fade {
+  animation: page-fade-in 600ms ease-out both;
+}
+
+.page-entrance-rise {
+  animation: page-rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.stagger-container > * {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  animation: card-stagger-in 600ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.stagger-container > *:nth-child(1) { animation-delay: 60ms; }
+.stagger-container > *:nth-child(2) { animation-delay: 120ms; }
+.stagger-container > *:nth-child(3) { animation-delay: 180ms; }
+.stagger-container > *:nth-child(4) { animation-delay: 240ms; }
+.stagger-container > *:nth-child(5) { animation-delay: 300ms; }
+.stagger-container > *:nth-child(6) { animation-delay: 360ms; }
+
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes page-rise-in {
+  0% { opacity: 0; transform: translateY(12px) }
+  100% { opacity: 1; transform: translateY(0) }
+}
+
+@keyframes card-stagger-in {
+  0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Welcome overlay animation for /workflows */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* text-only variant, uses existing page background (no blockers) */
+.welcome-overlay--text-only {}
+
+.welcome-enter {
+  animation: welcome-fade-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.welcome-exit {
+  animation: welcome-fade-out 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.welcome-center {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 2;
+}
+
+.welcome-text {
+  color: rgba(255,255,255,0.96);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-weight: 900;
+  font-size: clamp(28px, 6vw, 56px);
+  line-height: 1.05;
+  letter-spacing: 0.2px;
+  text-align: center;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes welcome-fade-in {
+  0% { opacity: 0; transform: translateY(6px) scale(0.99); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes welcome-fade-out {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-6px) scale(0.995); }
 }

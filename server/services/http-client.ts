@@ -1,6 +1,6 @@
 import { HttpNodeConfig } from '@/types/workflow'
 
-export interface HttpResponse {
+type HttpResponse = {
   status: number
   statusText: string
   data: any

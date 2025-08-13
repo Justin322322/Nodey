@@ -33,11 +33,34 @@ const buttonVariants = cva(
   }
 )
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
-}
+// Enhanced button variants for prominent CTAs
+export const landingButtonVariants = cva(
+  "relative inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-all select-none",
+  {
+    variants: {
+      intent: {
+        primary:
+          "bg-white text-gray-900 hover:bg-white/90 shadow-[0_10px_25px_rgba(255,255,255,0.2)]",
+        secondary:
+          "bg-transparent text-white border border-white/40 hover:bg-white/10 backdrop-blur-sm",
+      },
+      size: {
+        md: "h-11 px-5",
+        lg: "h-12 px-6 text-base",
+      },
+    },
+    defaultVariants: {
+      intent: "primary",
+      size: "lg",
+    },
+  }
+)
+
+
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
@@ -53,4 +76,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = "Button"
 
-export { Button, buttonVariants }
+export { Button }

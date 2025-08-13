@@ -5,12 +5,12 @@
 
 import { Workflow, WorkflowExecution } from '@/types/workflow'
 
-export async function executeWorkflow(workflow: Workflow): Promise<WorkflowExecution> {
+export async function executeWorkflow(workflow: Workflow, options?: { startNodeId?: string }): Promise<WorkflowExecution> {
   // Call a serverless route to execute workflow to avoid importing server code in client
   const response = await fetch('/api/execute-workflow', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ workflow }),
+    body: JSON.stringify({ workflow, options }),
   })
   if (!response.ok) {
     const text = await response.text()

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 type ToastVariant = "default" | "success" | "destructive"
 
-export interface ToastOptions {
+type ToastOptions = {
   title: string
   description?: string
   duration?: number
