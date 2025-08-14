@@ -26,7 +26,7 @@ import {
   LogicType
 } from '@/types/workflow'
 import { getDefaultConfigForNode } from '@/lib/node-definitions'
-import { buildWorkflowTemplateAt } from '@/lib/node-templates'
+import { buildWorkflowTemplateAt } from '@/templates'
 
 const nodeTypes = {
   trigger: TriggerNode,
