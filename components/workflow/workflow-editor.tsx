@@ -25,6 +25,8 @@ import {
   ActionType,
   LogicType
 } from '@/types/workflow'
+import { getDefaultConfigForNode } from '@/lib/node-definitions'
+import { buildWorkflowTemplateAt } from '@/lib/node-templates'
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -47,6 +49,7 @@ export function WorkflowEditor() {
     onEdgesChange,
     onConnect,
     addNode,
+    addEdges,
     setSelectedNodeId,
   } = useWorkflowStore()
   
@@ -55,6 +58,7 @@ export function WorkflowEditor() {
   }, [])
   
   const onDragOver = useCallback((event: React.DragEvent) => {
+    // Allow drop; we validate payload in onDrop
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
   }, [])
@@ -66,9 +70,35 @@ export function WorkflowEditor() {
       if (!reactFlowWrapper.current || !reactFlowInstance) return
       
       const bounds = reactFlowWrapper.current.getBoundingClientRect()
-      const type = event.dataTransfer.getData('nodeType')
-      const subType = event.dataTransfer.getData('subType')
-      const label = event.dataTransfer.getData('label')
+      let type = event.dataTransfer.getData('nodeType')
+      let subType = event.dataTransfer.getData('subType')
+      let label = event.dataTransfer.getData('label')
+      const nodeJson = event.dataTransfer.getData('node/json')
+      if ((!type || !subType) && nodeJson) {
+        try {
+          const parsed = JSON.parse(nodeJson) as { type?: string; subType?: string; label?: string }
+          type = type || parsed.type || ''
+          subType = subType || parsed.subType || ''
+          label = label || parsed.label || ''
+        } catch {
+          // ignore
+        }
+      }
+      const templateKey = event.dataTransfer.getData('templateKey')
+      
+      // If it's a template insertion via drag
+      if (!type && templateKey) {
+        const position = reactFlowInstance.project({
+          x: event.clientX - bounds.left,
+          y: event.clientY - bounds.top,
+        })
+        const built = buildWorkflowTemplateAt(templateKey, position)
+        if (built) {
+          built.nodes.forEach((n) => addNode(n))
+          addEdges(built.edges)
+        }
+        return
+      }
       
       if (!type || !subType) return
       
@@ -85,7 +115,7 @@ export function WorkflowEditor() {
             label,
             nodeType: NodeType.TRIGGER,
             triggerType: subType as TriggerType,
-            config: {},
+            config: getDefaultConfigForNode(NodeType.TRIGGER, subType as TriggerType) || {},
           }
           break
         case NodeType.ACTION:
@@ -93,7 +123,7 @@ export function WorkflowEditor() {
             label,
             nodeType: NodeType.ACTION,
             actionType: subType as ActionType,
-            config: {},
+            config: getDefaultConfigForNode(NodeType.ACTION, subType as ActionType) || {},
           }
           break
         case NodeType.LOGIC:
@@ -101,7 +131,7 @@ export function WorkflowEditor() {
             label,
             nodeType: NodeType.LOGIC,
             logicType: subType as LogicType,
-            config: {},
+            config: getDefaultConfigForNode(NodeType.LOGIC, subType as LogicType) || {},
           }
           break
         default:
@@ -117,19 +147,25 @@ export function WorkflowEditor() {
       
       addNode(newNode)
     },
-    [reactFlowInstance, addNode]
+    [reactFlowInstance, addNode, addEdges]
   )
   
   const onNodeDrag = (event: React.DragEvent, nodeTemplate: NodeTemplate) => {
+    event.dataTransfer.setData('application/reactflow', 'node')
     event.dataTransfer.setData('nodeType', nodeTemplate.type)
     event.dataTransfer.setData('subType', nodeTemplate.subType)
     event.dataTransfer.setData('label', nodeTemplate.label)
+    event.dataTransfer.setData(
+      'node/json',
+      JSON.stringify({ type: nodeTemplate.type, subType: nodeTemplate.subType, label: nodeTemplate.label })
+    )
     event.dataTransfer.effectAllowed = 'move'
   }
   
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
       setSelectedNodeId(node.id)
+      // Do NOT open config panel automatically here; gear button controls it
     },
     [setSelectedNodeId]
   )
