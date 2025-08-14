@@ -36,6 +36,8 @@ interface WorkflowStore {
   // UI State
   selectedNodeId: string | null
   setSelectedNodeId: (nodeId: string | null) => void
+  isConfigPanelOpen: boolean
+  setConfigPanelOpen: (open: boolean) => void
   pendingDeleteNodeId: string | null
   requestDeleteNode: (nodeId: string) => void
   clearPendingDelete: () => void
@@ -44,6 +46,35 @@ interface WorkflowStore {
 }
 
 export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
+  // Internal draft autosave timer (debounced)
+  // Not part of public store, retained via closure
+  _draftTimer: undefined as unknown as ReturnType<typeof setTimeout> | undefined,
+  _scheduleDraftSave() {
+    try {
+      if ((get() as unknown as { _draftTimer?: ReturnType<typeof setTimeout> })._draftTimer) {
+        clearTimeout((get() as unknown as { _draftTimer?: ReturnType<typeof setTimeout> })._draftTimer)
+      }
+    } catch (err) {
+      console.debug('clear timer failed', err)
+    }
+    const timer = setTimeout(() => {
+      try {
+        const { workflow, nodes, edges } = get()
+        if (!workflow) return
+        const draft = {
+          ...workflow,
+          nodes,
+          edges,
+          updatedAt: new Date(),
+        }
+        localStorage.setItem('workflowDraft', JSON.stringify(draft))
+        localStorage.setItem('lastOpenedWorkflowId', workflow.id)
+      } catch (err) {
+        console.debug('draft save failed', err)
+      }
+    }, 400)
+    ;(get() as unknown as { _draftTimer?: ReturnType<typeof setTimeout> })._draftTimer = timer
+  },
   // Initial state
   workflow: null,
   nodes: [],
@@ -52,6 +83,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   currentExecution: null,
   executionLogs: [],
   selectedNodeId: null,
+  isConfigPanelOpen: false,
   pendingDeleteNodeId: null,
   isLogsDialogOpen: false,
   
@@ -62,6 +94,15 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       nodes: workflow.nodes,
       edges: workflow.edges,
     })
+    try {
+      localStorage.setItem('lastOpenedWorkflowId', workflow.id)
+      // initialize draft on load to ensure refresh survival until first change
+      const { nodes, edges } = get()
+      const draft = { ...workflow, nodes, edges, updatedAt: new Date() }
+      localStorage.setItem('workflowDraft', JSON.stringify(draft))
+    } catch (err) {
+      console.debug('initialize draft failed', err)
+    }
   },
   
   createNewWorkflow: () => {
@@ -79,6 +120,12 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       nodes: [],
       edges: [],
     })
+    try {
+      localStorage.setItem('lastOpenedWorkflowId', newWorkflow.id)
+      localStorage.setItem('workflowDraft', JSON.stringify(newWorkflow))
+    } catch (err) {
+      console.debug('create draft failed', err)
+    }
   },
   
   saveWorkflow: async () => {
@@ -122,12 +169,14 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     set({
       nodes: applyNodeChanges(changes, get().nodes) as unknown as WorkflowNode[],
     })
+    ;(get() as unknown as { _scheduleDraftSave: () => void })._scheduleDraftSave()
   },
   
   onEdgesChange: (changes) => {
     set({
       edges: applyEdgeChanges(changes, get().edges) as unknown as WorkflowEdge[],
     })
+    ;(get() as unknown as { _scheduleDraftSave: () => void })._scheduleDraftSave()
   },
   
   onConnect: (connection) => {
@@ -146,12 +195,14 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     set({
       nodes: ([...get().nodes, node] as unknown) as WorkflowNode[],
     })
+    ;(get() as unknown as { _scheduleDraftSave: () => void })._scheduleDraftSave()
   },
   
   addEdges: (edges) => {
     set({
       edges: ([...get().edges, ...edges] as unknown) as WorkflowEdge[],
     })
+    ;(get() as unknown as { _scheduleDraftSave: () => void })._scheduleDraftSave()
   },
   
   updateNode: (nodeId, data) => {
@@ -162,6 +213,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
           : node
       ) as unknown) as WorkflowNode[],
     })
+    ;(get() as unknown as { _scheduleDraftSave: () => void })._scheduleDraftSave()
   },
   
   deleteNode: (nodeId) => {
@@ -172,6 +224,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
                   (edge as unknown as { source: string; target: string }).target !== nodeId
       ) as unknown) as WorkflowEdge[],
     })
+    ;(get() as unknown as { _scheduleDraftSave: () => void })._scheduleDraftSave()
   },
   
   // Execution
@@ -247,6 +300,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   setSelectedNodeId: (nodeId) => {
     set({ selectedNodeId: nodeId })
   },
+  setConfigPanelOpen: (open) => set({ isConfigPanelOpen: open }),
   requestDeleteNode: (nodeId) => set({ pendingDeleteNodeId: nodeId }),
   clearPendingDelete: () => set({ pendingDeleteNodeId: null }),
   setLogsDialogOpen: (open) => set({ isLogsDialogOpen: open }),
