@@ -122,3 +122,11 @@ This is a simplified version for demonstration:
 - Workflow versioning and history
 - Advanced scheduling with timezone support
 - Webhook response customization
+
+## Contributing
+
+Contributions are welcome! Please read the contribution guidelines and policies:
+
+- See `CONTRIBUTING.md` for how to set up your environment, development guidelines, and PR process
+- See `CODE_OF_CONDUCT.md` for community standards
+- See `SECURITY.md` for reporting vulnerabilities

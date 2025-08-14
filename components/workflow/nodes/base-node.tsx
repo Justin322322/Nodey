@@ -67,6 +67,8 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
           <div className="flex items-center gap-1 z-10 text-gray-500">
             <button
               className="rounded p-1.5 sm:p-2 hover:bg-gray-100 hover:text-gray-700 touch-manipulation"
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); setSelectedNodeId(nodeId) }}
               title="Configure"
             >
