@@ -15,7 +15,7 @@
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-slot": "^1.0.2",
-    "@react-three/fiber": "^9.3.0",
+    "@react-three/fiber": "^8.18.0",
     "@reactflow/background": "^11.3.14",
     "@reactflow/controls": "^11.2.14",
     "@reactflow/minimap": "^11.7.14",
