@@ -15,6 +15,7 @@ import {
 } from '@/types/workflow'
 import { v4 as uuidv4 } from 'uuid'
 import { executeHttpRequest } from '@/server/services/http-client'
+import { validateNodeBeforeExecute } from '@/lib/node-definitions'
 
 export class WorkflowExecutor {
   private workflow: Workflow
@@ -88,6 +89,14 @@ export class WorkflowExecutor {
     }
     
     this.log('info', node.id, `Executing node: ${node.data.label}`)
+
+    // Validate node config using definition schema (n8n-inspired)
+    const errors = validateNodeBeforeExecute(node)
+    if (errors.length > 0) {
+      const message = `Invalid configuration: ${errors.join('; ')}`
+      this.log('error', node.id, message)
+      throw new Error(message)
+    }
     
     try {
       let output: unknown
