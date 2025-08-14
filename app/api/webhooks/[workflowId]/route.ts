@@ -5,7 +5,16 @@ import { WorkflowExecutor } from '@/server/services/workflow-executor'
 import { saveWorkflowExecution } from '@/server/services/workflow-registry'
 
 // In-memory storage for webhook data (in production, use a database)
-const webhookData = new Map<string, any[]>()
+type StoredWebhook = {
+  id: string
+  workflowId: string
+  receivedAt: string
+  headers: Record<string, string>
+  event?: string
+  data: unknown
+  timestamp?: string
+}
+const webhookData = new Map<string, StoredWebhook[]>()
 
 // Schema for webhook payload validation
 const webhookPayloadSchema = z.object({
@@ -29,12 +38,14 @@ export async function POST(
     
     // Store webhook data
     const existingData = webhookData.get(workflowId) || []
-    const webhookEntry = {
+    const webhookEntry: StoredWebhook = {
       id: crypto.randomUUID(),
       workflowId,
       receivedAt: new Date().toISOString(),
       headers: Object.fromEntries(req.headers.entries()),
-      ...validatedData,
+      event: validatedData.event,
+      data: validatedData.data,
+      timestamp: validatedData.timestamp,
     }
     
     existingData.push(webhookEntry)

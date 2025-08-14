@@ -1,5 +1,4 @@
-import Link from 'next/link'
-import { Button, landingButtonVariants } from '@/components/ui/button'
+import { landingButtonVariants } from '@/components/ui/button'
 import { ArrowRight, Cpu, Play, FolderOpen } from 'lucide-react'
 import { Suspense, lazy } from 'react'
 import WelcomeLink from '@/components/landing/welcome-link'

@@ -1,7 +1,7 @@
 "use client"
 
 import { create } from 'zustand'
-import { Node, Edge, applyNodeChanges, applyEdgeChanges, OnNodesChange, OnEdgesChange, Connection, addEdge } from 'reactflow'
+import { applyNodeChanges, applyEdgeChanges, OnNodesChange, OnEdgesChange, Connection, addEdge } from 'reactflow'
 import { v4 as uuidv4 } from 'uuid'
 import { Workflow, WorkflowNode, WorkflowEdge, WorkflowExecution, ExecutionLog } from '@/types/workflow'
 import { executeWorkflow as executeWorkflowAction, stopWorkflowExecution } from '@/lib/workflow-actions'
@@ -112,7 +112,9 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedWorkflow),
       })
-    } catch {}
+    } catch {
+      // no-op
+    }
   },
   
   // Node operations
@@ -156,7 +158,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     set({
       nodes: (get().nodes.map((node) =>
         node.id === nodeId
-          ? ({ ...node, data: { ...node.data, ...(data as any) } } as WorkflowNode)
+          ? ({ ...node, data: { ...node.data, ...(data as Partial<WorkflowNode['data']>) } } as WorkflowNode)
           : node
       ) as unknown) as WorkflowNode[],
     })
@@ -166,7 +168,8 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     set({
       nodes: (get().nodes.filter((node) => node.id !== nodeId) as unknown) as WorkflowNode[],
       edges: (get().edges.filter(
-        (edge) => (edge as any).source !== nodeId && (edge as any).target !== nodeId
+        (edge) => (edge as unknown as { source: string; target: string }).source !== nodeId &&
+                  (edge as unknown as { source: string; target: string }).target !== nodeId
       ) as unknown) as WorkflowEdge[],
     })
   },

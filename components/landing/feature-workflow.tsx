@@ -33,7 +33,7 @@ interface FeatureNodeData {
 
 // True Glass Panel Node Component
 // Glass panel node (original landing look)
-function GlassFeatureNode({ data, selected }: { data: FeatureNodeData; selected?: boolean }) {
+function GlassFeatureNode({ data }: { data: FeatureNodeData }) {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
@@ -223,7 +223,9 @@ function InnerFeatureFlow() {
     const timer = setTimeout(() => {
       try {
         fitView({ padding: 0.1, includeHiddenNodes: true })
-      } catch {}
+      } catch {
+        // no-op
+      }
     }, 250)
     
     // Re-fit on window resize
@@ -231,7 +233,9 @@ function InnerFeatureFlow() {
       setTimeout(() => {
         try {
           fitView({ padding: 0.1, includeHiddenNodes: true })
-        } catch {}
+        } catch {
+          // no-op
+        }
       }, 100)
     }
     

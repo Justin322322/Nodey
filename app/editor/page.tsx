@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { WorkflowEditorProvider, WorkflowEditor } from '@/components/workflow/workflow-editor'
 import { WorkflowToolbar } from '@/components/workflow/workflow-toolbar'
@@ -14,7 +14,6 @@ function EditorInner() {
   const searchParams = useSearchParams()
   const workflowId = searchParams.get('workflowId')
   const [mounted, setMounted] = useState(false)
-  const shouldAnimateEntrance = false
   const { createNewWorkflow, setWorkflow } = useWorkflowStore()
   
   useEffect(() => {
@@ -32,6 +31,7 @@ function EditorInner() {
   }, [workflowId])
 
   useEffect(() => setMounted(true), [])
+  if (!mounted) return null
 
   
   return (

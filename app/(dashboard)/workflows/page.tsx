@@ -8,7 +8,6 @@ import { Workflow } from '@/types/workflow'
 import { useToast } from '@/components/ui/toaster'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import Link from 'next/link'
-import Silk from '@/components/ui/Silk/Silk'
 import { WorkflowsSkeleton } from '@/components/loading/workflows-skeleton'
 
 function WorkflowsInner() {
@@ -64,7 +63,7 @@ function WorkflowsInner() {
         localStorage.setItem('workflows', JSON.stringify(updated))
         setWorkflows(updated)
         toast({ title: 'Workflow imported', description: workflow.name, variant: 'success' })
-      } catch (e) {
+      } catch {
         toast({ title: 'Failed to import workflow', variant: 'destructive' })
       }
     }
@@ -84,7 +83,7 @@ function WorkflowsInner() {
       localStorage.setItem('workflows', JSON.stringify(updatedWorkflows))
       setWorkflows(updatedWorkflows)
       toast({ title: 'Workflow deleted', description: deleteTarget.name, variant: 'success' })
-    } catch (e) {
+    } catch {
       toast({ title: 'Failed to delete workflow', variant: 'destructive' })
     } finally {
       setDeleteTarget(null)

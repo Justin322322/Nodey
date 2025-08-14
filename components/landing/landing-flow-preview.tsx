@@ -165,7 +165,9 @@ function InnerPreview() {
         const isLargeScreen = window.innerWidth >= 1024
         const padding = isLargeScreen ? 0.1 : 0.15
         fitView({ padding, includeHiddenNodes: true })
-      } catch {}
+      } catch {
+        // no-op
+      }
     }, 250)
     
     // Re-fit on window resize
@@ -175,7 +177,9 @@ function InnerPreview() {
           const isLargeScreen = window.innerWidth >= 1024
           const padding = isLargeScreen ? 0.1 : 0.15
           fitView({ padding, includeHiddenNodes: true })
-        } catch {}
+        } catch {
+          // no-op
+        }
       }, 100)
     }
     

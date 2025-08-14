@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from 'react'
-import { Play, Webhook, Clock, Mail, Globe, Database, Braces, Timer, GitBranch, Shuffle, RotateCcw, Filter, ChevronDown, ChevronRight, Rocket } from 'lucide-react'
+import { Play, Webhook, Clock, Mail, Globe, Database, Braces, Timer, GitBranch, Shuffle, RotateCcw, Filter, ChevronDown, Rocket } from 'lucide-react'
 import { NodeType, TriggerType, ActionType, LogicType, WorkflowEdge, WorkflowNode } from '@/types/workflow'
 import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/components/ui/button'

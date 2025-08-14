@@ -4,7 +4,7 @@ import { memo, useMemo } from 'react'
 import { Handle, Position } from 'reactflow'
 import { WorkflowNodeData, NodeType } from '@/types/workflow'
 import { cn } from '@/lib/utils'
-import { Settings2, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Settings2, Trash2 } from 'lucide-react'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 
 interface BaseNodeProps {
@@ -19,13 +19,13 @@ interface BaseNodeProps {
   }
 }
 
-export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: true, source: true }, selected }: BaseNodeProps) => {
+export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: true, source: true } }: BaseNodeProps) => {
   const { setSelectedNodeId, requestDeleteNode, currentExecution } = useWorkflowStore()
 
   const subtypeLabel = useMemo(() => {
-    if (data.nodeType === NodeType.TRIGGER) return (data as any).triggerType
-    if (data.nodeType === NodeType.ACTION) return (data as any).actionType
-    if (data.nodeType === NodeType.LOGIC) return (data as any).logicType
+    if (data.nodeType === NodeType.TRIGGER) return (data as { triggerType?: string }).triggerType
+    if (data.nodeType === NodeType.ACTION) return (data as { actionType?: string }).actionType
+    if (data.nodeType === NodeType.LOGIC) return (data as { logicType?: string }).logicType
     return ''
   }, [data])
   const subtypeText = String(subtypeLabel || '').toUpperCase()
@@ -107,7 +107,7 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
       </div>
       
       {handles.source && (
-        data.nodeType === NodeType.LOGIC && (data as any).logicType === 'if' ? (
+        data.nodeType === NodeType.LOGIC && (data as { logicType?: string }).logicType === 'if' ? (
           <>
             <Handle
               id="true"

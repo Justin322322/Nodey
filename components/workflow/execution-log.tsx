@@ -65,7 +65,7 @@ export function ExecutionLog() {
             <div className="text-xs text-gray-600">
               {new Date(log.timestamp).toLocaleTimeString()}
             </div>
-            {log.data && (
+            {Boolean(log.data) && (
               <pre className="mt-2 text-xs bg-gray-100 text-gray-800 p-2 rounded overflow-x-auto border border-gray-200">
                 {JSON.stringify(log.data, null, 2)}
               </pre>

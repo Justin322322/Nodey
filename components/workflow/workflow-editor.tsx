@@ -153,7 +153,7 @@ export function WorkflowEditor() {
           onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          deleteKeyCode={['Delete', 'Backspace'] as any}
+          deleteKeyCode={['Delete', 'Backspace']}
           className="workbench-flow"
           fitView
         >

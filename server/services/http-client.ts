@@ -3,11 +3,11 @@ import { HttpNodeConfig } from '@/types/workflow'
 type HttpResponse = {
   status: number
   statusText: string
-  data: any
+  data: unknown
   headers: Record<string, string>
 }
 
-export async function executeHttpRequest(config: HttpNodeConfig): Promise<HttpResponse> {
+export async function executeHttpRequest(config: HttpNodeConfig, signal?: AbortSignal): Promise<HttpResponse> {
   const { method, url, headers = {}, body, authentication } = config
   
   // Build request headers
@@ -37,9 +37,10 @@ export async function executeHttpRequest(config: HttpNodeConfig): Promise<HttpRe
       method,
       headers: requestHeaders,
       body: method !== 'GET' && body ? JSON.stringify(body) : undefined,
+      signal,
     })
     
-    let responseData: any
+    let responseData: unknown
     const contentType = response.headers.get('content-type')
     
     if (contentType?.includes('application/json')) {

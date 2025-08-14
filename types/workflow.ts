@@ -38,8 +38,8 @@ type BaseNodeData = {
   label: string
   description?: string
   nodeType: NodeType
-  config: Record<string, any>
-  outputs?: Record<string, any>
+  config: Record<string, unknown>
+  outputs?: Record<string, unknown>
   error?: string
   // non-interactive, simplified rendering for marketing previews
   isPreview?: boolean
@@ -80,7 +80,7 @@ export interface Workflow {
   description?: string
   nodes: WorkflowNode[]
   edges: WorkflowEdge[]
-  variables?: Record<string, any>
+  variables?: Record<string, unknown>
   createdAt: Date
   updatedAt: Date
   isActive: boolean
@@ -95,7 +95,7 @@ export interface WorkflowExecution {
   completedAt?: Date
   error?: string
   logs: ExecutionLog[]
-  nodeOutputs: Record<string, any>
+  nodeOutputs: Record<string, unknown>
 }
 
 export interface ExecutionLog {
@@ -103,7 +103,7 @@ export interface ExecutionLog {
   nodeId: string
   message: string
   level: 'info' | 'warning' | 'error'
-  data?: any
+  data?: unknown
 }
 
 // Node Configuration Schemas
@@ -111,7 +111,7 @@ export interface HttpNodeConfig {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
   url: string
   headers?: Record<string, string>
-  body?: any
+  body?: unknown
   authentication?: {
     type: 'none' | 'bearer' | 'basic' | 'apiKey'
     value?: string
@@ -135,7 +135,7 @@ export interface IfNodeConfig {
   condition: {
     field: string
     operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan'
-    value: any
+    value: unknown
   }
 }
 

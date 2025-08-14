@@ -81,7 +81,7 @@ export function WorkflowToolbar() {
   const handleRunFromSelected = async () => {
     if (!selectedNodeId) return
     toast({ title: 'Execution started from selected node' })
-    const result = await executeWorkflow({ startNodeId: selectedNodeId } as any)
+    const result = await executeWorkflow({ startNodeId: selectedNodeId })
     if (!result) return
     const status = result.status
     if (status === 'completed') {

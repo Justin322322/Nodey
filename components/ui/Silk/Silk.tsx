@@ -1,6 +1,9 @@
 "use client";
 
-/* eslint-disable react/no-unknown-property */
+/*
+  The react/no-unknown-property rule is not available in our ESLint config.
+  three/fiber uses custom JSX props, which are valid here.
+*/
 import React, { forwardRef, useMemo, useRef, useLayoutEffect } from "react";
 import { Canvas, useFrame, useThree, RootState } from "@react-three/fiber";
 import { Color, Mesh, ShaderMaterial } from "three";

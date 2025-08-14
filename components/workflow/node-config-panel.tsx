@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { MobileSheet } from '@/components/ui/mobile-sheet'
 import { useToast } from '@/components/ui/toaster'
 import { WorkflowNode, NodeType, ActionType, TriggerType, HttpNodeConfig, EmailNodeConfig, ScheduleNodeConfig } from '@/types/workflow'
@@ -92,7 +92,7 @@ export function NodeConfigPanel() {
     })
   }
   
-  const handleConfigChange = (key: string, value: any) => {
+  const handleConfigChange = (key: string, value: unknown) => {
     updateNode(nodeId, {
       config: {
         ...selectedNode.data.config,
@@ -106,7 +106,7 @@ export function NodeConfigPanel() {
     
     // HTTP Request configuration
     if (data.nodeType === NodeType.ACTION && data.actionType === ActionType.HTTP) {
-      const config = data.config as HttpNodeConfig
+      const config = data.config as unknown as HttpNodeConfig
       
       return (
         <>
@@ -195,7 +195,9 @@ export function NodeConfigPanel() {
                 try {
                   const headers = JSON.parse(e.target.value)
                   handleConfigChange('headers', headers)
-                } catch {}
+                } catch {
+                  // no-op
+                }
               }}
               placeholder='{"Content-Type": "application/json"}'
             />
@@ -212,7 +214,9 @@ export function NodeConfigPanel() {
                   try {
                     const body = JSON.parse(e.target.value)
                     handleConfigChange('body', body)
-                  } catch {}
+                  } catch {
+                    // no-op
+                  }
                 }}
                 placeholder='{}'
               />
@@ -224,7 +228,7 @@ export function NodeConfigPanel() {
     
     // Email configuration
     if (data.nodeType === NodeType.ACTION && data.actionType === ActionType.EMAIL) {
-      const config = data.config as EmailNodeConfig
+      const config = data.config as unknown as EmailNodeConfig
       
       return (
         <>
@@ -264,7 +268,7 @@ export function NodeConfigPanel() {
     
     // Schedule configuration
     if (data.nodeType === NodeType.TRIGGER && data.triggerType === TriggerType.SCHEDULE) {
-      const config = data.config as ScheduleNodeConfig
+      const config = data.config as unknown as ScheduleNodeConfig
       
       return (
         <>

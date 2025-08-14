@@ -14,7 +14,9 @@ export async function executeWorkflow(workflow: Workflow, options?: { startNodeI
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(workflow),
     })
-  } catch {}
+  } catch {
+    // no-op
+  }
   const response = await fetch('/api/execute-workflow', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
