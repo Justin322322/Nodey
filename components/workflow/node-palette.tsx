@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toaster'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
+import { getDefaultConfigForNode } from '@/lib/node-definitions'
 
 interface NodeTemplate {
   type: NodeType
@@ -141,13 +142,36 @@ export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
           id: triggerId,
           type: 'trigger',
           position: { x: 150, y: 80 },
-          data: { label: 'Webhook', nodeType: NodeType.TRIGGER, triggerType: TriggerType.WEBHOOK, config: {} },
+          data: { label: 'Webhook', nodeType: NodeType.TRIGGER, triggerType: TriggerType.WEBHOOK, config: getDefaultConfigForNode(NodeType.TRIGGER, TriggerType.WEBHOOK) || {} },
         }
         const action: WorkflowNode = {
           id: actionId,
           type: 'action',
           position: { x: 150, y: 220 },
-          data: { label: 'HTTP Request', nodeType: NodeType.ACTION, actionType: ActionType.HTTP, config: { method: 'GET', url: '' } },
+          data: { label: 'HTTP Request', nodeType: NodeType.ACTION, actionType: ActionType.HTTP, config: getDefaultConfigForNode(NodeType.ACTION, ActionType.HTTP) || { method: 'GET', url: '' } },
+        }
+        const edges: WorkflowEdge[] = [{ id: uuidv4(), source: triggerId, target: actionId }]
+        return { nodes: [trigger, action], edges }
+      }
+    },
+    {
+      key: 'manual-to-http',
+      label: 'Manual → HTTP Request',
+      description: 'Start manually then call an API',
+      build: () => {
+        const triggerId = uuidv4()
+        const actionId = uuidv4()
+        const trigger: WorkflowNode = {
+          id: triggerId,
+          type: 'trigger',
+          position: { x: 150, y: 80 },
+          data: { label: 'Manual Trigger', nodeType: NodeType.TRIGGER, triggerType: TriggerType.MANUAL, config: getDefaultConfigForNode(NodeType.TRIGGER, TriggerType.MANUAL) || {} },
+        }
+        const action: WorkflowNode = {
+          id: actionId,
+          type: 'action',
+          position: { x: 150, y: 220 },
+          data: { label: 'HTTP Request', nodeType: NodeType.ACTION, actionType: ActionType.HTTP, config: getDefaultConfigForNode(NodeType.ACTION, ActionType.HTTP) || { method: 'GET', url: '' } },
         }
         const edges: WorkflowEdge[] = [{ id: uuidv4(), source: triggerId, target: actionId }]
         return { nodes: [trigger, action], edges }
@@ -164,13 +188,13 @@ export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
           id: triggerId,
           type: 'trigger',
           position: { x: 150, y: 80 },
-          data: { label: 'Schedule', nodeType: NodeType.TRIGGER, triggerType: TriggerType.SCHEDULE, config: { cron: '0 0 * * *' } },
+          data: { label: 'Schedule', nodeType: NodeType.TRIGGER, triggerType: TriggerType.SCHEDULE, config: getDefaultConfigForNode(NodeType.TRIGGER, TriggerType.SCHEDULE) || { cron: '0 0 * * *' } },
         }
         const action: WorkflowNode = {
           id: actionId,
           type: 'action',
           position: { x: 150, y: 220 },
-          data: { label: 'Send Email', nodeType: NodeType.ACTION, actionType: ActionType.EMAIL, config: { to: [], subject: '', body: '' } },
+          data: { label: 'Send Email', nodeType: NodeType.ACTION, actionType: ActionType.EMAIL, config: getDefaultConfigForNode(NodeType.ACTION, ActionType.EMAIL) || { to: [], subject: '', body: '' } },
         }
         const edges: WorkflowEdge[] = [{ id: uuidv4(), source: triggerId, target: actionId }]
         return { nodes: [trigger, action], edges }
@@ -201,25 +225,25 @@ export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
         label: nodeTemplate.label,
         nodeType: NodeType.TRIGGER,
         triggerType: nodeTemplate.subType as TriggerType,
-        config: nodeTemplate.subType === TriggerType.SCHEDULE ? { cron: '0 0 * * *' } : {},
+        config: getDefaultConfigForNode(NodeType.TRIGGER, nodeTemplate.subType as TriggerType) || (nodeTemplate.subType === TriggerType.SCHEDULE ? { cron: '0 0 * * *' } : {}),
       }
     } else if (nodeTemplate.type === NodeType.ACTION) {
       data = {
         label: nodeTemplate.label,
         nodeType: NodeType.ACTION,
         actionType: nodeTemplate.subType as ActionType,
-        config: nodeTemplate.subType === ActionType.HTTP
+        config: getDefaultConfigForNode(NodeType.ACTION, nodeTemplate.subType as ActionType) || (nodeTemplate.subType === ActionType.HTTP
           ? { method: 'GET', url: '' }
           : nodeTemplate.subType === ActionType.EMAIL
           ? { to: [], subject: '', body: '' }
-          : {},
+          : {}),
       }
     } else {
       data = {
         label: nodeTemplate.label,
         nodeType: NodeType.LOGIC,
         logicType: nodeTemplate.subType as LogicType,
-        config: {},
+        config: getDefaultConfigForNode(NodeType.LOGIC, nodeTemplate.subType as LogicType) || {},
       }
     }
     const node: WorkflowNode = { ...base, data } as WorkflowNode
@@ -259,7 +283,16 @@ export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
           <div className="overflow-hidden">
             <div className="space-y-2">
               {templates.map((t) => (
-                                  <div key={t.key} className="p-3 border border-gray-200 rounded-md hover:border-purple-500 hover:bg-purple-50 active:bg-purple-100 transition-colors cursor-pointer" onClick={() => insertTemplate(t.key)}>
+                                  <div
+                    key={t.key}
+                    className="p-3 border border-gray-200 rounded-md hover:border-purple-500 hover:bg-purple-50 active:bg-purple-100 transition-colors cursor-pointer"
+                    onClick={() => insertTemplate(t.key)}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('templateKey', t.key)
+                      e.dataTransfer.effectAllowed = 'move'
+                    }}
+                  >
                     <div className="flex items-center gap-2">
                       <div className="text-purple-600"><Rocket className="w-5 h-5" /></div>
                       <div className="flex-1">
