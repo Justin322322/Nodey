@@ -1,8 +1,26 @@
 "use client"
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react"
+import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from "react"
 import { X, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+// Hook to detect screen size
+function useScreenSize() {
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 640) // sm breakpoint
+    }
+    
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+    
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+  
+  return isMobile
+}
 
 type ToastVariant = "default" | "success" | "destructive"
 
@@ -36,6 +54,7 @@ export function useToast(): ToastContextValue {
 
 export function ToasterProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<InternalToast[]>([])
+  const isMobile = useScreenSize()
 
   const remove = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
@@ -74,9 +93,9 @@ export function ToasterProvider({ children }: { children: React.ReactNode }) {
               t.variant === "success" && "border-green-200",
               t.variant === "destructive" && "border-red-200",
               t.variant === "default" && "border-gray-200",
-              t.clickable && "cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation border-2"
+              t.clickable && isMobile && "cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation border-2"
             )}
-            onClick={t.clickable ? t.onClick : undefined}
+            onClick={t.clickable && isMobile ? t.onClick : undefined}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
@@ -84,10 +103,9 @@ export function ToasterProvider({ children }: { children: React.ReactNode }) {
                 {t.description && (
                   <div className="mt-1 text-sm text-gray-700">{t.description}</div>
                 )}
-                {t.clickable && (
+                {t.clickable && isMobile && (
                   <div className="mt-1 flex items-center gap-1 text-xs text-blue-600 font-medium">
                     <span className="sm:hidden">Tap to view logs</span>
-                    <span className="hidden sm:inline">Click to view details</span>
                     <ChevronRight className="w-3 h-3" />
                   </div>
                 )}

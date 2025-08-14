@@ -40,7 +40,8 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
       className={cn(
         "group px-0 py-0 rounded-md min-w-[220px] sm:min-w-[240px] overflow-hidden touch-manipulation",
         isPreview ? "shadow-sm bg-white/90" : "shadow-md bg-white",
-        hasError && !isPreview && "shadow-[0_0_0_3px_rgba(239,68,68,0.25)]"
+        hasError && !isPreview && "shadow-[0_0_0_3px_rgba(239,68,68,0.25)]",
+        hasOutput && !isPreview && !hasError && "shadow-[0_0_0_3px_rgba(16,185,129,0.25)]"
       )}
     >
       {handles.target && (
@@ -83,31 +84,6 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
           </div>
           )}
         </div>
-        {!isPreview && (
-          <div className="absolute -right-2 -top-2 sm:-right-3 sm:-top-3 pointer-events-none z-20">
-            {hasError ? (
-              <>
-                {/* Mobile: Simple dot indicator */}
-                <div className="w-2 h-2 bg-red-500 rounded-full sm:hidden"></div>
-                {/* Desktop: Full badge */}
-                <div className="hidden sm:flex items-center gap-1 text-red-600 text-xs bg-white rounded-full px-2 py-0.5 border border-red-200 shadow-sm">
-                  <AlertCircle className="w-3 h-3" />
-                  <span>Error</span>
-                </div>
-              </>
-            ) : hasOutput ? (
-              <>
-                {/* Mobile: Simple dot indicator */}
-                <div className="w-2 h-2 bg-green-500 rounded-full sm:hidden"></div>
-                {/* Desktop: Full badge */}
-                <div className="hidden sm:flex items-center gap-1 text-green-600 text-xs bg-white rounded-full px-2 py-0.5 border border-green-200 shadow-sm">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>Done</span>
-                </div>
-              </>
-            ) : null}
-          </div>
-        )}
       </div>
 
       {/* Body */}
