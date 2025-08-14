@@ -24,7 +24,7 @@ interface FeatureNodeData {
   title: string
   description: string
   detailedDescription?: string
-  icon: React.ReactNode
+  icon: React.ReactElement
   color: string
   isStart?: boolean
   isEnd?: boolean
@@ -53,9 +53,7 @@ function GlassFeatureNode({ data, selected }: { data: FeatureNodeData; selected?
 
         <div className="flex items-start gap-3 p-4 h-full">
           <div className="flex-shrink-0 mt-0.5">
-            {React.cloneElement(data.icon as React.ReactElement, {
-              className: "w-5 h-5 text-white"
-            })}
+            {data.icon}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -113,7 +111,7 @@ function InnerFeatureFlow() {
         id: 'local-first',
         title: 'Local‑first, private by default',
         description: 'Complete privacy with browser-based storage. Your workflows never leave your machine unless you choose to export them.',
-        icon: <HardDrive className="h-4 w-4" />,
+        icon: <HardDrive className="w-5 h-5 text-white" />,
         color: '#ffffff'
       }
     },
@@ -125,7 +123,7 @@ function InnerFeatureFlow() {
         id: 'visual-editor',
         title: 'Visual workflow editor',
         description: 'Intuitive drag-and-drop interface with instant feedback. Build complex automations without writing code.',
-        icon: <GitBranch className="h-4 w-4" />,
+        icon: <GitBranch className="w-5 h-5 text-white" />,
         color: '#ffffff'
       }
     },
@@ -137,7 +135,7 @@ function InnerFeatureFlow() {
         id: 'universal-connectivity',
         title: 'Universal API connectivity',
         description: 'Connect to any HTTP API or webhook. Transform data with built-in logic nodes and control flow.',
-        icon: <Plug className="h-4 w-4" />,
+        icon: <Plug className="w-5 h-5 text-white" />,
         color: '#ffffff'
       }
     },
@@ -149,7 +147,7 @@ function InnerFeatureFlow() {
         id: 'clear-execution',
         title: 'Real-time execution logs',
         description: 'Step-by-step execution tracking with detailed logs. Debug issues quickly with complete visibility.',
-        icon: <Activity className="h-4 w-4" />,
+        icon: <Activity className="w-5 h-5 text-white" />,
         color: '#ffffff'
       }
     },
@@ -161,7 +159,7 @@ function InnerFeatureFlow() {
         id: 'portable-json',
         title: 'Portable JSON workflows',
         description: 'Export workflows as JSON for version control, sharing, or migration. Never get locked into our platform.',
-        icon: <FileJson className="h-4 w-4" />,
+        icon: <FileJson className="w-5 h-5 text-white" />,
         color: '#ffffff'
       }
     },
@@ -173,7 +171,7 @@ function InnerFeatureFlow() {
         id: 'extensible-nodes',
         title: 'Extensible node system',
         description: 'Add custom node types and integrations. The platform grows with your automation needs.',
-        icon: <Puzzle className="h-4 w-4" />,
+        icon: <Puzzle className="w-5 h-5 text-white" />,
         color: '#ffffff'
       }
     }
