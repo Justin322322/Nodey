@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toaster'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { getDefaultConfigForNode } from '@/lib/node-definitions'
+import { getWorkflowTemplates } from '@/templates'
 
 interface NodeTemplate {
   type: NodeType
@@ -130,86 +131,16 @@ export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
   })
   const toggle = (key: string) => setOpen((s) => ({ ...s, [key]: !s[key] }))
   
-  const templates = useMemo(() => ([
-    {
-      key: 'webhook-to-http',
-      label: 'Webhook → HTTP Request',
-      description: 'Receive a webhook then call an external API',
-      build: () => {
-        const triggerId = uuidv4()
-        const actionId = uuidv4()
-        const trigger: WorkflowNode = {
-          id: triggerId,
-          type: 'trigger',
-          position: { x: 150, y: 80 },
-          data: { label: 'Webhook', nodeType: NodeType.TRIGGER, triggerType: TriggerType.WEBHOOK, config: getDefaultConfigForNode(NodeType.TRIGGER, TriggerType.WEBHOOK) || {} },
-        }
-        const action: WorkflowNode = {
-          id: actionId,
-          type: 'action',
-          position: { x: 150, y: 220 },
-          data: { label: 'HTTP Request', nodeType: NodeType.ACTION, actionType: ActionType.HTTP, config: getDefaultConfigForNode(NodeType.ACTION, ActionType.HTTP) || { method: 'GET', url: '' } },
-        }
-        const edges: WorkflowEdge[] = [{ id: uuidv4(), source: triggerId, target: actionId }]
-        return { nodes: [trigger, action], edges }
-      }
-    },
-    {
-      key: 'manual-to-http',
-      label: 'Manual → HTTP Request',
-      description: 'Start manually then call an API',
-      build: () => {
-        const triggerId = uuidv4()
-        const actionId = uuidv4()
-        const trigger: WorkflowNode = {
-          id: triggerId,
-          type: 'trigger',
-          position: { x: 150, y: 80 },
-          data: { label: 'Manual Trigger', nodeType: NodeType.TRIGGER, triggerType: TriggerType.MANUAL, config: getDefaultConfigForNode(NodeType.TRIGGER, TriggerType.MANUAL) || {} },
-        }
-        const action: WorkflowNode = {
-          id: actionId,
-          type: 'action',
-          position: { x: 150, y: 220 },
-          data: { label: 'HTTP Request', nodeType: NodeType.ACTION, actionType: ActionType.HTTP, config: getDefaultConfigForNode(NodeType.ACTION, ActionType.HTTP) || { method: 'GET', url: '' } },
-        }
-        const edges: WorkflowEdge[] = [{ id: uuidv4(), source: triggerId, target: actionId }]
-        return { nodes: [trigger, action], edges }
-      }
-    },
-    {
-      key: 'schedule-to-email',
-      label: 'Schedule → Send Email',
-      description: 'Run on a schedule and send an email',
-      build: () => {
-        const triggerId = uuidv4()
-        const actionId = uuidv4()
-        const trigger: WorkflowNode = {
-          id: triggerId,
-          type: 'trigger',
-          position: { x: 150, y: 80 },
-          data: { label: 'Schedule', nodeType: NodeType.TRIGGER, triggerType: TriggerType.SCHEDULE, config: getDefaultConfigForNode(NodeType.TRIGGER, TriggerType.SCHEDULE) || { cron: '0 0 * * *' } },
-        }
-        const action: WorkflowNode = {
-          id: actionId,
-          type: 'action',
-          position: { x: 150, y: 220 },
-          data: { label: 'Send Email', nodeType: NodeType.ACTION, actionType: ActionType.EMAIL, config: getDefaultConfigForNode(NodeType.ACTION, ActionType.EMAIL) || { to: [], subject: '', body: '' } },
-        }
-        const edges: WorkflowEdge[] = [{ id: uuidv4(), source: triggerId, target: actionId }]
-        return { nodes: [trigger, action], edges }
-      }
-    },
-  ]), [])
+  const templates = useMemo(() => getWorkflowTemplates(), [])
 
   const insertTemplate = (key: string) => {
     const tpl = templates.find(t => t.key === key)
     if (!tpl) return
-    const built = tpl.build()
+    const built = tpl.buildAt({ x: 150, y: 80 })
     built.nodes.forEach(n => addNode(n))
     addEdges(built.edges)
     toast({ title: 'Template added', description: tpl.label, variant: 'success' })
-    onNodeAdded?.() // Close mobile modal after adding template
+    onNodeAdded?.()
   }
 
   const insertSingleNode = (nodeTemplate: NodeTemplate) => {
