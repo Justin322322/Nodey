@@ -1,5 +1,5 @@
 import { landingButtonVariants } from '@/components/ui/button'
-import { ArrowRight, Cpu, Play, FolderOpen } from 'lucide-react'
+import { ArrowRight, Cpu, Play, FolderOpen, Github } from 'lucide-react'
 import { Suspense, lazy } from 'react'
 import WelcomeLink from '@/components/landing/welcome-link'
 
@@ -91,6 +91,19 @@ function HeroSection() {
 export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-x-hidden">
+      {/* Contribute button - landing page only */}
+      <a
+        href="https://github.com/Justin322322/Nodey"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Contribute on GitHub"
+        className="fixed top-4 right-4 z-50"
+      >
+        <span className={`${landingButtonVariants({ intent: 'secondary', size: 'md' })} inline-flex items-center gap-2`}>
+          <Github className="h-4 w-4" />
+          <span>Contribute</span>
+        </span>
+      </a>
       {/* Hero section */}
       <HeroSection />
 
