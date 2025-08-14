@@ -13,7 +13,7 @@ import {
 // Minimal, n8n-inspired parameter schema for nodes.
 // This powers defaults and validation and can later drive dynamic UIs.
 
-export type ParameterType =
+type ParameterType =
   | 'string'
   | 'number'
   | 'boolean'
@@ -22,7 +22,7 @@ export type ParameterType =
   | 'textarea'
   | 'stringList'
 
-export interface ParameterDefinition {
+interface ParameterDefinition {
   // Label shown to users
   label: string
   // JSON path inside node.data.config (e.g., 'authentication.type')
@@ -37,7 +37,7 @@ export interface ParameterDefinition {
   default?: unknown
 }
 
-export interface NodeDefinition<TSubType extends string = string> {
+interface NodeDefinition<TSubType extends string = string> {
   nodeType: NodeType
   subType: TSubType
   label: string
@@ -284,7 +284,7 @@ const IF_DEFINITION: NodeDefinition<LogicType> = {
   },
 }
 
-export const NODE_DEFINITIONS: NodeDefinition[] = [
+const NODE_DEFINITIONS: NodeDefinition[] = [
   HTTP_DEFINITION,
   EMAIL_DEFINITION,
   MANUAL_DEFINITION,

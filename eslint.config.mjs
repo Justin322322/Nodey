@@ -1,13 +1,11 @@
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import nextPlugin from '@next/eslint-plugin-next'
-import { FlatCompat } from '@eslint/eslintrc'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const compat = new FlatCompat({ baseDirectory: __dirname })
 
 export default [
 	// Ignore build artifacts and this config file
@@ -22,8 +20,8 @@ export default [
 	// Explicitly register Next.js plugin so Next detection can find it in flat config
 	{ plugins: { '@next/next': nextPlugin } },
 
-	// Next.js core web vitals (use shareable config from eslint-config-next for detection)
-	...compat.extends('next/core-web-vitals'),
+	// Next.js core web vitals ruleset via plugin
+	{ rules: { ...nextPlugin.configs['core-web-vitals'].rules } },
 
 	// Project-specific overrides
 	{ rules: { 'react/no-unescaped-entities': 'off' } },

@@ -3,7 +3,7 @@ import manualToHttp from '@/templates/manual-to-http'
 import scheduleToEmail from '@/templates/schedule-to-email'
 import type { WorkflowTemplate } from '@/templates/types'
 
-export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
+const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
   webhookToHttp,
   manualToHttp,
   scheduleToEmail,

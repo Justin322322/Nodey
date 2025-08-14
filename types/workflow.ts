@@ -139,7 +139,4 @@ export interface IfNodeConfig {
   }
 }
 
-export interface LoopNodeConfig {
-  items: string // Path to array in data
-  maxIterations?: number
-}
+// Removed unused LoopNodeConfig

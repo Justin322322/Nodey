@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 
 const Dialog = DialogPrimitive.Root
 
-const DialogTrigger = DialogPrimitive.Trigger
+// Use Radix's Trigger directly where needed; not re-exported here
 
 // Internal primitives used within this module
 const DialogPortal = DialogPrimitive.Portal
@@ -125,7 +125,6 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName
 
 export {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogFooter,
