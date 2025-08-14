@@ -1,6 +1,9 @@
 # Nodey - Low-Code Workflow Automation Builder
-
 A simplified n8n-like application for building workflow automations with a visual node-based editor.
+<img width="1919" height="917" alt="image" src="https://github.com/user-attachments/assets/90fbbb54-87ff-4a30-9a5a-89d47e4c1a9e" />
+<img width="1919" height="916" alt="image" src="https://github.com/user-attachments/assets/5f33f9ad-9868-4da8-93e9-9e5873c11b81" />
+
+
 
 ## Features
 
