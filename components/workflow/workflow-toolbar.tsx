@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { useToast } from '@/components/ui/toaster'
 import { MobileActionSheet } from '@/components/ui/mobile-sheet'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { useState } from 'react'
 
 export function WorkflowToolbar() {
@@ -22,12 +23,20 @@ export function WorkflowToolbar() {
   } = useWorkflowStore()
   const { toast } = useToast()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showNewWorkflowDialog, setShowNewWorkflowDialog] = useState(false)
   
   const handleNew = () => {
-    if (confirm('Create a new workflow? Any unsaved changes will be lost.')) {
-      createNewWorkflow()
-      toast({ title: 'New workflow created', variant: 'success' })
-    }
+    setShowNewWorkflowDialog(true)
+  }
+
+  const handleConfirmNewWorkflow = () => {
+    createNewWorkflow()
+    setShowNewWorkflowDialog(false)
+    toast({ title: 'New workflow created', variant: 'success' })
+  }
+
+  const handleCancelNewWorkflow = () => {
+    setShowNewWorkflowDialog(false)
   }
   
   const handleViewList = () => {
@@ -263,6 +272,33 @@ export function WorkflowToolbar() {
           ]}
         />
       </div>
+
+      {/* New Workflow Confirmation Dialog */}
+      <Dialog open={showNewWorkflowDialog} onOpenChange={setShowNewWorkflowDialog}>
+        <DialogContent className="bg-white border border-gray-200 sm:max-w-md sm:!top-1/3 sm:!left-1/2 sm:!-translate-x-1/2 sm:!translate-y-0">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900">Create New Workflow</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-gray-600">
+            Create a new workflow? Any unsaved changes will be lost.
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCancelNewWorkflow}
+              className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 min-h-[44px] touch-manipulation"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmNewWorkflow}
+              className="bg-blue-600 hover:bg-blue-700 text-white min-h-[44px] touch-manipulation"
+            >
+              Create New Workflow
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

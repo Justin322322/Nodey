@@ -120,9 +120,20 @@
   color: #0f172a;
 }
 
+/* Remove focus rings from all form elements */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="combobox"]:focus-visible {
+  outline: none !important;
+  ring: none !important;
+  box-shadow: none !important;
+  border-color: #9ca3af !important;
+}
+
 .react-flow__node.selected {
-  border-color: hsl(var(--primary));
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+  border: none;
+  box-shadow: none;
 }
 
 .react-flow__handle { width: 12px; height: 12px; border: none; box-shadow: none; }

@@ -40,7 +40,6 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
       className={cn(
         "group px-0 py-0 rounded-md min-w-[220px] sm:min-w-[240px] overflow-hidden touch-manipulation",
         isPreview ? "shadow-sm bg-white/90" : "shadow-md bg-white",
-        selected && !isPreview ? "shadow-[0_0_0_3px_rgba(59,130,246,0.25)]" : "",
         hasError && !isPreview && "shadow-[0_0_0_3px_rgba(239,68,68,0.25)]"
       )}
     >
