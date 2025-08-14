@@ -35,18 +35,18 @@ const buttonVariants = cva(
 
 // Enhanced button variants for prominent CTAs
 export const landingButtonVariants = cva(
-  "relative inline-flex items-center justify-center rounded-lg text-sm font-semibold transition-all select-none",
+  "relative inline-flex items-center justify-center rounded-xl text-sm font-semibold transition-all duration-300 select-none",
   {
     variants: {
       intent: {
         primary:
-          "bg-white text-gray-900 hover:bg-white/90 shadow-[0_10px_25px_rgba(255,255,255,0.2)]",
+          "landing-button-primary text-gray-900 hover:scale-105 active:scale-95",
         secondary:
-          "bg-transparent text-white border border-white/40 hover:bg-white/10 backdrop-blur-sm",
+          "landing-button-secondary text-white hover:scale-105 active:scale-95",
       },
       size: {
-        md: "h-11 px-5",
-        lg: "h-12 px-6 text-base",
+        md: "h-11 px-6 py-3",
+        lg: "h-14 px-8 py-4 text-base",
       },
     },
     defaultVariants: {

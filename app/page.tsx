@@ -1,70 +1,108 @@
 import Link from 'next/link'
 import { Button, landingButtonVariants } from '@/components/ui/button'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Cpu, Play, FolderOpen } from 'lucide-react'
 import { Suspense, lazy } from 'react'
 import WelcomeLink from '@/components/landing/welcome-link'
-
-
-
-
 
 // Lazy load heavy components
 const LandingFlowPreview = lazy(() => import('@/components/landing/landing-flow-preview'))
 const HeroProximityTitle = lazy(() => import('@/components/landing/hero-title'))
 const FeatureWorkflowSection = lazy(() => import('@/components/landing/feature-workflow'))
 
+// Modern badge component
+function FeatureBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/90 backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:border-white/30">
+      <Cpu className="w-4 h-4" />
+      {children}
+    </div>
+  )
+}
+
+// Modern hero section
+function HeroSection() {
+  return (
+    <section className="relative py-20 sm:py-28 lg:py-32 overflow-hidden">
+
+      
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center space-y-8">
+          {/* Feature badge */}
+          <div className="flex justify-center">
+            <FeatureBadge>Local‑first workflow automation</FeatureBadge>
+          </div>
+
+          {/* Main heading */}
+          <div className="space-y-6">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight text-white leading-[0.9]">
+              <Suspense fallback={
+                <div className="h-24 sm:h-28 lg:h-32 text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight text-white">
+                  Build automations at the speed of thought
+                </div>
+              }>
+                  <HeroProximityTitle />
+              </Suspense>
+            </h1>
+          </div>
+
+          {/* Description */}
+          <p className="max-w-4xl mx-auto text-lg sm:text-xl lg:text-2xl text-white/80 leading-relaxed font-light">
+            Nodey is a focused, friction‑free workflow editor. Drag, connect, ship. 
+            Your data lives in your browser, your logic is portable, and your ideas go from sketch to ship in minutes.
+          </p>
+
+          {/* CTA buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <WelcomeLink
+              href="/editor"
+              className={landingButtonVariants({ intent: 'primary', size: 'lg' })}
+            >
+              <Play className="w-5 h-5 mr-2" />
+              Open the Editor
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </WelcomeLink>
+            <WelcomeLink
+              href="/workflows"
+              className={landingButtonVariants({ intent: 'secondary', size: 'lg' })}
+            >
+              <FolderOpen className="w-5 h-5 mr-2" />
+              View Workflows
+            </WelcomeLink>
+          </div>
+        </div>
+
+        {/* Live ReactFlow preview */}
+        <div className="mt-16 sm:mt-20 lg:mt-24 w-full max-w-6xl lg:max-w-7xl mx-auto">
+          <div className="relative rounded-2xl border border-white/20 bg-white/5 p-2 shadow-2xl shadow-black/40 backdrop-blur-sm overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-purple-500/10 rounded-2xl" />
+            <Suspense fallback={
+              <div className="h-80 sm:h-96 lg:h-[28rem] bg-white/5 rounded-xl animate-pulse flex items-center justify-center">
+                <div className="text-white/50 text-lg">Loading workflow preview...</div>
+              </div>
+            }>
+              <LandingFlowPreview />
+            </Suspense>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-x-hidden">
-      <div className="relative z-10 w-full">
-        {/* Hero section */}
-        <section className="relative">
-          <div className="container mx-auto px-4 sm:px-6 py-20 sm:py-28">
-            <div className="relative mx-auto max-w-4xl text-center z-10">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/80 backdrop-blur">
-                <span>Local‑first workflow automation</span>
-              </div>
-              <div className="mt-6 text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-white font-sans">
-                <Suspense fallback={<div className="h-16 sm:h-20">Build automations at the speed of thought</div>}>
-                  <HeroProximityTitle />
-                </Suspense>
-              </div>
-              <p className="mx-auto mt-5 max-w-2xl text-sm sm:text-base leading-6 sm:leading-7 text-white/80 px-4 sm:px-0">
-                Nodey is a focused, friction‑free workflow editor. Drag, connect, ship. Your data lives in your browser, your logic is portable, and your ideas go from sketch to ship in minutes.
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <WelcomeLink
-                  href="/editor"
-                  className={landingButtonVariants({ intent: 'primary', size: 'lg' })}
-                >
-                  Open the Editor
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </WelcomeLink>
-                <WelcomeLink
-                  href="/workflows"
-                  className={landingButtonVariants({ intent: 'secondary', size: 'lg' })}
-                >
-                  View Workflows
-                </WelcomeLink>
-              </div>
-            </div>
-            {/* Live ReactFlow preview */}
-            <div className="mx-auto mt-10 sm:mt-16 lg:mt-20 w-full max-w-6xl lg:max-w-7xl rounded-lg sm:rounded-xl border border-white/10 bg-white/5 p-1.5 sm:p-2 lg:p-3 shadow-[0_10px_40px_rgba(0,0,0,0.2)] backdrop-blur overflow-hidden">
-              <Suspense fallback={<div className="h-64 sm:h-72 lg:h-96 xl:h-[28rem] bg-white/5 rounded-lg animate-pulse" />}>
-                <LandingFlowPreview />
-              </Suspense>
-            </div>
-          </div>
-        </section>
+      {/* Hero section */}
+      <HeroSection />
 
-        {/* Feature workflow section (Interactive workflow demonstration) */}
-        <Suspense fallback={<div className="h-16 sm:h-20" />}>
-          <FeatureWorkflowSection />
-        </Suspense>
-
-
-
-      </div>
+      {/* Feature workflow section */}
+      <Suspense fallback={
+        <div className="py-20 flex items-center justify-center">
+          <div className="text-white/50 text-lg">Loading features...</div>
+        </div>
+      }>
+        <FeatureWorkflowSection />
+      </Suspense>
     </main>
   )
 }

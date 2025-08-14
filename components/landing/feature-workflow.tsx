@@ -18,6 +18,7 @@ import 'reactflow/dist/style.css'
 import { cn } from "@/lib/utils"
 import { HardDrive, GitBranch, Plug, FileJson, Activity, Puzzle, Play, Pause } from "lucide-react"
 import ElectricEdge from "./edges/electric-edge"
+import RotatingText from "@/components/ui/RotatingText/RotatingText"
 
 interface FeatureNodeData {
   id: string
@@ -307,16 +308,45 @@ function InnerFeatureFlow() {
 
 export default function FeatureWorkflowSection() {
   return (
-    <section className="relative py-14 sm:py-20 overflow-x-hidden">
+    <section className="relative py-20 sm:py-24 lg:py-32 overflow-x-hidden">
       <div className="container mx-auto px-4 sm:px-6 w-full">
-        <div className="mx-auto max-w-4xl text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">From idea to AUTOMATION</h2>
-          <p className="mt-2 sm:mt-3 text-white/60">
-            See how Nodey's features work together seamlessly
+        <div className="mx-auto max-w-5xl text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white font-sans leading-tight">
+            <span className="variable-proximity-demo [text-shadow:0_2px_20px_rgba(0,0,0,0.25)]">
+              From idea to{" "}
+              <RotatingText
+                texts={[
+                  "AUTOMATION",
+                  "INTEGRATION", 
+                  "WORKFLOW",
+                  "EXECUTION",
+                  "DEPLOYMENT",
+                  "SOLUTION"
+                ]}
+                mainClassName="px-4 py-2 bg-white/10 backdrop-blur-xl text-white font-bold tracking-tight rounded-lg border border-white/15 hover:bg-white/15 transition-all duration-300 rotating-border-container"
+                staggerFrom="last"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "-120%" }}
+                staggerDuration={0.025}
+                splitLevelClassName="overflow-hidden"
+                elementLevelClassName="inline-block"
+                transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                rotationInterval={3000}
+                animatePresenceMode="wait"
+                splitBy="characters"
+              />
+            </span>
+          </h2>
+          <p className="mt-4 sm:mt-6 text-lg sm:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed">
+            Experience the power of visual workflow automation with Nodey's intuitive features working seamlessly together
           </p>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[90rem] rounded-lg sm:rounded-xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden">
+        <div className="relative mx-auto w-full max-w-[90rem] rounded-2xl border border-white/15 bg-white/8 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/20">
+          {/* Subtle inner glow */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
+          
           <ReactFlowProvider>
             <InnerFeatureFlow />
           </ReactFlowProvider>
