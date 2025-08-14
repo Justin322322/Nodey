@@ -17,7 +17,7 @@ export function ExecutionLog() {
   }, [isLogsDialogOpen])
   useEffect(() => {
     if (mobileOpen !== isLogsDialogOpen) setLogsDialogOpen(mobileOpen)
-  }, [mobileOpen])
+  }, [mobileOpen, isLogsDialogOpen, setLogsDialogOpen])
   
   const getLogIcon = (level: string) => {
     switch (level) {
