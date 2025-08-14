@@ -1,7 +1,7 @@
 "use client"
 
 import { X, Info, Copy } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,19 +38,25 @@ export function NodeConfigPanel() {
     setKvStateByPath({})
   }, [selectedNodeId])
 
+  // Track whether confirm dialog was opened due to a pending delete request from node header
+  const confirmOpenedFromPendingRef = useRef<boolean>(false)
+
   // Open confirm dialog if a delete was requested from node header
   useEffect(() => {
-    // If delete was requested from node header, force-close config panel selection and open only dialog
     if (pendingDeleteNodeId) {
       if (selectedNodeId && selectedNodeId !== pendingDeleteNodeId) {
         setSelectedNodeId(null)
       }
       setConfirmOpen(true)
+      confirmOpenedFromPendingRef.current = true
       return
     }
-    // Reset confirm state when pending delete clears
-    if (!pendingDeleteNodeId && confirmOpen) setConfirmOpen(false)
-  }, [pendingDeleteNodeId, selectedNodeId, setSelectedNodeId, confirmOpen])
+    // If the dialog was opened due to pending delete, close it once pending clears
+    if (!pendingDeleteNodeId && confirmOpenedFromPendingRef.current) {
+      setConfirmOpen(false)
+      confirmOpenedFromPendingRef.current = false
+    }
+  }, [pendingDeleteNodeId, selectedNodeId, setSelectedNodeId])
   
   // If a delete has been requested, show dialog only and no side panel
   if (pendingDeleteNodeId) {
