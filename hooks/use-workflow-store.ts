@@ -129,6 +129,12 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   },
   
   onConnect: (connection) => {
+    // Prevent self-connections (nodes connecting to themselves)
+    if (connection.source === connection.target) {
+      console.warn('Cannot connect a node to itself')
+      return
+    }
+    
     set({
       edges: addEdge(connection, get().edges),
     })

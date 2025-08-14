@@ -441,13 +441,12 @@ export function NodeConfigPanel() {
               >
                 Delete
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
                 onClick={handleClose}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-transparent focus:bg-transparent focus:outline-none"
               >
                 <X className="w-4 h-4" />
-              </Button>
+              </button>
             </div>
           </div>
           <p className="text-sm text-gray-500 mt-1">{selectedNode.data.label}</p>

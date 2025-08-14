@@ -106,15 +106,13 @@
   box-shadow: none;
 }
 
-/* Ensure node action buttons (configure/delete) remain visible */
-.react-flow__node .group:hover .opacity-0 { opacity: 1 !important; }
+/* Removed unused rule targeting opacity toggle inside ReactFlow nodes */
 
 /* Ensure inputs/selects in the editor are bright on white regardless of theme */
 .workbench-flow ~ .react-flow__panel,
 .workbench-flow input,
 .workbench-flow textarea,
 .workbench-flow select,
-.workbench-flow .radix-select-content,
 .workbench-flow [role="combobox"] {
   background-color: #ffffff;
   color: #0f172a;
@@ -126,7 +124,6 @@ textarea:focus-visible,
 select:focus-visible,
 [role="combobox"]:focus-visible {
   outline: none !important;
-  ring: none !important;
   box-shadow: none !important;
   border-color: #9ca3af !important;
 }
