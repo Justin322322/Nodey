@@ -84,7 +84,7 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
           )}
         </div>
         {!isPreview && (
-          <div className="absolute right-1 top-1 sm:right-2 sm:top-1 pointer-events-none z-20">
+          <div className="absolute -right-2 -top-2 sm:-right-3 sm:-top-3 pointer-events-none z-20">
             {hasError ? (
               <>
                 {/* Mobile: Simple dot indicator */}
