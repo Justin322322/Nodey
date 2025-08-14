@@ -20,7 +20,7 @@ interface BaseNodeProps {
 }
 
 export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: true, source: true } }: BaseNodeProps) => {
-  const { setSelectedNodeId, requestDeleteNode, currentExecution } = useWorkflowStore()
+  const { setSelectedNodeId, setConfigPanelOpen, requestDeleteNode, clearPendingDelete, currentExecution } = useWorkflowStore()
 
   const subtypeLabel = useMemo(() => {
     if (data.nodeType === NodeType.TRIGGER) return (data as { triggerType?: string }).triggerType
@@ -69,7 +69,7 @@ export const BaseNode = memo(({ nodeId, data, icon, color, handles = { target: t
               className="rounded p-1.5 sm:p-2 hover:bg-gray-100 hover:text-gray-700 touch-manipulation"
               onMouseDown={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.stopPropagation(); setSelectedNodeId(nodeId) }}
+              onClick={(e) => { e.stopPropagation(); clearPendingDelete(); setSelectedNodeId(nodeId); setConfigPanelOpen(true) }}
               title="Configure"
             >
               <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
