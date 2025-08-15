@@ -1,18 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import { EmailNodeConfig, EmailExecutionResult } from './EmailNode.types'
-
-export interface NodeExecutionContext {
-  nodeId: string
-  config: Record<string, unknown>
-  previousOutput?: unknown
-  signal?: AbortSignal
-}
-
-export interface NodeExecutionResult {
-  success: boolean
-  output?: unknown
-  error?: string
-}
+import { NodeExecutionContext, NodeExecutionResult } from '../types'
 
 export async function executeEmailNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
   try {

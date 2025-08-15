@@ -1,17 +1,5 @@
 import { HttpNodeConfig, HttpExecutionResult } from './HttpNode.types'
-
-export interface NodeExecutionContext {
-  nodeId: string
-  config: Record<string, unknown>
-  previousOutput?: unknown
-  signal?: AbortSignal
-}
-
-export interface NodeExecutionResult {
-  success: boolean
-  output?: unknown
-  error?: string
-}
+import { NodeExecutionContext, NodeExecutionResult } from '../types'
 
 export async function executeHttpNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
   const startTime = Date.now()

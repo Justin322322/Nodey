@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { executeHttpNode, NodeExecutionContext } from "./HttpNode.service";
+import { executeHttpNode } from "./HttpNode.service";
+import { NodeExecutionContext } from "../types";
 import { HTTP_NODE_DEFINITION } from "./HttpNode.schema";
 import { HttpNodeConfig } from "./HttpNode.types";
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { executeEmailNode, NodeExecutionContext } from './EmailNode.service'
+import { executeEmailNode } from './EmailNode.service'
+import { NodeExecutionContext } from '../types'
 import { EMAIL_NODE_DEFINITION } from './EmailNode.schema'
 import { EmailNodeConfig } from './EmailNode.types'
 

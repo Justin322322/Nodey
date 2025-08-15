@@ -1,22 +1,12 @@
 // Central node registry and exports
 import { NodeType } from '@/types/workflow'
+import type { NodeExecutionContext, NodeExecutionResult } from './types'
 
 // Import all nodes
 export * from './EmailNode'
 
 // Base interfaces for all nodes
-export interface NodeExecutionContext {
-  nodeId: string
-  config: Record<string, unknown>
-  previousOutput?: unknown
-  signal?: AbortSignal
-}
-
-export interface NodeExecutionResult {
-  success: boolean
-  output?: unknown
-  error?: string
-}
+export type { NodeExecutionContext, NodeExecutionResult } from './types'
 
 export interface ParameterDefinition {
   name: string
