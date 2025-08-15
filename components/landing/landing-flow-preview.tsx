@@ -7,7 +7,7 @@ import 'reactflow/dist/style.css'
 import { TriggerNode, ActionNode, LogicNode } from '@/components/workflow/nodes'
 import FlowEdge from '@/components/workflow/edges/flow-edge'
 import { NodeType, TriggerType, ActionType, LogicType, WorkflowNode, WorkflowEdge } from '@/types/workflow'
-import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode'
+import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode/EmailNode.schema'
 
 function MeteorsOverlay({ count = 10 }: { count?: number }) {
   // Precompute positions and timings for deterministic animation

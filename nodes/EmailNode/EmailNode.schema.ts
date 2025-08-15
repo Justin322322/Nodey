@@ -12,15 +12,9 @@ export interface ParameterDefinition {
   description?: string
 }
 
-export interface NodeDefinition {
-  nodeType: NodeType
-  subType: ActionType
-  label: string
-  description: string
-  parameters: ParameterDefinition[]
-  validate: (config: Record<string, unknown>) => string[]
-  getDefaults: () => EmailNodeConfig
-}
+import { NodeDefinition as BaseNodeDefinition } from '../index'
+
+type EmailNodeDefinition = BaseNodeDefinition<EmailNodeConfig>
 
 export const EMAIL_NODE_DEFINITION: NodeDefinition = {
   nodeType: NodeType.ACTION,

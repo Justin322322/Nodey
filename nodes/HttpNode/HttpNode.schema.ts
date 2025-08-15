@@ -111,7 +111,11 @@ export const HTTP_NODE_DEFINITION: NodeDefinition = {
       errors.push('URL is required')
     } else {
       try {
-        new URL(typed.url)
+        const url = new URL(typed.url)
+        // Ensure HTTPS in production
+        if (process.env.NODE_ENV === 'production' && url.protocol !== 'https:') {
+          errors.push('HTTPS is required for production requests')
+        }
       } catch {
         errors.push('Invalid URL format')
       }
@@ -143,7 +147,11 @@ export const HTTP_NODE_DEFINITION: NodeDefinition = {
     // Validate body JSON if provided
     if (typed.body && typeof typed.body === 'string') {
       try {
-        JSON.parse(typed.body)
+        const parsed = JSON.parse(typed.body)
+        // Check size limit (e.g., 1MB)
+        if (JSON.stringify(parsed).length > 1024 * 1024) {
+          errors.push('Request body exceeds 1MB limit')
+        }
       } catch {
         errors.push('Body must be valid JSON')
       }

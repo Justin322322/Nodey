@@ -29,15 +29,17 @@ export interface ParameterDefinition {
   description?: string
 }
 
+import type { ReactNode } from 'react'
+
 export interface NodeDefinition<TConfig = Record<string, unknown>> {
   // Metadata
   nodeType: NodeType
-  subType: string
+  subType: string | number  // Allow both string and enum values
   label: string
   description: string
   
   // UI Configuration
-  icon?: React.ReactNode
+  icon?: ReactNode
   color?: string
   
   // Parameter Schema
@@ -59,6 +61,9 @@ export const NODE_REGISTRY: Map<string, NodeDefinition> = new Map()
 // Utility functions for node registry management
 export function registerNode(definition: NodeDefinition): void {
   const key = `${definition.nodeType}-${definition.subType}`
+  if (NODE_REGISTRY.has(key)) {
+    console.warn(`Warning: Overwriting existing node definition for key "${key}"`)
+  }
   NODE_REGISTRY.set(key, definition)
 }
 
@@ -96,9 +101,11 @@ export function getRegistryKey(nodeType: NodeType, subType: string): string {
 
 // Auto-register nodes
 import { EMAIL_NODE_DEFINITION } from './EmailNode'
+import { HTTP_NODE_DEFINITION } from './HttpNode'
 
 // Register all nodes on module load
 registerNode(EMAIL_NODE_DEFINITION)
+registerNode(HTTP_NODE_DEFINITION)
 
 // Export types for external use
 export type { NodeType } from '@/types/workflow'
