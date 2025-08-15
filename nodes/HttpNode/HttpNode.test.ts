@@ -411,6 +411,25 @@ describe('HttpNode', () => {
         expect(paramNames).toContain('headers')
         expect(paramNames).toContain('body')
       })
+
+      it('should have correct showIf conditions for conditional parameters', () => {
+        const authValueParam = HTTP_NODE_DEFINITION.parameters.find(p => p.name === 'authentication.value')
+        const bodyParam = HTTP_NODE_DEFINITION.parameters.find(p => p.name === 'body')
+        
+        // Auth value should show for bearer, basic, or apiKey (OR logic)
+        expect(authValueParam?.showIf).toEqual([
+          { path: 'authentication.type', equals: 'bearer' },
+          { path: 'authentication.type', equals: 'basic' },
+          { path: 'authentication.type', equals: 'apiKey' }
+        ])
+        
+        // Body should show for POST, PUT, or PATCH (OR logic)
+        expect(bodyParam?.showIf).toEqual([
+          { path: 'method', equals: 'POST' },
+          { path: 'method', equals: 'PUT' },
+          { path: 'method', equals: 'PATCH' }
+        ])
+      })
     })
   })
 })
