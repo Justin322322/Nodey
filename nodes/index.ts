@@ -95,7 +95,7 @@ export function clearRegistry(): void {
 }
 
 // Helper function to generate registry key
-export function getRegistryKey(nodeType: NodeType, subType: string): string {
+export function getRegistryKey(nodeType: NodeType, subType: string | number): string {
   return `${nodeType}-${subType}`
 }
 
