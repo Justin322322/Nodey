@@ -334,7 +334,11 @@ export class WorkflowExecutor {
     if (previousOutput && typeof previousOutput === 'object') {
       const obj = previousOutput as Record<string, unknown>
       if (Array.isArray(obj.items)) return obj.items
-      if (Array.isArray(obj.data)) return obj.data
+      if (Array.isArray(obj.data)) return obj.data as unknown[]
+      if (obj.data && typeof obj.data === 'object') {
+        const dataObj = obj.data as Record<string, unknown>
+        if (Array.isArray(dataObj.items)) return dataObj.items
+      }
     }
     return []
   }
