@@ -85,7 +85,7 @@ export function isNodeRegistered(nodeType: NodeType, subType: string): boolean {
   return NODE_REGISTRY.has(key)
 }
 
-export function unregisterNode(nodeType: NodeType, subType: string): boolean {
+export function unregisterNode(nodeType: NodeType, subType: string | number): boolean {
   const key = `${nodeType}-${subType}`
   return NODE_REGISTRY.delete(key)
 }
