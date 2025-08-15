@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toaster'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { getDefaultConfigForNode } from '@/lib/node-definitions'
+import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode'
 import { getWorkflowTemplates } from '@/templates'
 
 interface NodeTemplate {
@@ -163,11 +164,11 @@ export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
         label: nodeTemplate.label,
         nodeType: NodeType.ACTION,
         actionType: nodeTemplate.subType as ActionType,
-        config: getDefaultConfigForNode(NodeType.ACTION, nodeTemplate.subType as ActionType) || (nodeTemplate.subType === ActionType.HTTP
-          ? { method: 'GET', url: '' }
-          : nodeTemplate.subType === ActionType.EMAIL
-          ? { to: [], subject: '', body: '' }
-          : {}),
+        config: nodeTemplate.subType === ActionType.EMAIL 
+          ? EMAIL_NODE_DEFINITION.getDefaults()
+          : getDefaultConfigForNode(NodeType.ACTION, nodeTemplate.subType as ActionType) || (nodeTemplate.subType === ActionType.HTTP
+            ? { method: 'GET', url: '' }
+            : {}),
       }
     } else {
       data = {

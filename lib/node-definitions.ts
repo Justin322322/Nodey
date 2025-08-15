@@ -5,7 +5,6 @@ import {
   LogicType,
   WorkflowNode,
   HttpNodeConfig,
-  EmailNodeConfig,
   ScheduleNodeConfig,
 } from '@/types/workflow'
 
@@ -193,25 +192,7 @@ const HTTP_DEFINITION: NodeDefinition<ActionType> = {
   },
 }
 
-// Email Action
-const EMAIL_DEFINITION: NodeDefinition<ActionType> = {
-  nodeType: NodeType.ACTION,
-  subType: ActionType.EMAIL,
-  label: 'Send Email',
-  description: 'Send an email message',
-  parameters: [
-    { label: 'To', path: 'to', type: 'stringList', required: true, default: [] },
-    { label: 'Subject', path: 'subject', type: 'string', required: true, default: '' },
-    { label: 'Body', path: 'body', type: 'textarea', required: true, default: '' },
-  ],
-  validate: (config) => {
-    const errors: string[] = []
-    const typed = config as unknown as EmailNodeConfig
-    if (!Array.isArray(typed.to) || typed.to.length === 0) errors.push('At least one recipient (To) is required')
-    if (!typed.subject || typed.subject.trim().length === 0) errors.push('Subject is required')
-    return errors
-  },
-}
+
 
 // Schedule Trigger
 const SCHEDULE_DEFINITION: NodeDefinition<TriggerType> = {
@@ -300,7 +281,6 @@ const FILTER_DEFINITION: NodeDefinition<LogicType> = {
 
 const NODE_DEFINITIONS: NodeDefinition[] = [
   HTTP_DEFINITION,
-  EMAIL_DEFINITION,
   MANUAL_DEFINITION,
   WEBHOOK_DEFINITION,
   SCHEDULE_DEFINITION,

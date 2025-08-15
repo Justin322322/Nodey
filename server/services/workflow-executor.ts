@@ -8,7 +8,6 @@ import {
   TriggerType,
   LogicType,
   HttpNodeConfig,
-  EmailNodeConfig,
   ScheduleNodeConfig,
   IfNodeConfig,
   LogicNodeData
@@ -16,6 +15,7 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { executeHttpRequest } from '@/server/services/http-client'
 import { validateNodeBeforeExecute } from '@/lib/node-definitions'
+import { executeEmailNode } from '@/nodes/EmailNode'
 
 export class WorkflowExecutor {
   private workflow: Workflow
@@ -223,8 +223,18 @@ export class WorkflowExecutor {
       case ActionType.HTTP:
         return await this.executeHttpRequest(config as HttpNodeConfig, signal)
         
-      case ActionType.EMAIL:
-        return await this.sendEmail(config as EmailNodeConfig)
+      case ActionType.EMAIL: {
+        const result = await executeEmailNode({
+          nodeId: node.id,
+          config: config as Record<string, unknown>,
+          previousOutput: this.getPreviousNodeOutput(node),
+          signal
+        })
+        if (!result.success) {
+          throw new Error(result.error || 'Email execution failed')
+        }
+        return result.output
+      }
         
       case ActionType.DATABASE:
         // Mock database query
@@ -288,16 +298,7 @@ export class WorkflowExecutor {
     }
   }
   
-  private async sendEmail(config: EmailNodeConfig): Promise<unknown> {
-    // Mock email sending
-    // In a real implementation, this would use an email service
-    return {
-      sent: true,
-      to: config.to,
-      subject: config.subject,
-      messageId: uuidv4()
-    }
-  }
+
   
   private evaluateCondition(condition: { field: string; operator: string; value: unknown }, data: unknown): boolean {
     // Simple condition evaluation
