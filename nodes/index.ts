@@ -29,15 +29,17 @@ export interface ParameterDefinition {
   description?: string
 }
 
+import type { ReactNode } from 'react'
+
 export interface NodeDefinition<TConfig = Record<string, unknown>> {
   // Metadata
   nodeType: NodeType
-  subType: string
+  subType: string | number  // Allow both string and enum values
   label: string
   description: string
   
   // UI Configuration
-  icon?: React.ReactNode
+  icon?: ReactNode
   color?: string
   
   // Parameter Schema
