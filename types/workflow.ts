@@ -139,4 +139,13 @@ export interface IfNodeConfig {
   }
 }
 
+// Filter node uses the same simple condition structure as IF
+export interface FilterNodeConfig {
+  condition: {
+    field: string
+    operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan'
+    value: unknown
+  }
+}
+
 // Removed unused LoopNodeConfig

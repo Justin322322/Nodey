@@ -343,7 +343,7 @@ export default function FeatureWorkflowSection() {
             </span>
           </h2>
           <p className="mt-4 sm:mt-6 text-lg sm:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed">
-            Experience the power of visual workflow automation with Nodey's intuitive features working seamlessly together
+            {"Experience the power of visual workflow automation with Nodey's intuitive features working seamlessly together"}
           </p>
         </div>
 

@@ -237,7 +237,7 @@ function WorkflowsInner() {
           </DialogHeader>
           <div className="text-sm text-gray-600">
             {deleteTarget ? (
-              <>This will permanently delete "{deleteTarget.name}" and cannot be undone.</>
+              <>{`This will permanently delete "${deleteTarget.name}" and cannot be undone.`}</>
             ) : null}
           </div>
           <DialogFooter>
