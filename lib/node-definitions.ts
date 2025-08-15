@@ -7,7 +7,6 @@ import {
   HttpNodeConfig,
   EmailNodeConfig,
   ScheduleNodeConfig,
-  IfNodeConfig,
 } from '@/types/workflow'
 
 // Minimal, n8n-inspired parameter schema for nodes.
@@ -80,6 +79,35 @@ function buildDefaultsFromParameters(params?: ParameterDefinition[]): Record<str
     }
   }
   return cfg
+}
+
+// Shared conditional parameter set for logic nodes that compare a field to a value
+const CONDITION_PARAMETERS: ParameterDefinition[] = [
+  { label: 'Field', path: 'condition.field', type: 'string', required: true, default: '' },
+  {
+    label: 'Operator',
+    path: 'condition.operator',
+    type: 'select',
+    required: true,
+    default: 'equals',
+    options: [
+      { label: 'Equals', value: 'equals' },
+      { label: 'Not Equals', value: 'notEquals' },
+      { label: 'Contains', value: 'contains' },
+      { label: 'Greater Than', value: 'greaterThan' },
+      { label: 'Less Than', value: 'lessThan' },
+    ],
+  },
+  { label: 'Value', path: 'condition.value', type: 'string', required: true, default: '' },
+]
+
+function validateConditionConfig(config: Record<string, unknown>): string[] {
+  const errors: string[] = []
+  const typed = config as { condition?: { field?: string; operator?: string; value?: unknown } }
+  if (!typed.condition?.field) errors.push('Condition field is required')
+  if (!typed.condition?.operator) errors.push('Operator is required')
+  if (typeof typed.condition?.value === 'undefined') errors.push('Comparison value is required')
+  return errors
 }
 
 // HTTP Action
@@ -256,32 +284,18 @@ const IF_DEFINITION: NodeDefinition<LogicType> = {
   subType: LogicType.IF,
   label: 'If/Else',
   description: 'Conditional branching based on previous data',
-  parameters: [
-    { label: 'Field', path: 'condition.field', type: 'string', required: true, default: '' },
-    {
-      label: 'Operator',
-      path: 'condition.operator',
-      type: 'select',
-      required: true,
-      default: 'equals',
-      options: [
-        { label: 'Equals', value: 'equals' },
-        { label: 'Not Equals', value: 'notEquals' },
-        { label: 'Contains', value: 'contains' },
-        { label: 'Greater Than', value: 'greaterThan' },
-        { label: 'Less Than', value: 'lessThan' },
-      ],
-    },
-    { label: 'Value', path: 'condition.value', type: 'string', required: true, default: '' },
-  ],
-  validate: (config) => {
-    const errors: string[] = []
-    const typed = config as unknown as IfNodeConfig
-    if (!typed.condition?.field) errors.push('Condition field is required')
-    if (!typed.condition?.operator) errors.push('Operator is required')
-    if (typeof typed.condition?.value === 'undefined') errors.push('Comparison value is required')
-    return errors
-  },
+  parameters: CONDITION_PARAMETERS,
+  validate: validateConditionConfig,
+}
+
+// FILTER Logic
+const FILTER_DEFINITION: NodeDefinition<LogicType> = {
+  nodeType: NodeType.LOGIC,
+  subType: LogicType.FILTER,
+  label: 'Filter',
+  description: 'Filter array items using a simple condition',
+  parameters: CONDITION_PARAMETERS,
+  validate: validateConditionConfig,
 }
 
 const NODE_DEFINITIONS: NodeDefinition[] = [
@@ -291,6 +305,7 @@ const NODE_DEFINITIONS: NodeDefinition[] = [
   WEBHOOK_DEFINITION,
   SCHEDULE_DEFINITION,
   IF_DEFINITION,
+  FILTER_DEFINITION,
 ]
 
 export function findNodeDefinition(node: WorkflowNode): NodeDefinition | undefined {

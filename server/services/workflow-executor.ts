@@ -265,9 +265,14 @@ export class WorkflowExecutor {
         return { iterations: 0, items: [] }
       }
         
-      case LogicType.FILTER:
-        // Mock filter logic
-        return { filtered: [], count: 0 }
+      case LogicType.FILTER: {
+        // Filter previous output (expects array or object with items array)
+        const items: unknown[] = this.extractArrayFromPrevious(previousOutput)
+        const { condition } = (config as { condition?: { field: string; operator: string; value: unknown } }) || {}
+        if (!condition) return { filtered: [], count: 0 }
+        const filtered = items.filter((item) => this.evaluateCondition(condition, item))
+        return { filtered, count: filtered.length }
+      }
         
       default:
         throw new Error(`Unknown logic type: ${logicType}`)
@@ -322,6 +327,20 @@ export class WorkflowExecutor {
       }
       return undefined
     }, obj)
+  }
+  
+  private extractArrayFromPrevious(previousOutput: unknown): unknown[] {
+    if (Array.isArray(previousOutput)) return previousOutput
+    if (previousOutput && typeof previousOutput === 'object') {
+      const obj = previousOutput as Record<string, unknown>
+      if (Array.isArray(obj.items)) return obj.items
+      if (Array.isArray(obj.data)) return obj.data as unknown[]
+      if (obj.data && typeof obj.data === 'object') {
+        const dataObj = obj.data as Record<string, unknown>
+        if (Array.isArray(dataObj.items)) return dataObj.items
+      }
+    }
+    return []
   }
   
   private getPreviousNodeOutput(node: WorkflowNode): unknown {

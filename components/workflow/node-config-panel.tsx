@@ -554,7 +554,7 @@ export function NodeConfigPanel() {
               className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
             />
             <p className="text-xs text-gray-500">
-              Examples: "0 0 * * *" (daily at midnight), "*/5 * * * *" (every 5 minutes)
+              {"Examples: \"0 0 * * *\" (daily at midnight), \"*/5 * * * *\" (every 5 minutes)"}
             </p>
           </div>
           
@@ -590,7 +590,7 @@ export function NodeConfigPanel() {
           <pre className="text-xs bg-gray-100 text-gray-800 p-2 rounded border border-gray-200 overflow-x-auto">
             {`${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/${typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('workflowId') || '<workflowId>') : '<workflowId>'}`}
           </pre>
-          <p className="text-xs text-gray-500">Use the "GET" button to preview received webhooks in the registry endpoint.</p>
+          <p className="text-xs text-gray-500">{"Use the \"GET\" button to preview received webhooks in the registry endpoint."}</p>
         </div>
       )
     }
@@ -694,7 +694,7 @@ export function NodeConfigPanel() {
           </div>
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          Use labels "true" and "false" on connections from IF nodes to control branching.
+          {"Use labels \"true\" and \"false\" on connections from IF nodes to control branching."}
         </p>
       </div>
 
