@@ -41,9 +41,16 @@ const dateArg = getArgValue('date')
 const today = dateArg ? dateArg : formatDate(new Date())
 
 // 1) Replace first occurrence of Unreleased
-const unreleasedHeadingRegex = /^### \[Unreleased\]/m
-if (!unreleasedHeadingRegex.test(raw)) {
+const unreleasedHeadingRegex = /^### \[Unreleased\][^\S\r\n]*$/m
+// Find Unreleased block and ensure it has content
+const unreleasedBlockRegex = /^### \[Unreleased\][^\S\r\n]*\r?\n([\s\S]*?)(?=^###\s|\Z)/m
+const blockMatch = unreleasedBlockRegex.exec(raw)
+if (!blockMatch) {
   console.log('No "### [Unreleased]" section found. No changes made.')
+  process.exit(0)
+}
+if (blockMatch[1].trim().length === 0) {
+  console.log('"Unreleased" section is empty. Nothing to release.')
   process.exit(0)
 }
 
