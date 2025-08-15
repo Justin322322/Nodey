@@ -429,6 +429,20 @@ describe('HttpNode', () => {
           { path: 'method', equals: 'PUT' },
           { path: 'method', equals: 'PATCH' }
         ])
+        
+        // Note: showIfLogic property is used by the UI but not tested here
+        // The UI logic in node-config-panel.tsx handles OR logic for these parameters
+      })
+
+      it('should have parameters without showIf conditions visible by default', () => {
+        const methodParam = HTTP_NODE_DEFINITION.parameters.find(p => p.name === 'method')
+        const urlParam = HTTP_NODE_DEFINITION.parameters.find(p => p.name === 'url')
+        const authTypeParam = HTTP_NODE_DEFINITION.parameters.find(p => p.name === 'authentication.type')
+        
+        // These parameters should not have showIf conditions (always visible)
+        expect(methodParam?.showIf).toBeUndefined()
+        expect(urlParam?.showIf).toBeUndefined()
+        expect(authTypeParam?.showIf).toBeUndefined()
       })
     })
   })

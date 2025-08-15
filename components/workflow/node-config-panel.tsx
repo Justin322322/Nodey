@@ -167,7 +167,11 @@ export function NodeConfigPanel() {
       return (
         <>
           {def.parameters.map((param) => {
-            const shouldShow = (param.showIf || []).some((cond) => getValueAtPath(data.config as Record<string, unknown>, cond.path) === cond.equals)
+            const shouldShow = !param.showIf || param.showIf.length === 0 
+              ? true 
+              : param.showIfLogic === 'or'
+                ? param.showIf.some((cond) => getValueAtPath(data.config as Record<string, unknown>, cond.path) === cond.equals)
+                : param.showIf.every((cond) => getValueAtPath(data.config as Record<string, unknown>, cond.path) === cond.equals)
             if (!shouldShow) return null
             const value = getValueAtPath(data.config as Record<string, unknown>, param.path)
             switch (param.type) {

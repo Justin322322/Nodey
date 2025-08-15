@@ -32,6 +32,7 @@ interface ParameterDefinition {
   options?: Array<{ label: string; value: string }>
   // Simple conditional display logic based on other config values
   showIf?: Array<{ path: string; equals: string | number | boolean }>
+  showIfLogic?: 'and' | 'or' // Default is 'and'
   // Default value for this parameter
   default?: unknown
 }
