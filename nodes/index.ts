@@ -80,7 +80,7 @@ export function getNodesByType(nodeType: NodeType): NodeDefinition[] {
   return Array.from(NODE_REGISTRY.values()).filter(def => def.nodeType === nodeType)
 }
 
-export function isNodeRegistered(nodeType: NodeType, subType: string): boolean {
+export function isNodeRegistered(nodeType: NodeType, subType: string | number): boolean {
   const key = `${nodeType}-${subType}`
   return NODE_REGISTRY.has(key)
 }
