@@ -61,6 +61,9 @@ export const NODE_REGISTRY: Map<string, NodeDefinition> = new Map()
 // Utility functions for node registry management
 export function registerNode(definition: NodeDefinition): void {
   const key = `${definition.nodeType}-${definition.subType}`
+  if (NODE_REGISTRY.has(key)) {
+    console.warn(`Warning: Overwriting existing node definition for key "${key}"`)
+  }
   NODE_REGISTRY.set(key, definition)
 }
 
