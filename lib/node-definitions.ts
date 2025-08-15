@@ -4,9 +4,10 @@ import {
   ActionType,
   LogicType,
   WorkflowNode,
-  HttpNodeConfig,
   ScheduleNodeConfig,
 } from '@/types/workflow'
+import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode/EmailNode.schema'
+import { HTTP_NODE_DEFINITION } from '@/nodes/HttpNode/HttpNode.schema'
 
 // Minimal, n8n-inspired parameter schema for nodes.
 // This powers defaults and validation and can later drive dynamic UIs.
@@ -109,90 +110,6 @@ function validateConditionConfig(config: Record<string, unknown>): string[] {
   return errors
 }
 
-// HTTP Action
-const HTTP_DEFINITION: NodeDefinition<ActionType> = {
-  nodeType: NodeType.ACTION,
-  subType: ActionType.HTTP,
-  label: 'HTTP Request',
-  description: 'Make an HTTP request to an external API',
-  parameters: [
-    {
-      label: 'Method',
-      path: 'method',
-      type: 'select',
-      required: true,
-      default: 'GET',
-      options: [
-        { label: 'GET', value: 'GET' },
-        { label: 'POST', value: 'POST' },
-        { label: 'PUT', value: 'PUT' },
-        { label: 'DELETE', value: 'DELETE' },
-        { label: 'PATCH', value: 'PATCH' },
-      ],
-    },
-    {
-      label: 'URL',
-      path: 'url',
-      type: 'string',
-      required: true,
-      default: '',
-      description: 'Full URL to request',
-    },
-    {
-      label: 'Authentication',
-      path: 'authentication.type',
-      type: 'select',
-      required: false,
-      default: 'none',
-      options: [
-        { label: 'None', value: 'none' },
-        { label: 'Bearer Token', value: 'bearer' },
-        { label: 'Basic (Base64 user:pass)', value: 'basic' },
-        { label: 'API Key (Header)', value: 'apiKey' },
-      ],
-    },
-    {
-      label: 'Auth Value',
-      path: 'authentication.value',
-      type: 'string',
-      required: false,
-      showIf: [{ path: 'authentication.type', equals: 'bearer' }],
-    },
-    {
-      label: 'Headers (JSON)',
-      path: 'headers',
-      type: 'json',
-      required: false,
-      // no default to avoid pre-populating the friendly editor
-    },
-    {
-      label: 'Body (JSON)',
-      path: 'body',
-      type: 'json',
-      required: false,
-      showIf: [{ path: 'method', equals: 'POST' }],
-      // no default to avoid pre-populating the friendly editor
-    },
-  ],
-  validate: (config) => {
-    const errors: string[] = []
-    const typed = config as unknown as HttpNodeConfig
-    if (!typed.url || typeof typed.url !== 'string' || typed.url.trim().length === 0) {
-      errors.push('URL is required')
-    }
-    const method = (typed.method as string) || 'GET'
-    const valid = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
-    if (!valid.includes(method)) {
-      errors.push(`Invalid HTTP method: ${method}`)
-    }
-    if (typed.authentication && typed.authentication.type !== 'none' && !typed.authentication.value) {
-      errors.push('Authentication value is required for selected auth type')
-    }
-    return errors
-  },
-}
-
-
 
 // Schedule Trigger
 const SCHEDULE_DEFINITION: NodeDefinition<TriggerType> = {
@@ -280,7 +197,6 @@ const FILTER_DEFINITION: NodeDefinition<LogicType> = {
 }
 
 const NODE_DEFINITIONS: NodeDefinition[] = [
-  HTTP_DEFINITION,
   MANUAL_DEFINITION,
   WEBHOOK_DEFINITION,
   SCHEDULE_DEFINITION,
@@ -311,9 +227,29 @@ export function getDefaultConfigForNode(nodeType: NodeType, subType: TriggerType
 
 export function validateNodeBeforeExecute(node: WorkflowNode): string[] {
   const def = findNodeDefinition(node)
-  if (!def || !def.validate) return []
-  const config = (node.data as { config: Record<string, unknown> }).config || {}
-  return def.validate(config)
+  if (def && def.validate) {
+    const config = (node.data as { config: Record<string, unknown> }).config || {}
+    return def.validate(config)
+  }
+  
+  // Fallback for modular nodes that aren't in NODE_DEFINITIONS
+  const data = node.data as WorkflowNode['data']
+  if (data.nodeType === NodeType.ACTION) {
+    const actionData = data as { actionType: ActionType }
+    const config = (data as { config: Record<string, unknown> }).config || {}
+    
+    // Handle Email nodes
+    if (actionData.actionType === ActionType.EMAIL) {
+      return EMAIL_NODE_DEFINITION.validate(config)
+    }
+    
+    // Handle HTTP nodes
+    if (actionData.actionType === ActionType.HTTP) {
+      return HTTP_NODE_DEFINITION.validate(config)
+    }
+  }
+  
+  return []
 }
 
 
