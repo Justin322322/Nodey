@@ -3,21 +3,12 @@
 import { AlertCircle, CheckCircle, Info, XCircle, List } from 'lucide-react'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { cn } from '@/lib/utils'
-import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { MobileSheet } from '@/components/ui/mobile-sheet'
 
 export function ExecutionLog() {
   const { executionLogs, currentExecution, isLogsDialogOpen, setLogsDialogOpen } = useWorkflowStore()
-  const [mobileOpen, setMobileOpen] = useState(false)
   const hasAny = Boolean(currentExecution) || executionLogs.length > 0
-  
-  useEffect(() => {
-    setMobileOpen(isLogsDialogOpen)
-  }, [isLogsDialogOpen])
-  useEffect(() => {
-    if (mobileOpen !== isLogsDialogOpen) setLogsDialogOpen(mobileOpen)
-  }, [mobileOpen, isLogsDialogOpen, setLogsDialogOpen])
   
   const getLogIcon = (level: string) => {
     switch (level) {
@@ -112,7 +103,7 @@ export function ExecutionLog() {
         size="sm"
         className="fixed bottom-20 right-4 z-50 sm:hidden bg-blue-600 hover:bg-blue-500 text-white shadow-lg"
         aria-label="Open execution logs"
-        onClick={() => setMobileOpen(true)}
+        onClick={() => setLogsDialogOpen(true)}
       >
         <List className="w-4 h-4 mr-1" /> Logs
       </Button>
@@ -120,8 +111,8 @@ export function ExecutionLog() {
       {/* Mobile Sheet */}
       <div className="sm:hidden">
         <MobileSheet 
-          open={mobileOpen}
-          onOpenChange={setMobileOpen}
+          open={isLogsDialogOpen}
+          onOpenChange={setLogsDialogOpen}
           title="Execution Log"
         >
         {currentExecution && (
