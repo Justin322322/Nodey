@@ -240,7 +240,7 @@ export function validateNodeBeforeExecute(node: WorkflowNode): string[] {
     
     // Handle Email nodes
     if (actionData.actionType === ActionType.EMAIL) {
-      return EMAIL_NODE_DEFINITION.validate(config)
+      return EMAIL_NODE_DEFINITION.validate(config as unknown as Record<string, unknown>)
     }
     
     // Handle HTTP nodes
