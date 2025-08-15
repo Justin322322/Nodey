@@ -101,9 +101,11 @@ export function getRegistryKey(nodeType: NodeType, subType: string): string {
 
 // Auto-register nodes
 import { EMAIL_NODE_DEFINITION } from './EmailNode'
+import { HTTP_NODE_DEFINITION } from './HttpNode'
 
 // Register all nodes on module load
 registerNode(EMAIL_NODE_DEFINITION)
+registerNode(HTTP_NODE_DEFINITION)
 
 // Export types for external use
 export type { NodeType } from '@/types/workflow'
