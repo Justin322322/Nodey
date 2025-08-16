@@ -94,7 +94,32 @@
 
 /* Override for the landing feature workflow – nodes are custom glass cards */
 /* Feature workflow preview: keep neutral RF wrapper; glass nodes define look */
-.feature-workflow-canvas .react-flow__node { border: none; padding: 0; background: transparent; box-shadow: none; }
+.feature-workflow-canvas .react-flow__node { 
+  border: none; 
+  padding: 0; 
+  background: transparent; 
+  box-shadow: none;
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+.feature-workflow-canvas .react-flow__edge {
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+.feature-workflow-canvas .react-flow__handle {
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+.feature-workflow-canvas {
+  cursor: default !important;
+}
+
+.feature-workflow-canvas * {
+  cursor: default !important;
+}
 
 /* Workbench (editor) flow: use our custom node visuals without the default RF card styles */
 .workbench-flow .react-flow__node {
