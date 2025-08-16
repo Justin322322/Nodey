@@ -3,8 +3,8 @@ import { ArrowRight, Cpu, Play, FolderOpen, Github } from 'lucide-react'
 import { Suspense, lazy } from 'react'
 import Image from 'next/image'
 import WelcomeLink from '@/components/landing/welcome-link'
-import TesseractBackground from '@/components/effects/TesseractBackground'
-// Lazy load heavy components
+// Lazy load ALL heavy components including TesseractBackground
+const TesseractBackground = lazy(() => import('@/components/effects/TesseractBackground'))
 const LandingFlowPreview = lazy(() => import('@/components/landing/landing-flow-preview'))
 const HeroProximityTitle = lazy(() => import('@/components/landing/hero-title'))
 const FeatureWorkflowSection = lazy(() => import('@/components/landing/feature-workflow'))
@@ -143,8 +143,10 @@ export default function LandingPage() {
 
           {/* CTA section */}
           <section className="relative py-6 sm:py-8 lg:py-10 overflow-hidden">
-            {/* Tesseract 3D background effect */}
-            <TesseractBackground />
+            {/* Tesseract 3D background effect - Lazy loaded */}
+            <Suspense fallback={null}>
+              <TesseractBackground />
+            </Suspense>
             
             {/* Grid pattern with circular fade mask */}
             <div className="absolute inset-0 bg-grid-pattern" style={{

@@ -24,8 +24,10 @@ export default function TesseractBackground() {
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
     const renderer = new THREE.WebGLRenderer({ 
       alpha: true, 
-      antialias: true,
-      powerPreference: "high-performance"
+      antialias: false, // Disable antialiasing for better performance
+      powerPreference: "high-performance",
+      stencil: false,
+      depth: false
     })
     
     renderer.setSize(window.innerWidth, window.innerHeight)
@@ -69,8 +71,8 @@ export default function TesseractBackground() {
     // Create tesseract group
     const tesseract = new THREE.Group()
 
-    // Create vertices
-    const vertexGeometry = new THREE.SphereGeometry(0.03, 8, 8)
+    // Create vertices with reduced geometry complexity
+    const vertexGeometry = new THREE.SphereGeometry(0.03, 6, 6) // Reduced from 8,8 to 6,6
     const vertexMaterial = new THREE.MeshBasicMaterial({ 
       color: 0xffffff, 
       transparent: true, 
@@ -107,10 +109,20 @@ export default function TesseractBackground() {
 
     sceneRef.current = { scene, camera, renderer, tesseract }
 
-    // Animation loop
-    function animate() {
+    // Animation loop with throttling for better performance
+    let lastFrameTime = 0
+    const targetFPS = 45 // Increase to 45 FPS for smoother background effects
+    const frameInterval = 1000 / targetFPS
+    
+    function animate(currentTime: number = 0) {
       const animationId = requestAnimationFrame(animate)
       sceneRef.current.animationId = animationId
+
+      // Throttle animation to target FPS
+      if (currentTime - lastFrameTime < frameInterval) {
+        return
+      }
+      lastFrameTime = currentTime
 
       if (tesseract) {
         // Rotate the tesseract in multiple dimensions
@@ -217,7 +229,7 @@ export default function TesseractBackground() {
   return (
     <div 
       ref={mountRef} 
-      className="absolute inset-0 pointer-events-none opacity-60"
+      className="absolute inset-0 pointer-events-none opacity-75 gpu-accelerated"
       style={{ zIndex: 1 }}
     />
   )

@@ -63,46 +63,17 @@ function GlassFeatureNode({ data }: { data: FeatureNodeData }) {
               })}
             </div>
 
-            {/* Energy flowing through paths */}
+            {/* Single energy trail flowing effect */}
             <div className="absolute inset-0">
-              {/* First energy trail - Bright cyan */}
               <div className="absolute inset-0">
                 {React.cloneElement(data.icon as React.ReactElement<any>, {
-                  className: "w-24 h-24 text-cyan-200",
+                  className: "w-24 h-24 text-cyan-300",
                   strokeWidth: 1.5,
                   style: {
-                    strokeDasharray: '4 8',
+                    strokeDasharray: '4 16',
                     strokeDashoffset: '0',
-                    animation: 'energyTrail1 2s linear infinite',
-                    filter: 'drop-shadow(0 0 12px rgba(34, 211, 238, 1)) drop-shadow(0 0 24px rgba(34, 211, 238, 0.8)) brightness(2) saturate(1.5)'
-                  }
-                })}
-              </div>
-
-              {/* Second energy trail - Bright blue */}
-              <div className="absolute inset-0">
-                {React.cloneElement(data.icon as React.ReactElement<any>, {
-                  className: "w-24 h-24 text-blue-200",
-                  strokeWidth: 1.2,
-                  style: {
-                    strokeDasharray: '6 12',
-                    strokeDashoffset: '0',
-                    animation: 'energyTrail2 2.5s linear infinite',
-                    filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 1)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.7)) brightness(1.8) saturate(1.4)'
-                  }
-                })}
-              </div>
-
-              {/* Third energy trail - Bright white-blue */}
-              <div className="absolute inset-0">
-                {React.cloneElement(data.icon as React.ReactElement<any>, {
-                  className: "w-24 h-24 text-white",
-                  strokeWidth: 1,
-                  style: {
-                    strokeDasharray: '2 10',
-                    strokeDashoffset: '0',
-                    animation: 'energyTrail3 3s linear infinite',
-                    filter: 'drop-shadow(0 0 15px rgba(125, 211, 252, 1)) drop-shadow(0 0 30px rgba(125, 211, 252, 0.6)) brightness(2.2) saturate(1.6)'
+                    animation: 'energyFlow 4s linear infinite',
+                    filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.6)) brightness(1.4)'
                   }
                 })}
               </div>

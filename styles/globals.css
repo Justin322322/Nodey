@@ -2,6 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Performance optimizations */
+@layer base {
+  /* GPU acceleration for animations */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* Reduce motion for accessibility and performance */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  
+  /* Optimize rendering layers */
+  canvas,
+  .three-canvas {
+    will-change: transform;
+  }
+  
+  /* Lightweight energy flow animation */
+  @keyframes energyFlow {
+    0% { 
+      stroke-dashoffset: 20;
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% { 
+      stroke-dashoffset: -20;
+      opacity: 0.4;
+    }
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

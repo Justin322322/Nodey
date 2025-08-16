@@ -54,13 +54,13 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
   (
     {
       texts,
-      transition = { type: "spring", damping: 25, stiffness: 300 },
+      transition = { type: "spring", damping: 25, stiffness: 250 }, // Restore more responsive spring animation
       initial = { y: "100%", opacity: 0 },
       animate = { y: 0, opacity: 1 },
       exit = { y: "-120%", opacity: 0 },
       animatePresenceMode = "wait",
       animatePresenceInitial = false,
-      rotationInterval = 2000,
+      rotationInterval = 2500, // Restore faster rotation for better engagement
       staggerDuration = 0,
       staggerFrom = "first",
       loop = true,

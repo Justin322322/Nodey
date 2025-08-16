@@ -16,8 +16,8 @@ function MeteorsOverlay({ count = 10 }: { count?: number }) {
       id: i,
       top: 10 + (i * 7) % 60, // 10% to 70%
       left: (i * 11) % 100,   // spread across width
-      delay: (i * 0.35) % 4,  // staggered delays
-      duration: 5 + (i % 3),  // 5s to 7s
+      delay: (i * 0.4) % 5,  // Restore faster stagger delays
+      duration: 6 + (i % 3),  // 6s to 8s - restore more dynamic timing
     }))
   }, [count])
 
@@ -207,7 +207,7 @@ function InnerPreview() {
   return (
     <div ref={containerRef} className="relative h-64 sm:h-96 lg:h-96 xl:h-[28rem] w-full overflow-hidden rounded-lg sm:rounded-xl border bg-white shadow-sm">
       {/* background effect from Aceternity UI (meteors-inspired) */}
-      <MeteorsOverlay count={12} />
+      <MeteorsOverlay count={8} /> {/* Restore some meteors for visual appeal */}
 
       <div className="w-full h-full">
         <ReactFlow

@@ -14,9 +14,20 @@ import { motion } from "motion/react";
 function useAnimationFrame(callback: () => void) {
   useEffect(() => {
     let frameId: number;
-    const loop = () => {
-      callback();
+    let lastFrameTime = 0;
+    const targetFPS = 45; // Increase to 45 FPS for smoother text effects
+    const frameInterval = 1000 / targetFPS;
+    
+    const loop = (currentTime: number) => {
       frameId = requestAnimationFrame(loop);
+      
+      // Throttle to target FPS
+      if (currentTime - lastFrameTime < frameInterval) {
+        return;
+      }
+      lastFrameTime = currentTime;
+      
+      callback();
     };
     frameId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frameId);
@@ -136,7 +147,15 @@ const VariableProximity = forwardRef<HTMLSpanElement, VariableProximityProps>(
     useAnimationFrame(() => {
       if (!containerRef?.current) return;
       const { x, y } = mousePositionRef.current;
-      if (lastPositionRef.current.x === x && lastPositionRef.current.y === y) {
+      
+      // Add threshold to reduce unnecessary calculations
+      const threshold = 1; // Reduce threshold for more responsive text effects
+      if (
+        lastPositionRef.current.x !== null && 
+        lastPositionRef.current.y !== null &&
+        Math.abs(lastPositionRef.current.x - x) < threshold &&
+        Math.abs(lastPositionRef.current.y - y) < threshold
+      ) {
         return;
       }
       lastPositionRef.current = { x, y };

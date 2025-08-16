@@ -194,11 +194,16 @@ export function WorkflowEditor() {
           fitView
         >
           <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="rgba(100,116,139,0.5)" />
-          <div className="hidden md:block">
+          <div className="hidden lg:block"> {/* Only show on large screens */}
             <Controls />
           </div>
-          <div className="hidden md:block">
-            <MiniMap nodeStrokeWidth={3} zoomable pannable style={{ background: '#eef2f7', border: '1px solid #e2e8f0', borderRadius: 8 }} />
+          <div className="hidden xl:block"> {/* Only show MiniMap on extra large screens */}
+            <MiniMap 
+              nodeStrokeWidth={2} 
+              zoomable 
+              pannable 
+              style={{ background: '#eef2f7', border: '1px solid #e2e8f0', borderRadius: 8 }} 
+            />
           </div>
           <div className="absolute bottom-3 left-16 z-50 rounded-md bg-white px-3 py-2 text-xs text-gray-700 shadow-md hidden sm:block">
             <div className="flex items-center gap-3">
