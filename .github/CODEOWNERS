@@ -1,0 +1,27 @@
+# Code Owners for Nodey Repository
+
+# Global owners - require review for all changes
+* @Justin322322
+
+# Workflow and CI/CD files
+.github/ @Justin322322
+
+# Core architecture files
+/lib/ @Justin322322
+/types/ @Justin322322
+/server/ @Justin322322
+
+# Node modules - require careful review
+/nodes/ @Justin322322
+
+# Security sensitive files
+package.json @Justin322322
+package-lock.json @Justin322322
+.env* @Justin322322
+
+# Deployment configuration
+vercel.json @Justin322322
+next.config.* @Justin322322
+
+# Documentation
+*.md @Justin322322
