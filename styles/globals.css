@@ -557,3 +557,37 @@ select:focus-visible,
   transform: scale(1.02);
   opacity: 1 !important;
 }
+
+/* Energy Trail Animations - Creates flowing effect along paths */
+@keyframes energyTrail1 {
+  0% { 
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% { 
+    stroke-dashoffset: -24;
+    opacity: 1;
+  }
+}
+
+@keyframes energyTrail2 {
+  0% { 
+    stroke-dashoffset: 0;
+    opacity: 0.9;
+  }
+  100% { 
+    stroke-dashoffset: -36;
+    opacity: 0.9;
+  }
+}
+
+@keyframes energyTrail3 {
+  0% { 
+    stroke-dashoffset: 0;
+    opacity: 0.8;
+  }
+  100% { 
+    stroke-dashoffset: -24;
+    opacity: 0.8;
+  }
+}

@@ -32,7 +32,7 @@ interface FeatureNodeData {
 }
 
 // True Glass Panel Node Component
-// Glass panel node (original landing look)
+// Glass panel node with watermark design
 function GlassFeatureNode({ data }: { data: FeatureNodeData }) {
   const [isHovered, setIsHovered] = useState(false)
 
@@ -52,30 +52,85 @@ function GlassFeatureNode({ data }: { data: FeatureNodeData }) {
       >
         {isHovered && <div className="absolute inset-0 glass-card-shimmer pointer-events-none" />}
 
-        <div className="flex items-start gap-3 p-4 h-full">
-          <div className="flex-shrink-0 mt-0.5">
-            {data.icon}
-          </div>
+        {/* Large watermark icon with energy flowing effects */}
+        <div className="absolute -bottom-2 -right-2 opacity-[0.25] pointer-events-none">
+          <div className="relative">
+            {/* Base icon */}
+            <div className="relative">
+              {React.cloneElement(data.icon as React.ReactElement<any>, {
+                className: "w-24 h-24 text-white/60",
+                strokeWidth: 1.5
+              })}
+            </div>
 
-          <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-white leading-tight mb-1">
+            {/* Energy flowing through paths */}
+            <div className="absolute inset-0">
+              {/* First energy trail - Bright cyan */}
+              <div className="absolute inset-0">
+                {React.cloneElement(data.icon as React.ReactElement<any>, {
+                  className: "w-24 h-24 text-cyan-200",
+                  strokeWidth: 1.5,
+                  style: {
+                    strokeDasharray: '4 8',
+                    strokeDashoffset: '0',
+                    animation: 'energyTrail1 2s linear infinite',
+                    filter: 'drop-shadow(0 0 12px rgba(34, 211, 238, 1)) drop-shadow(0 0 24px rgba(34, 211, 238, 0.8)) brightness(2) saturate(1.5)'
+                  }
+                })}
+              </div>
+
+              {/* Second energy trail - Bright blue */}
+              <div className="absolute inset-0">
+                {React.cloneElement(data.icon as React.ReactElement<any>, {
+                  className: "w-24 h-24 text-blue-200",
+                  strokeWidth: 1.2,
+                  style: {
+                    strokeDasharray: '6 12',
+                    strokeDashoffset: '0',
+                    animation: 'energyTrail2 2.5s linear infinite',
+                    filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 1)) drop-shadow(0 0 20px rgba(59, 130, 246, 0.7)) brightness(1.8) saturate(1.4)'
+                  }
+                })}
+              </div>
+
+              {/* Third energy trail - Bright white-blue */}
+              <div className="absolute inset-0">
+                {React.cloneElement(data.icon as React.ReactElement<any>, {
+                  className: "w-24 h-24 text-white",
+                  strokeWidth: 1,
+                  style: {
+                    strokeDasharray: '2 10',
+                    strokeDashoffset: '0',
+                    animation: 'energyTrail3 3s linear infinite',
+                    filter: 'drop-shadow(0 0 15px rgba(125, 211, 252, 1)) drop-shadow(0 0 30px rgba(125, 211, 252, 0.6)) brightness(2.2) saturate(1.6)'
+                  }
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Clean content container */}
+        <div className="flex flex-col justify-center p-6 h-full relative z-10">
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-white leading-tight">
               {data.title}
             </h3>
-            <p className="text-[11px] text-white/70 leading-relaxed">
+            <p className="text-sm text-white/80 leading-relaxed max-w-[280px]">
               {data.description}
             </p>
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 px-4 py-2 flex items-center justify-between text-[10px] text-white/60">
+        {/* Active status in top right */}
+        <div className="absolute top-4 right-6">
           <div className="flex items-center gap-2">
+            <span className="text-xs text-white/60">active</span>
             <span className="relative inline-flex h-2.5 w-2.5 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400/40 blur-[2px]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400/40 blur-[2px] animate-pulse" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-300" />
             </span>
-            <span>active</span>
           </div>
-          <div className="opacity-70 truncate">#{data.id}</div>
         </div>
       </div>
 
