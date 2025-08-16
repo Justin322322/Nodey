@@ -11,6 +11,7 @@ import { getDefaultConfigForNode } from '@/lib/node-definitions'
 import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode'
 import { HTTP_NODE_DEFINITION } from '@/nodes/HttpNode'
 import { SCHEDULE_NODE_DEFINITION } from '@/nodes/ScheduleNode'
+import { WEBHOOK_NODE_DEFINITION } from '@/nodes/WebhookNode'
 import { getWorkflowTemplates } from '@/templates'
 
 interface NodeTemplate {
@@ -161,6 +162,8 @@ export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
         triggerType: nodeTemplate.subType as TriggerType,
         config: nodeTemplate.subType === TriggerType.SCHEDULE 
           ? SCHEDULE_NODE_DEFINITION.getDefaults()
+          : nodeTemplate.subType === TriggerType.WEBHOOK
+          ? WEBHOOK_NODE_DEFINITION.getDefaults()
           : getDefaultConfigForNode(NodeType.TRIGGER, nodeTemplate.subType as TriggerType) || {},
       }
     } else if (nodeTemplate.type === NodeType.ACTION) {
