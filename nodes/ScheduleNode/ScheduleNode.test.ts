@@ -118,7 +118,7 @@ describe('ScheduleNode', () => {
 
     it('should detect high frequency schedules', () => {
       const config: ScheduleNodeConfig = {
-        cron: '0,30 * * * *', // Twice per hour
+        cron: '* * * * *', // Every minute
         timezone: 'UTC'
       }
 
@@ -128,7 +128,6 @@ describe('ScheduleNode', () => {
       expect(result.warnings).toBeDefined()
       expect(result.warnings).toContain('Schedule runs very frequently (more than once per minute). Consider if this is necessary.')
     })
-
     it('should reject invalid timezone', () => {
       const config: ScheduleNodeConfig = {
         cron: '0 0 * * *',
