@@ -5,6 +5,9 @@ import { NodeProps } from 'reactflow'
 import { Play, Webhook, Clock, Mail } from 'lucide-react'
 import { BaseNode } from './base-node'
 import { TriggerNodeData, TriggerType } from '@/types/workflow'
+import { ScheduleNode } from '@/nodes/ScheduleNode'
+import { WebhookNode } from '@/nodes/WebhookNode'
+import { ManualNode } from '@/nodes/ManualNode'
 
 const triggerIcons = {
   [TriggerType.MANUAL]: <Play className="w-4 h-4" />,
@@ -14,6 +17,19 @@ const triggerIcons = {
 }
 
 export const TriggerNode = memo(({ id, data, selected }: NodeProps<TriggerNodeData>) => {
+  // Route to modular trigger nodes
+  if (data.triggerType === TriggerType.SCHEDULE) {
+    return <ScheduleNode {...({ id, data, selected } as any)} />
+  }
+  
+  if (data.triggerType === TriggerType.WEBHOOK) {
+    return <WebhookNode {...({ id, data, selected } as any)} />
+  }
+  
+  if (data.triggerType === TriggerType.MANUAL) {
+    return <ManualNode {...({ id, data, selected } as any)} />
+  }
+  
   const icon = triggerIcons[data.triggerType] || <Play className="w-4 h-4" />
   
   return (

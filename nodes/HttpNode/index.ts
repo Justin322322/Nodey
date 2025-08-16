@@ -1,4 +1,8 @@
-// HttpNode component removed because it's unused; keep node types, service and schema exports
-export * from './HttpNode.types'
-export * from './HttpNode.service'
-export * from './HttpNode.schema'
+export { HttpNode } from './HttpNode'
+export { executeHttpNode } from './HttpNode.service'
+export { HTTP_NODE_DEFINITION } from './HttpNode.schema'
+export type { 
+  HttpNodeConfig, 
+  HttpNodeData, 
+  HttpExecutionResult 
+} from './HttpNode.types'
