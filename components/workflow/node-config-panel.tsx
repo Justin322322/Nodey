@@ -10,7 +10,8 @@ import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { MobileSheet } from '@/components/ui/mobile-sheet'
 import { useToast } from '@/components/ui/toaster'
-import { WorkflowNode, NodeType, ActionType, TriggerType, HttpNodeConfig, EmailNodeConfig, ScheduleNodeConfig } from '@/types/workflow'
+import { WorkflowNode, NodeType, ActionType, TriggerType, HttpNodeConfig, ScheduleNodeConfig } from '@/types/workflow'
+import { EMAIL_NODE_DEFINITION, EmailNodeConfig } from '@/nodes/EmailNode'
 import { findNodeDefinition } from '@/lib/node-definitions'
 
 export function NodeConfigPanel() {
@@ -166,7 +167,9 @@ export function NodeConfigPanel() {
       return (
         <>
           {def.parameters.map((param) => {
-            const shouldShow = (param.showIf || []).every((cond) => getValueAtPath(data.config as Record<string, unknown>, cond.path) === cond.equals)
+            const shouldShow = !param.showIf || param.showIf.length === 0 
+              ? true 
+              : param.showIf.some((cond) => getValueAtPath(data.config as Record<string, unknown>, cond.path) === cond.equals)
             if (!shouldShow) return null
             const value = getValueAtPath(data.config as Record<string, unknown>, param.path)
             switch (param.type) {
@@ -499,7 +502,7 @@ export function NodeConfigPanel() {
       )
     }
     
-    // Email configuration
+    // Email configuration - using new modular EmailNode
     if (data.nodeType === NodeType.ACTION && data.actionType === ActionType.EMAIL) {
       const config = data.config as unknown as EmailNodeConfig
       
@@ -509,7 +512,7 @@ export function NodeConfigPanel() {
             <Label>To (comma separated)</Label>
             <Input
               value={config.to?.join(', ') || ''}
-              onChange={(e) => handleConfigChange('to', e.target.value.split(',').map(s => s.trim()))}
+              onChange={(e) => handleConfigChange('to', e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0))}
               placeholder="user@example.com, another@example.com"
               className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
             />
@@ -533,6 +536,16 @@ export function NodeConfigPanel() {
               value={config.body || ''}
               onChange={(e) => handleConfigChange('body', e.target.value)}
               placeholder="Email body content..."
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>From (optional)</Label>
+            <Input
+              value={config.from || ''}
+              onChange={(e) => handleConfigChange('from', e.target.value)}
+              placeholder="sender@example.com"
+              className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
             />
           </div>
         </>

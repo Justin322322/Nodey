@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { NodeType, TriggerType, ActionType, WorkflowEdge, WorkflowNode } from '@/types/workflow'
 import { getDefaultConfigForNode } from '@/lib/node-definitions'
+import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode'
 import type { WorkflowTemplate } from '@/templates/types'
 
 const template: WorkflowTemplate = {
@@ -29,7 +30,7 @@ const template: WorkflowTemplate = {
         label: 'Send Email',
         nodeType: NodeType.ACTION,
         actionType: ActionType.EMAIL,
-        config: getDefaultConfigForNode(NodeType.ACTION, ActionType.EMAIL) || { to: [], subject: '', body: '' },
+        config: EMAIL_NODE_DEFINITION.getDefaults(),
       },
     }
     const edges: WorkflowEdge[] = [{ id: uuidv4(), source: triggerId, target: actionId }]

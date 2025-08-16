@@ -118,13 +118,7 @@ export interface HttpNodeConfig {
   }
 }
 
-export interface EmailNodeConfig {
-  to: string[]
-  subject: string
-  body: string
-  from?: string
-  attachments?: string[]
-}
+
 
 export interface ScheduleNodeConfig {
   cron: string

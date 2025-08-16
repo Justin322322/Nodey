@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { NodeType, TriggerType, ActionType, WorkflowEdge, WorkflowNode } from '@/types/workflow'
 import { getDefaultConfigForNode } from '@/lib/node-definitions'
+import { HTTP_NODE_DEFINITION } from '@/nodes/HttpNode'
 import type { WorkflowTemplate } from '@/templates/types'
 
 const template: WorkflowTemplate = {
@@ -29,7 +30,7 @@ const template: WorkflowTemplate = {
         label: 'HTTP Request',
         nodeType: NodeType.ACTION,
         actionType: ActionType.HTTP,
-        config: getDefaultConfigForNode(NodeType.ACTION, ActionType.HTTP) || { method: 'GET', url: '' },
+        config: HTTP_NODE_DEFINITION.getDefaults() as unknown as Record<string, unknown>,
       },
     }
     const edges: WorkflowEdge[] = [{ id: uuidv4(), source: triggerId, target: actionId }]
