@@ -31,7 +31,7 @@ jobs:
       - name: Verify Vitest config
         run: |
           echo "Checking Vitest configuration..."
-          cat vitest.config.ts
+          cat vitest.config.mjs
           echo "Node.js version:"
           node --version
           echo "npm version:"
