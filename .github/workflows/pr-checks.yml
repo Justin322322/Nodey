@@ -1,0 +1,150 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  validate-pr:
+    name: Validate PR Requirements
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Check PR title follows conventional commits
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            refactor
+            chore
+            test
+            perf
+            build
+            ci
+            style
+          scopes: |
+            editor
+            flow
+            ui
+            api
+            workflow
+            nodes
+            templates
+            config
+          requireScope: false
+          disallowScopes: |
+            release
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            doesn't start with an uppercase character.
+
+  code-quality:
+    name: Code Quality Checks  
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Type check
+        run: npm run typecheck
+        
+      - name: Lint check
+        run: npm run lint
+        
+      - name: Test
+        run: npm test
+        
+      - name: Build check
+        run: npm run build
+        
+      - name: Check for TypeScript strict compliance
+        run: |
+          echo "Checking for 'any' types in new/modified files..."
+          git diff --name-only origin/main...HEAD | grep -E '\.(ts|tsx)$' | xargs grep -l 'any' || echo "No 'any' types found - good!"
+          
+      - name: Validate no console.log in production code
+        run: |
+          echo "Checking for console.log statements..."
+          git diff --name-only origin/main...HEAD | grep -E '\.(ts|tsx)$' | grep -v '.test.' | xargs grep -l 'console\.log' && echo "Found console.log statements - please remove before merging" && exit 1 || echo "No console.log found - good!"
+
+  accessibility-check:
+    name: Accessibility Compliance
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build for accessibility testing
+        run: npm run build
+        
+      - name: Check for accessibility patterns
+        run: |
+          echo "Checking for semantic HTML and accessibility patterns..."
+          git diff --name-only origin/main...HEAD | grep -E '\.(tsx)$' | xargs grep -l 'onClick.*div\|onClick.*span' && echo "Warning: Found onClick on non-semantic elements. Consider using button elements." || echo "Semantic elements check passed!"
+
+  template-validation:
+    name: Validate Workflow Templates
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false && contains(github.event.pull_request.changed_files, 'templates/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Validate template structure
+        run: |
+          echo "Validating workflow templates..."
+          for template_dir in templates/*/; do
+            if [ -d "$template_dir" ] && [ "$template_dir" != "templates/" ]; then
+              template_name=$(basename "$template_dir")
+              if [ ! -f "$template_dir/index.ts" ]; then
+                echo "Error: Template $template_name missing index.ts"
+                exit 1
+              fi
+              echo "✓ Template $template_name structure valid"
+            fi
+          done
+          
+      - name: Type check templates
+        run: |
+          echo "Type checking templates..."
+          npm run typecheck

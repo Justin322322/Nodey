@@ -1,1 +1,11 @@
 blank_issues_enabled: false
+contact_links:
+  - name: 🛡️ Security Vulnerability
+    url: https://github.com/Justin322322/Nodey/security/advisories/new
+    about: Please report security vulnerabilities privately through our Security Advisory system
+  - name: 💬 Questions & Discussions
+    url: https://github.com/Justin322322/Nodey/discussions
+    about: Ask questions about usage, get help, or discuss ideas before creating a feature request
+  - name: 📖 Documentation
+    url: https://github.com/Justin322322/Nodey/blob/main/README.md
+    about: Check the README and docs folder for setup instructions and guides

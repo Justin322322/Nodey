@@ -1,0 +1,73 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    reviewers:
+      - "Justin322322"
+    labels:
+      - "dependencies"
+      - "javascript"
+    # Group dependencies by type
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "@types/*"
+          - "*eslint*"
+          - "*prettier*"
+          - "*jest*"
+          - "*vitest*"
+          - "*testing*"
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "next*"
+          - "@next/*"
+      ui-dependencies:
+        patterns:
+          - "tailwind*"
+          - "@tailwindcss/*"
+          - "framer-motion"
+          - "motion"
+          - "@radix-ui/*"
+          - "lucide-react"
+      workflow-dependencies:
+        patterns:
+          - "reactflow"
+          - "@reactflow/*"
+          - "three"
+          - "@three/*"
+          - "@react-three/*"
+    # Ignore major updates for critical dependencies
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+        
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+    reviewers:
+      - "Justin322322"
+    labels:
+      - "dependencies"
+      - "github-actions"
