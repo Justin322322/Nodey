@@ -110,48 +110,9 @@ Note: Save your workflow from the editor at least once to sync it to the server 
 - **Validation**: Comprehensive validation with fallback mechanisms
 - **API**: RESTful endpoints for workflow management and webhook triggers
 
-### Database (Supabase Integration Planned)
-- **Primary Database**: Supabase (PostgreSQL) for production-ready persistence
-- **Authentication**: Supabase Auth for user management and security
-- **Real-time**: Supabase Realtime for collaborative workflow editing
-- **Storage**: Supabase Storage for file handling and assets
-- **Features**: 
-  - Workflow storage and versioning
-  - User authentication and authorization
-  - Real-time subscriptions for collaborative editing
-  - Row-level security for multi-tenant support
-  - Automatic backups and point-in-time recovery
+### Database
 - **Current**: LocalStorage for development and demo purposes
-
-#### Planned Database Schema
-```sql
--- Users table (handled by Supabase Auth)
--- Workflows table
-CREATE TABLE workflows (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id),
-  name TEXT NOT NULL,
-  description TEXT,
-  nodes JSONB NOT NULL,
-  edges JSONB NOT NULL,
-  variables JSONB DEFAULT '{}',
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Workflow executions table
-CREATE TABLE workflow_executions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  workflow_id UUID REFERENCES workflows(id) ON DELETE CASCADE,
-  status TEXT CHECK (status IN ('running', 'completed', 'failed', 'cancelled')),
-  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  completed_at TIMESTAMP WITH TIME ZONE,
-  error TEXT,
-  logs JSONB DEFAULT '[]',
-  node_outputs JSONB DEFAULT '{}'
-);
-```
+- **Planned**: Supabase (PostgreSQL) integration for production persistence
 
 ## Development
 
@@ -176,62 +137,7 @@ npm test -- --run nodes/HttpNode/HttpNode.test.ts
 npm run build
 ```
 
-### Project Structure
-```
-├── components/          # Reusable UI components
-│   └── workflow/       # Workflow-specific components
-├── nodes/              # Modular node implementations
-│   ├── types.ts        # Shared node execution interfaces
-│   ├── HttpNode/       # HTTP node implementation
-│   │   ├── HttpNode.tsx           # React component
-│   │   ├── HttpNode.service.ts    # Business logic
-│   │   ├── HttpNode.schema.ts     # Schema and validation
-│   │   ├── HttpNode.types.ts      # TypeScript interfaces
-│   │   ├── HttpNode.test.ts       # Comprehensive tests
-│   │   └── index.ts              # Exports
-│   └── EmailNode/      # Email node implementation
-├── lib/                # Utility functions and legacy code
-├── types/              # Global TypeScript definitions
-└── app/                # Next.js app router pages
-```
-
-### Testing Strategy
-- **Unit Tests**: Comprehensive test coverage for all node services
-- **Integration Tests**: Validation and schema testing
-- **Type Safety**: TypeScript strict mode with full type checking
-- **Test Framework**: Vitest for fast, modern testing
-- **Coverage**: Aim for >90% test coverage on critical paths
-
-Example test structure:
-```typescript
-describe('NodeName', () => {
-  describe('executeNode', () => {
-    it('should handle success cases')
-    it('should handle error cases')
-    it('should validate configuration')
-    it('should handle abort signals')
-  })
-  
-  describe('schema validation', () => {
-    it('should validate required fields')
-    it('should provide correct defaults')
-    it('should handle edge cases')
-  })
-})
-```
-
-### Adding New Nodes
-1. Create a new directory in `nodes/` (e.g., `nodes/DatabaseNode/`)
-2. Implement the required files following the HttpNode pattern:
-   - `NodeName.tsx` - React component using BaseNode
-   - `NodeName.service.ts` - Business logic with execute function
-   - `NodeName.schema.ts` - Schema definition and validation
-   - `NodeName.types.ts` - TypeScript interfaces
-   - `NodeName.test.ts` - Comprehensive test suite
-   - `index.ts` - Clean exports
-3. Add validation fallback in `lib/node-definitions.ts` if needed
-4. Export from `nodes/index.ts`
-5. Write comprehensive tests covering all functionality
+For detailed development information, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Current Limitations
 
@@ -241,38 +147,12 @@ describe('NodeName', () => {
 - **Database Nodes**: Not yet implemented (Supabase integration planned)
 - **Collaboration**: Single-user only (real-time collaboration planned)
 
-## Roadmap & Future Enhancements
+## Roadmap
 
-### Phase 1: Database Integration (Next Priority)
-- **Supabase Integration**: 
-  - PostgreSQL database for workflow persistence
-  - User authentication and authorization
-  - Row-level security for multi-tenant support
-  - Real-time subscriptions for collaborative features
-- **Migration**: Seamless migration from LocalStorage to database
-- **Backup & Export**: Workflow backup and restore functionality
-
-### Phase 2: Enhanced Node Ecosystem
-- **Database Node**: Full CRUD operations with Supabase
-- **Transform Node**: Data transformation and mapping
-- **Delay Node**: Time-based workflow pauses
-- **File Node**: File upload, download, and processing
-- **Notification Node**: Slack, Discord, Teams integrations
-
-### Phase 3: Advanced Features
-- **User Management**: Multi-user support with permissions
-- **Workflow Versioning**: Git-like versioning and history
-- **Advanced Scheduling**: Timezone support and complex cron expressions
-- **Webhook Customization**: Custom response handling and headers
-- **Monitoring**: Workflow analytics and performance metrics
-- **API Management**: Rate limiting and API key management
-
-### Phase 4: Enterprise Features
-- **Team Collaboration**: Real-time collaborative editing
-- **Workflow Templates**: Shareable workflow templates
-- **Custom Nodes**: Plugin system for custom node development
-- **Advanced Security**: Encryption, audit logs, compliance features
-- **Scalability**: Horizontal scaling and load balancing
+- **Database Integration**: Supabase for persistence and authentication
+- **Enhanced Node Ecosystem**: Database, Transform, File, and Notification nodes
+- **Advanced Features**: User management, versioning, monitoring
+- **Enterprise Features**: Team collaboration, custom nodes, advanced security
 
 ## Contributing
 
