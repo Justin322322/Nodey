@@ -226,10 +226,10 @@ export class ScheduleNodeService {
       return !isNaN(step) && step > 0 && step <= 5
     }
 
-    // Multiple specific minutes (comma-separated). Consider 3+ per hour as high frequency.
+    // Multiple specific minutes (comma-separated). Consider 2+ per hour as high frequency.
     if (minute.includes(',')) {
       const values = minute.split(',').map(v => v.trim()).filter(Boolean)
-      return values.length >= 3
+      return values.length >= 2
     }
 
     return false
