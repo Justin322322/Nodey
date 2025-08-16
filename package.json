@@ -24,6 +24,7 @@
     "@types/three": "^0.179.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "image-size": "^2.0.2",
     "lucide-react": "^0.370.0",
     "motion": "^12.23.12",
     "next": "^15.1.3",
