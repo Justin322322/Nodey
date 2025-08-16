@@ -9,6 +9,7 @@ import {
 import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode/EmailNode.schema'
 import { HTTP_NODE_DEFINITION } from '@/nodes/HttpNode/HttpNode.schema'
 import { SCHEDULE_NODE_DEFINITION } from '@/nodes/ScheduleNode/ScheduleNode.schema'
+import { WEBHOOK_NODE_DEFINITION } from '@/nodes/WebhookNode/WebhookNode.schema'
 
 // Minimal, n8n-inspired parameter schema for nodes.
 // This powers defaults and validation and can later drive dynamic UIs.
@@ -115,44 +116,8 @@ function validateConditionConfig(config: Record<string, unknown>): string[] {
 // Schedule Trigger (now handled by ScheduleNode module)
 // Removed - replaced by nodes/ScheduleNode implementation
 
-// Webhook Trigger
-const WEBHOOK_DEFINITION: NodeDefinition<TriggerType> = {
-  nodeType: NodeType.TRIGGER,
-  subType: TriggerType.WEBHOOK,
-  label: 'Webhook',
-  description: 'Trigger the workflow via an HTTP request',
-  parameters: [
-    {
-      label: 'Method',
-      path: 'method',
-      type: 'select',
-      required: true,
-      default: 'POST',
-      options: [
-        { label: 'POST', value: 'POST' },
-        { label: 'GET', value: 'GET' },
-        { label: 'PUT', value: 'PUT' },
-        { label: 'PATCH', value: 'PATCH' },
-        { label: 'DELETE', value: 'DELETE' },
-      ],
-    },
-    {
-      label: 'Secret (optional)',
-      path: 'secret',
-      type: 'string',
-      required: false,
-      description: 'If set, include a signature header in requests to verify the source',
-    },
-    {
-      label: 'Signature Header',
-      path: 'signatureHeader',
-      type: 'string',
-      required: false,
-      default: 'x-webhook-signature',
-      description: 'Header name used to send a request signature',
-    },
-  ],
-}
+// Webhook Trigger (now handled by WebhookNode module)
+// Removed - replaced by nodes/WebhookNode implementation
 
 // Manual Trigger (n8n-equivalent): has no configurable parameters
 const MANUAL_DEFINITION: NodeDefinition<TriggerType> = {
@@ -184,7 +149,7 @@ const FILTER_DEFINITION: NodeDefinition<LogicType> = {
 
 const NODE_DEFINITIONS: NodeDefinition[] = [
   MANUAL_DEFINITION,
-  WEBHOOK_DEFINITION,
+  // WEBHOOK_DEFINITION removed - handled by WebhookNode module
   // SCHEDULE_DEFINITION removed - handled by ScheduleNode module
   IF_DEFINITION,
   FILTER_DEFINITION,
@@ -208,6 +173,10 @@ export function getDefaultConfigForNode(nodeType: NodeType, subType: TriggerType
   // Handle modular nodes first
   if (nodeType === NodeType.TRIGGER && subType === TriggerType.SCHEDULE) {
     return SCHEDULE_NODE_DEFINITION.getDefaults()
+  }
+  
+  if (nodeType === NodeType.TRIGGER && subType === TriggerType.WEBHOOK) {
+    return WEBHOOK_NODE_DEFINITION.getDefaults()
   }
   
   const def = NODE_DEFINITIONS.find((d) => d.nodeType === nodeType && d.subType === subType)
@@ -247,6 +216,11 @@ export function validateNodeBeforeExecute(node: WorkflowNode): string[] {
     // Handle Schedule nodes
     if (triggerData.triggerType === TriggerType.SCHEDULE) {
       return SCHEDULE_NODE_DEFINITION.validate(config as unknown as Record<string, unknown>)
+    }
+    
+    // Handle Webhook nodes
+    if (triggerData.triggerType === TriggerType.WEBHOOK) {
+      return WEBHOOK_NODE_DEFINITION.validate(config as unknown as Record<string, unknown>)
     }
   }
   
