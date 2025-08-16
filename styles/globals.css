@@ -52,6 +52,14 @@
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground; }
+  html, body { 
+    overflow-x: hidden !important; 
+    max-width: 100vw !important;
+    box-sizing: border-box;
+  }
+  * {
+    box-sizing: border-box;
+  }
 }
 
 /* React Flow styles */
@@ -165,7 +173,7 @@ select:focus-visible,
     opacity: 1;
   }
   100% {
-    transform: translateX(-500px) translateY(500px) rotate(-45deg);
+    transform: translateX(-200px) translateY(200px) rotate(-45deg);
     opacity: 0;
   }
 }
@@ -248,3 +256,268 @@ select:focus-visible,
 }
 
 /* Mobile Sheet Animations - Now using standard Tailwind animations */
+
+/* Enhanced landing page background effects */
+.landing-enhanced-bg {
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 60% 60%, rgba(147, 51, 234, 0.04) 0%, transparent 50%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 50%, rgba(15, 23, 42, 0.9) 100%);
+}
+
+.landing-pattern-overlay {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px, 90px 90px;
+}
+
+/* Grid pattern for CTA section with varied line brightness */
+.bg-grid-pattern {
+  background-image: 
+    /* Bright lines every 3rd line */
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px, transparent 119px, rgba(255, 255, 255, 0.08) 119px, rgba(255, 255, 255, 0.08) 120px, transparent 120px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px, transparent 119px, rgba(255, 255, 255, 0.08) 119px, rgba(255, 255, 255, 0.08) 120px, transparent 120px),
+    /* Medium bright lines every 2nd line */
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px, transparent 79px, rgba(255, 255, 255, 0.05) 79px, rgba(255, 255, 255, 0.05) 80px, transparent 80px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px, transparent 79px, rgba(255, 255, 255, 0.05) 79px, rgba(255, 255, 255, 0.05) 80px, transparent 80px),
+    /* Regular lines */
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 
+    120px 120px,
+    120px 120px,
+    80px 80px,
+    80px 80px,
+    40px 40px,
+    40px 40px;
+  animation: grid-shift 30s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-8px) rotate(0.5deg); }
+  66% { transform: translateY(-12px) rotate(-0.5deg); }
+}
+
+@keyframes grid-shift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(10px, 5px); }
+  50% { transform: translate(-5px, 10px); }
+  75% { transform: translate(5px, -5px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes grid-sparkle {
+  0%, 100% { 
+    filter: brightness(1) contrast(1);
+  }
+  25% { 
+    filter: brightness(1.1) contrast(1.05);
+  }
+  50% { 
+    filter: brightness(0.95) contrast(0.98);
+  }
+  75% { 
+    filter: brightness(1.05) contrast(1.02);
+  }
+}
+
+/* Animated aurora effect for enhanced sections */
+@keyframes aurora {
+  0%, 100% { 
+    transform: translateY(0px) scale(1) rotate(0deg);
+    opacity: 0.3;
+  }
+  33% { 
+    transform: translateY(-20px) scale(1.1) rotate(1deg);
+    opacity: 0.5;
+  }
+  66% { 
+    transform: translateY(-10px) scale(0.95) rotate(-1deg);
+    opacity: 0.4;
+  }
+}
+
+/* Particle effects - disabled for footer */
+.particle-field::before,
+.particle-field::after {
+  display: none;
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(0px);
+    opacity: 0;
+  }
+}
+
+/* Animated gradient border for rotating text */
+.rotating-border-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.rotating-border-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  background: linear-gradient(45deg, rgba(255,255,255,0.3), rgba(120,119,198,0.3), rgba(59,130,246,0.3), rgba(255,255,255,0.3));
+  background-size: 300% 300%;
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  animation: rotate-gradient 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotate-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Breathing effect for the enhanced background */
+.landing-enhanced-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.02) 0%, transparent 70%);
+  /* animation: breathe 15s ease-in-out infinite; DISABLED - CAUSING HORIZONTAL SCROLL */
+  pointer-events: none;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+@keyframes breathe {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% { 
+    transform: scale(1.05);
+    opacity: 0.5;
+  }
+}
+
+/* Constrained breathe animation for footer elements to prevent overflow */
+@keyframes breathe-constrained {
+  0%, 100% { 
+    transform: scale(0.95);
+    opacity: 0.3;
+  }
+  50% { 
+    transform: scale(1.0);
+    opacity: 0.5;
+  }
+}
+
+/* Subtle sparkle effect */
+.particle-field {
+  position: relative;
+}
+
+.particle-field::before,
+.particle-field::after {
+  z-index: 1;
+}
+
+/* Additional sparkle elements */
+@keyframes sparkle {
+  0%, 20% { opacity: 0; transform: scale(0); }
+  25% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0); }
+}
+
+/* Rice grain shaped separator */
+.rice-grain-separator {
+  width: 100%;
+  max-width: 100%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 5%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0.4) 35%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0.4) 65%,
+    rgba(255, 255, 255, 0.2) 80%,
+    rgba(255, 255, 255, 0.05) 95%,
+    transparent 100%
+  );
+  border-radius: 50px;
+  position: relative;
+  animation: separator-glow 3s ease-in-out infinite alternate;
+  /* Ensure perfect horizontal alignment and prevent overflow */
+  display: block;
+  margin: 0;
+  padding: 0;
+  transform: none;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.rice-grain-separator::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 10%,
+    rgba(255, 255, 255, 0.1) 30%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 70%,
+    rgba(255, 255, 255, 0.03) 90%,
+    transparent 100%
+  );
+  border-radius: 50px;
+  filter: blur(2px);
+}
+
+.rice-grain-separator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40%;
+  height: 150%;
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  border-radius: 50px;
+  filter: blur(1px);
+}
+
+@keyframes separator-glow {
+  0% { 
+    opacity: 0.8;
+    transform: scaleY(1);
+  }
+  100% { 
+    opacity: 1;
+    transform: scaleY(1.1);
+  }
+}

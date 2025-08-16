@@ -347,7 +347,7 @@ export default function FeatureWorkflowSection() {
           </p>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[90rem] rounded-2xl border border-white/15 bg-white/8 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/20">
+        <div className="relative mx-auto w-full max-w-7xl rounded-2xl border border-white/15 bg-white/8 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/20">
           {/* Subtle inner glow */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
           
