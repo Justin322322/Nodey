@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { NodeType, TriggerType, ActionType, WorkflowEdge, WorkflowNode } from '@/types/workflow'
 import { getDefaultConfigForNode } from '@/lib/node-definitions'
 import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode'
+import { SCHEDULE_NODE_DEFINITION } from '@/nodes/ScheduleNode'
 import type { WorkflowTemplate } from '@/templates/types'
 
 const template: WorkflowTemplate = {
@@ -19,7 +20,7 @@ const template: WorkflowTemplate = {
         label: 'Schedule',
         nodeType: NodeType.TRIGGER,
         triggerType: TriggerType.SCHEDULE,
-        config: getDefaultConfigForNode(NodeType.TRIGGER, TriggerType.SCHEDULE) || { cron: '0 0 * * *' },
+        config: SCHEDULE_NODE_DEFINITION.getDefaults(),
       },
     }
     const action: WorkflowNode = {
