@@ -12,7 +12,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NODE_ENV === 'production' ? 'https://nodey.vercel.app' : 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://nodey.vercel.app' : 'http://localhost:3000'),
   title: 'Nodey - Workflow Automation Builder',
   description: 'Build powerful workflow automations with our intuitive visual node editor. Drag, connect, and deploy automated workflows in minutes with local-first architecture.',
   openGraph: {
