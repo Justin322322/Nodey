@@ -123,11 +123,6 @@ export default function Footer() {
           <div className="absolute top-0 left-0 right-0 -translate-y-1/2 overflow-hidden">
             <div className="rice-grain-separator w-full h-[3px]"></div>
           </div>
-          <div className="flex items-center gap-2 text-white/60 text-sm">
-            <span>Made with</span>
-            <Heart className="w-4 h-4 text-red-400" />
-            <span>for the automation community</span>
-          </div>
           <div className="text-white/40 text-sm">
             © {new Date().getFullYear()} Nodey. Open source under MIT License.
           </div>
