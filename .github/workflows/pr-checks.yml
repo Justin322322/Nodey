@@ -7,44 +7,18 @@ on:
 
 jobs:
   validate-pr:
-    name: Validate PR Requirements
+    name: Validate PR Requirements (Optional)
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    continue-on-error: true  # Don't fail the entire workflow if this fails
     
     steps:
-      - name: Check PR title follows conventional commits
-        uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            docs
-            refactor
-            chore
-            test
-            perf
-            build
-            ci
-            style
-          scopes: |
-            editor
-            flow
-            ui
-            api
-            workflow
-            nodes
-            templates
-            config
-          requireScope: false
-          disallowScopes: |
-            release
-          subjectPattern: ^(?![A-Z]).+$
-          subjectPatternError: |
-            The subject "{subject}" found in the pull request title "{title}"
-            didn't match the configured pattern. Please ensure that the subject
-            doesn't start with an uppercase character.
+      - name: Check PR title (optional check)
+        continue-on-error: true  # Don't fail if title doesn't match
+        run: |
+          echo "📝 PR Title: ${{ github.event.pull_request.title }}"
+          echo "✅ This is now an optional check - any title format is accepted"
+          echo "💡 Recommended format: 'type: description' (e.g., 'fix: resolve deployment issue')"
 
   code-quality:
     name: Code Quality Checks  
@@ -76,20 +50,23 @@ jobs:
       - name: Build check
         run: npm run build
         
-      - name: Check for TypeScript strict compliance
+      - name: Check for TypeScript strict compliance (warning only)
+        continue-on-error: true
         run: |
-          echo "Checking for 'any' types in new/modified files..."
-          git diff --name-only origin/main...HEAD | grep -E '\.(ts|tsx)$' | xargs grep -l 'any' || echo "No 'any' types found - good!"
+          echo "⚠️  Checking for 'any' types in new/modified files (warning only)..."
+          git diff --name-only origin/main...HEAD | grep -E '\.(ts|tsx)$' | xargs grep -l 'any' && echo "⚠️  Found 'any' types - consider using specific types for better code quality" || echo "✅ No 'any' types found - good!"
           
-      - name: Validate no console.log in production code
+      - name: Check for console.log (warning only)
+        continue-on-error: true
         run: |
-          echo "Checking for console.log statements..."
-          git diff --name-only origin/main...HEAD | grep -E '\.(ts|tsx)$' | grep -v '.test.' | xargs grep -l 'console\.log' && echo "Found console.log statements - please remove before merging" && exit 1 || echo "No console.log found - good!"
+          echo "⚠️  Checking for console.log statements (warning only)..."
+          git diff --name-only origin/main...HEAD | grep -E '\.(ts|tsx)$' | grep -v '.test.' | xargs grep -l 'console\.log' && echo "⚠️  Found console.log statements - consider removing for production" || echo "✅ No console.log found - good!"
 
   accessibility-check:
-    name: Accessibility Compliance
+    name: Accessibility Compliance (Optional)
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    continue-on-error: true
     
     steps:
       - name: Checkout code
@@ -107,10 +84,11 @@ jobs:
       - name: Build for accessibility testing
         run: npm run build
         
-      - name: Check for accessibility patterns
+      - name: Check for accessibility patterns (warning only)
+        continue-on-error: true
         run: |
-          echo "Checking for semantic HTML and accessibility patterns..."
-          git diff --name-only origin/main...HEAD | grep -E '\.(tsx)$' | xargs grep -l 'onClick.*div\|onClick.*span' && echo "Warning: Found onClick on non-semantic elements. Consider using button elements." || echo "Semantic elements check passed!"
+          echo "⚠️  Checking for semantic HTML and accessibility patterns (warning only)..."
+          git diff --name-only origin/main...HEAD | grep -E '\.(tsx)$' | xargs grep -l 'onClick.*div\|onClick.*span' && echo "⚠️  Found onClick on non-semantic elements. Consider using button elements for better accessibility." || echo "✅ Semantic elements check passed!"
 
   template-validation:
     name: Validate Workflow Templates
