@@ -107,7 +107,7 @@ export interface ExecutionLog {
 }
 
 // Node Configuration Schemas
-export interface HttpNodeConfig {
+export interface HttpNodeConfig extends Record<string, unknown> {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
   url: string
   headers?: Record<string, string>

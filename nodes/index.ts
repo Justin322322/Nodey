@@ -4,8 +4,12 @@ import type { NodeExecutionContext, NodeExecutionResult } from './types'
 
 // Import all nodes
 export * from './EmailNode'
+export * from './HttpNode'
 export * from './ScheduleNode'
 export * from './WebhookNode'
+export * from './ManualNode'
+export * from './IfNode'
+export * from './FilterNode'
 
 // Base interfaces for all nodes
 export type { NodeExecutionContext, NodeExecutionResult } from './types'
@@ -13,7 +17,7 @@ export type { NodeExecutionContext, NodeExecutionResult } from './types'
 export interface ParameterDefinition {
   name: string
   label: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url'
+  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url' | 'json'
   required?: boolean
   defaultValue?: unknown
   options?: Array<{ label: string; value: string }>
@@ -92,13 +96,22 @@ export function getRegistryKey(nodeType: NodeType, subType: string | number): st
 }
 
 // Auto-register nodes
-// Note: EMAIL and HTTP nodes are handled via fallback in lib/node-definitions.ts
-// import { EMAIL_NODE_DEFINITION } from './EmailNode'
-// import { HTTP_NODE_DEFINITION } from './HttpNode'
+import { EMAIL_NODE_DEFINITION } from './EmailNode'
+import { HTTP_NODE_DEFINITION } from './HttpNode'
+import { SCHEDULE_NODE_DEFINITION } from './ScheduleNode'
+import { WEBHOOK_NODE_DEFINITION } from './WebhookNode'
+import { MANUAL_NODE_DEFINITION } from './ManualNode'
+import { IF_NODE_DEFINITION } from './IfNode'
+import { FILTER_NODE_DEFINITION } from './FilterNode'
 
 // Register all nodes on module load
-// registerNode(EMAIL_NODE_DEFINITION)
-// registerNode(HTTP_NODE_DEFINITION)
+registerNode(EMAIL_NODE_DEFINITION)
+registerNode(HTTP_NODE_DEFINITION)
+registerNode(SCHEDULE_NODE_DEFINITION)
+registerNode(WEBHOOK_NODE_DEFINITION)
+registerNode(MANUAL_NODE_DEFINITION)
+registerNode(IF_NODE_DEFINITION)
+registerNode(FILTER_NODE_DEFINITION)
 
 // Export types for external use
 export type { NodeType } from '../types/workflow'

@@ -4,8 +4,11 @@
 
 export interface NodeExecutionContext {
   nodeId: string
+  workflowId: string
   config: Record<string, unknown>
-  previousOutput?: unknown
+  input: unknown
+  previousNodes: string[]
+  executionId: string
   signal?: AbortSignal
 }
 
