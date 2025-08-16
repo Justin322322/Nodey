@@ -13,6 +13,7 @@ import {
   LogicNodeData
 } from '@/types/workflow'
 import { v4 as uuidv4 } from 'uuid'
+import { ScheduleNodeService } from '@/nodes/ScheduleNode/ScheduleNode.service'
 import { executeHttpRequest } from '@/server/services/http-client'
 import { validateNodeBeforeExecute } from '@/lib/node-definitions'
 import { executeEmailNode } from '@/nodes/EmailNode'
@@ -203,8 +204,15 @@ export class WorkflowExecutor {
         return { triggered: true, method: 'POST', body: {} }
         
       case TriggerType.SCHEDULE: {
-        const scheduleConfig = config as ScheduleNodeConfig
-        return { triggered: true, cron: scheduleConfig.cron }
+        const context = {
+          nodeId: node.id,
+          config: config as Record<string, unknown>
+        }
+        const result = await ScheduleNodeService.execute(context)
+        if (!result.success) {
+          throw new Error(result.error || 'Schedule execution failed')
+        }
+        return result.output
       }
         
       case TriggerType.EMAIL:

@@ -4,6 +4,7 @@ import type { NodeExecutionContext, NodeExecutionResult } from './types'
 
 // Import all nodes
 export * from './EmailNode'
+export * from './ScheduleNode'
 
 // Base interfaces for all nodes
 export type { NodeExecutionContext, NodeExecutionResult } from './types'

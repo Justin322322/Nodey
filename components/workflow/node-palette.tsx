@@ -10,6 +10,7 @@ import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { getDefaultConfigForNode } from '@/lib/node-definitions'
 import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode'
 import { HTTP_NODE_DEFINITION } from '@/nodes/HttpNode'
+import { SCHEDULE_NODE_DEFINITION } from '@/nodes/ScheduleNode'
 import { getWorkflowTemplates } from '@/templates'
 
 interface NodeTemplate {
@@ -158,7 +159,9 @@ export function NodePalette({ onNodeDrag, onNodeAdded }: NodePaletteProps) {
         label: nodeTemplate.label,
         nodeType: NodeType.TRIGGER,
         triggerType: nodeTemplate.subType as TriggerType,
-        config: getDefaultConfigForNode(NodeType.TRIGGER, nodeTemplate.subType as TriggerType) || (nodeTemplate.subType === TriggerType.SCHEDULE ? { cron: '0 0 * * *' } : {}),
+        config: nodeTemplate.subType === TriggerType.SCHEDULE 
+          ? SCHEDULE_NODE_DEFINITION.getDefaults()
+          : getDefaultConfigForNode(NodeType.TRIGGER, nodeTemplate.subType as TriggerType) || {},
       }
     } else if (nodeTemplate.type === NodeType.ACTION) {
       data = {

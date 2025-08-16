@@ -8,6 +8,7 @@ import {
 } from '@/types/workflow'
 import { EMAIL_NODE_DEFINITION } from '@/nodes/EmailNode/EmailNode.schema'
 import { HTTP_NODE_DEFINITION } from '@/nodes/HttpNode/HttpNode.schema'
+import { SCHEDULE_NODE_DEFINITION } from '@/nodes/ScheduleNode/ScheduleNode.schema'
 
 // Minimal, n8n-inspired parameter schema for nodes.
 // This powers defaults and validation and can later drive dynamic UIs.
@@ -111,23 +112,8 @@ function validateConditionConfig(config: Record<string, unknown>): string[] {
 }
 
 
-// Schedule Trigger
-const SCHEDULE_DEFINITION: NodeDefinition<TriggerType> = {
-  nodeType: NodeType.TRIGGER,
-  subType: TriggerType.SCHEDULE,
-  label: 'Schedule',
-  description: 'Run on a recurring schedule',
-  parameters: [
-    { label: 'Cron', path: 'cron', type: 'string', required: true, default: '0 0 * * *' },
-    { label: 'Timezone', path: 'timezone', type: 'string', required: false, default: 'UTC' },
-  ],
-  validate: (config) => {
-    const errors: string[] = []
-    const typed = config as unknown as ScheduleNodeConfig
-    if (!typed.cron || typed.cron.trim().length === 0) errors.push('Cron expression is required')
-    return errors
-  },
-}
+// Schedule Trigger (now handled by ScheduleNode module)
+// Removed - replaced by nodes/ScheduleNode implementation
 
 // Webhook Trigger
 const WEBHOOK_DEFINITION: NodeDefinition<TriggerType> = {
@@ -199,7 +185,7 @@ const FILTER_DEFINITION: NodeDefinition<LogicType> = {
 const NODE_DEFINITIONS: NodeDefinition[] = [
   MANUAL_DEFINITION,
   WEBHOOK_DEFINITION,
-  SCHEDULE_DEFINITION,
+  // SCHEDULE_DEFINITION removed - handled by ScheduleNode module
   IF_DEFINITION,
   FILTER_DEFINITION,
 ]
@@ -219,6 +205,11 @@ export function findNodeDefinition(node: WorkflowNode): NodeDefinition | undefin
 }
 
 export function getDefaultConfigForNode(nodeType: NodeType, subType: TriggerType | ActionType | LogicType): Record<string, unknown> | undefined {
+  // Handle modular nodes first
+  if (nodeType === NodeType.TRIGGER && subType === TriggerType.SCHEDULE) {
+    return SCHEDULE_NODE_DEFINITION.getDefaults()
+  }
+  
   const def = NODE_DEFINITIONS.find((d) => d.nodeType === nodeType && d.subType === subType)
   if (!def) return {}
   if (def.defaults?.config) return def.defaults.config
@@ -234,9 +225,10 @@ export function validateNodeBeforeExecute(node: WorkflowNode): string[] {
   
   // Fallback for modular nodes that aren't in NODE_DEFINITIONS
   const data = node.data as WorkflowNode['data']
+  const config = (data as { config: Record<string, unknown> }).config || {}
+  
   if (data.nodeType === NodeType.ACTION) {
     const actionData = data as { actionType: ActionType }
-    const config = (data as { config: Record<string, unknown> }).config || {}
     
     // Handle Email nodes
     if (actionData.actionType === ActionType.EMAIL) {
@@ -246,6 +238,15 @@ export function validateNodeBeforeExecute(node: WorkflowNode): string[] {
     // Handle HTTP nodes
     if (actionData.actionType === ActionType.HTTP) {
       return HTTP_NODE_DEFINITION.validate(config)
+    }
+  }
+  
+  if (data.nodeType === NodeType.TRIGGER) {
+    const triggerData = data as { triggerType: TriggerType }
+    
+    // Handle Schedule nodes
+    if (triggerData.triggerType === TriggerType.SCHEDULE) {
+      return SCHEDULE_NODE_DEFINITION.validate(config as unknown as Record<string, unknown>)
     }
   }
   
