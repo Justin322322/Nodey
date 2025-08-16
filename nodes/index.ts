@@ -1,5 +1,5 @@
 // Central node registry and exports
-import { NodeType } from '@/types/workflow'
+import { NodeType } from '../types/workflow'
 import type { NodeExecutionContext, NodeExecutionResult } from './types'
 
 // Import all nodes
@@ -99,4 +99,4 @@ export function getRegistryKey(nodeType: NodeType, subType: string | number): st
 // registerNode(HTTP_NODE_DEFINITION)
 
 // Export types for external use
-export type { NodeType } from '@/types/workflow'
+export type { NodeType } from '../types/workflow'

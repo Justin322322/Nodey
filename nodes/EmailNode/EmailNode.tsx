@@ -7,7 +7,7 @@ import { BaseNode } from '@/components/workflow/nodes/base-node'
 import { WorkflowNodeData } from '@/types/workflow'
 import { EmailNodeData } from './EmailNode.types'
 
-export const EmailNode = memo(({ id, data, selected }: NodeProps<EmailNodeData>) => {
+const EmailNode = memo(({ id, data, selected }: NodeProps<EmailNodeData>) => {
     return (
         <BaseNode
             nodeId={id}

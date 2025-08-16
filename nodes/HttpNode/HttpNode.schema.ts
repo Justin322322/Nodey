@@ -1,7 +1,7 @@
 import { NodeType, ActionType } from "@/types/workflow";
 import { HttpNodeConfig } from "./HttpNode.types";
 
-export interface ParameterDefinition {
+interface ParameterDefinition {
   name: string;
   label: string;
   type:
@@ -21,7 +21,7 @@ export interface ParameterDefinition {
   showIf?: Array<{ path: string; equals: string | number | boolean }>;
 }
 
-export interface NodeDefinition {
+interface NodeDefinition {
   nodeType: NodeType;
   subType: ActionType;
   label: string;
