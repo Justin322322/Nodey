@@ -200,19 +200,22 @@ export class ScheduleNodeService {
     if (parts.length !== 5) return false
     
     const [minute] = parts
-    
-    // Check for step values in minutes that are less than 1 minute
+
+    // Every minute
+    if (minute === '*') return true
+
+    // Step values (*/n) — consider <= 5 minutes as high frequency
     if (minute.startsWith('*/')) {
       const step = parseInt(minute.substring(2), 10)
-      return !isNaN(step) && step < 1
+      return !isNaN(step) && step > 0 && step <= 5
     }
-    
-    // Check for multiple specific minutes (comma-separated)
+
+    // Multiple specific minutes (comma-separated). Consider 3+ per hour as high frequency.
     if (minute.includes(',')) {
-      const values = minute.split(',')
-      return values.length > 1
+      const values = minute.split(',').map(v => v.trim()).filter(Boolean)
+      return values.length >= 3
     }
-    
+
     return false
   }
 
