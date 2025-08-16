@@ -266,6 +266,69 @@ describe('ScheduleNode', () => {
       const output = result.output as any
       expect(output.timezone).toBe('America/New_York')
     })
+
+    it('should short-circuit when schedule is disabled', async () => {
+      const context: NodeExecutionContext = {
+        nodeId: 'test-node',
+        config: {
+          cron: '0 0 * * *',
+          timezone: 'UTC',
+          enabled: false
+        }
+      }
+
+      const result = await ScheduleNodeService.execute(context)
+
+      expect(result.success).toBe(true)
+      expect(result.output).toBeDefined()
+      expect(result.error).toBeUndefined()
+
+      const output = result.output as any
+      expect(output.triggered).toBe(false)
+      expect(output.reason).toBe('Schedule disabled')
+      expect(output.cronExpression).toBe('0 0 * * *')
+      expect(output.timezone).toBe('UTC')
+      expect(output.timestamp).toBeInstanceOf(Date)
+    })
+
+    it('should handle disabled schedule with custom timezone', async () => {
+      const context: NodeExecutionContext = {
+        nodeId: 'test-node',
+        config: {
+          cron: '*/15 * * * *',
+          timezone: 'America/Los_Angeles',
+          enabled: false
+        }
+      }
+
+      const result = await ScheduleNodeService.execute(context)
+
+      expect(result.success).toBe(true)
+      const output = result.output as any
+      expect(output.triggered).toBe(false)
+      expect(output.reason).toBe('Schedule disabled')
+      expect(output.cronExpression).toBe('*/15 * * * *')
+      expect(output.timezone).toBe('America/Los_Angeles')
+    })
+
+    it('should handle disabled schedule with default timezone', async () => {
+      const context: NodeExecutionContext = {
+        nodeId: 'test-node',
+        config: {
+          cron: '0 12 * * 1-5',
+          enabled: false
+        }
+      }
+
+      const result = await ScheduleNodeService.execute(context)
+
+      expect(result.success).toBe(true)
+      const output = result.output as any
+      expect(output.triggered).toBe(false)
+      expect(output.reason).toBe('Schedule disabled')
+      expect(output.cronExpression).toBe('0 12 * * 1-5')
+      expect(output.timezone).toBe('UTC')
+    })
   })
 
   describe('Cron Field Validation', () => {
