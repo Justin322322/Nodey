@@ -129,87 +129,6 @@ export default function LandingPage() {
 
         {/* All remaining sections with solid slate background */}
         <div className="bg-slate-900">
-          {/* ASCII Art Card Section */}
-          <section className="relative py-16 sm:py-20 lg:py-24">
-            <div className="container mx-auto px-6 sm:px-8 lg:px-12">
-              <div className="max-w-4xl mx-auto">
-                {/* ASCII Art Card with transparent background */}
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500" />
-                  <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 sm:p-12 hover:bg-white/8 hover:border-white/20 transition-all duration-500">
-                    {/* Card header */}
-                    <div className="text-center mb-8">
-                      <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                        Built for Developers, by Developers
-                      </h3>
-                      <p className="text-white/70 text-lg">
-                        Terminal-inspired workflow automation that feels like home
-                      </p>
-                    </div>
-                    
-                    {/* ASCII Art Display */}
-                    <div className="relative overflow-hidden rounded-xl bg-black/20 border border-white/10 p-6">
-                      <div className="absolute top-3 left-3 flex gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500/60"></div>
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/60"></div>
-                        <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
-                      </div>
-                      <pre className="text-white/80 font-mono text-xs sm:text-sm leading-tight mt-8 overflow-x-auto whitespace-pre">
-                        {`                         -+*%%**=----------
-                  =+*#%**%@@@**@@@****@%**%%@@@*
-               +**%@@@%****#%#%@@@+--+**@@@@+--+**@@@@%#
-           #%#@@%+****@@@@+++++##@@@*==--+**@@@@#---**@@@@%
-        %%@@@*+++###@@%+--**@@@@**@@@#+++++###@@@@*+#%@@@@%*
-      @@%*---+#@@@@*---**@@@@%**@@@@%##%%%@@@@@@%*+##@@@@@@@%*
-     %*--**@@@@%*--**@@@@%**@@@@@@@@@@@@@@%@@%%@@##@@@@@@@@@@%*
-    +**@@@@%*--**@@@@%**@@@@@@@@@@@@@@@%*         **@@@@@@@@@@%**
- ::::**@@@*++**@@@@%**@@@@@@@@@@@@@@@@*             +**@@@@@@@@@@%**
- :::+**@@++**@@@@%**@@@@@@@@@@@@@@@@*                  **@@@@@@@@@@%*
-  :::--++%%@@@@%**@@@@@@@@@@@@@@@@**                    **@@@@@@@@@@%
-  ::::::::::::::::**%@@@@@@@@@@@@%*                      **@@@@@@@@@@**
-  ::::::::::::::::::::+**@@@@@@@@**                       +**@@@@@@@@%*
- ::::++==::::::::::::::::::::::**@*                        **@@@@@@@@%*
-  ::::==#@@@@=:::::::::::::       :                         **@@@@@@@@%*
-   :::--%%@@%%--::::::::                                     **@@@@@@@@%*
-    :::**%+**%**:::::                                         +**@@@@@@%*
-     :#%*++*#%#:                                              **@@@@@@%*
-      -+%#%*+-                                                **@@@@%**
-         -                                                    +**@%**
-                                                              **%**
-       +--+**#@@@@@@%**=--                                   +**
-    +%@@@++*+++*##@@@@@@@@@@#%*--                 +--+**%@@@@@@@@%**+**%@@@%**
-  +%@@#++**#@@@*+++%@@@@@@@@@@@@%*++           ++%@@@@%##@@@@@@@@@@%**@@@@@@@@@%*
-++%@@*++%@@@@@@@#++**@@@@@@@@@@@@@@%*++     ++*%@@@@@@@@@@@@@@@@@@@@@%**@@@@@@@@@@@%*
-  +**@@@@@@@@@@@%*++**@@@@@@@@@@@@@@@@%*+*%@@@@@@@@@@@@@@@@@@@@@@@@@@@%**@@@@@@@@@@@@%*
-      ++++*#%@@@@@@%**@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**@@@@@@@@@@@@%
-              ++++**%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**@@@@@@@@@@@%*
-                      **@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**@@@@@@@@@@%
-                        **@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**@@@@@@@%*
-                         **@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**@@@%**
-                          **@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**
-                           **@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%*
-                            **@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**
-                             +**@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**
-                                +**@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%**
-                                   +**@@@@@@@@@@@@@@@@@@@@@@@%**
-                                      ++**%@@@@@@@@@@@%**++
-                                          ++**%%%**++
-                                             ****
-                                              *`}
-                      </pre>
-                    </div>
-                    
-                    {/* Card footer */}
-                    <div className="text-center mt-8">
-                      <p className="text-white/60 text-sm">
-                        Clean, powerful, and beautifully crafted automation tools
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
 
           {/* Feature workflow section */}
           <div className="relative">
@@ -223,7 +142,7 @@ export default function LandingPage() {
           </div>
 
           {/* CTA section */}
-          <section className="relative py-16 sm:py-20 lg:py-24 overflow-hidden">
+          <section className="relative py-6 sm:py-8 lg:py-10 overflow-hidden">
             {/* Tesseract 3D background effect */}
             <TesseractBackground />
             
@@ -272,13 +191,12 @@ export default function LandingPage() {
                     <Image 
                       src="/nodey-ascii.png" 
                       alt="Nodey ASCII Art" 
-                      width={500}
-                      height={350}
-                      className="max-w-full h-auto opacity-90"
+                      width={700}
+                      height={490}
+                      className="max-w-full h-auto opacity-90 cursor-pointer ascii-gold-hover"
                       style={{
                         filter: 'brightness(1.1) contrast(1.2)',
-                        maxHeight: '350px',
-                        width: 'auto'
+                        transition: 'all 0.7s ease-in-out'
                       }}
                       priority={false}
                     />
