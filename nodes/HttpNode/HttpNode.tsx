@@ -20,5 +20,3 @@ export const HttpNode = memo(({ id, data, selected }: NodeProps<HttpNodeData>) =
 })
 
 HttpNode.displayName = 'HttpNode'
-
-export default HttpNode

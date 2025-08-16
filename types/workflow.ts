@@ -134,12 +134,8 @@ export interface IfNodeConfig {
 }
 
 // Filter node uses the same simple condition structure as IF
-export interface FilterNodeConfig {
-  condition: {
-    field: string
-    operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan'
-    value: unknown
-  }
-}
+// Filter node uses the same simple condition structure as IF — removed unused explicit
+// exported type to avoid unused-export noise. The schema remains defined in node
+// schemas where needed.
 
 // Removed unused LoopNodeConfig

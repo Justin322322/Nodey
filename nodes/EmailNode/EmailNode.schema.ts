@@ -1,7 +1,7 @@
 import { NodeType, ActionType } from '@/types/workflow'
 import { EmailNodeConfig } from './EmailNode.types'
 
-export interface ParameterDefinition {
+interface ParameterDefinition {
   name: string
   label: string
   type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url'
@@ -12,7 +12,7 @@ export interface ParameterDefinition {
   description?: string
 }
 
-export interface NodeDefinition {
+interface NodeDefinition {
   nodeType: NodeType
   subType: ActionType
   label: string
