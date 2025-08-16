@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: 'Nodey',
     images: [
       {
-        url: '/nodey-ascii.png',
+        url: '/nodey-social-preview.png',
         alt: 'Nodey - Visual workflow automation builder',
       },
     ],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Nodey - Workflow Automation Builder',
     description: 'Build powerful workflow automations with our intuitive visual node editor. Drag, connect, and deploy automated workflows in minutes.',
-    images: ['/nodey-ascii.png'],
+    images: ['/nodey-social-preview.png'],
   },
 }
 
