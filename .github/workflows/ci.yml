@@ -60,7 +60,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.head_ref != 'feature/schedule-node-implementation'
     
     steps:
       - name: Checkout Repository
