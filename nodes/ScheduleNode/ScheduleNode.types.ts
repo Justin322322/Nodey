@@ -17,6 +17,7 @@ export interface ScheduleExecutionResult {
   nextRun?: Date
   timezone: string
   timestamp: Date
+  reason?: string
 }
 
 export interface CronParseResult {

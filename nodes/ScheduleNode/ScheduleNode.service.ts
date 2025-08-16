@@ -10,6 +10,22 @@ export class ScheduleNodeService {
     try {
       const config = context.config as ScheduleNodeConfig
       
+      // Check if schedule is disabled
+      if (config.enabled === false) {
+        const result: ScheduleExecutionResult = {
+          triggered: false,
+          reason: 'Schedule disabled',
+          cronExpression: config.cron,
+          timezone: config.timezone || 'UTC',
+          timestamp: new Date()
+        }
+
+        return {
+          success: true,
+          output: result
+        }
+      }
+      
       // Validate the schedule configuration
       const validation = this.validateSchedule(config)
       if (!validation.isValid) {
