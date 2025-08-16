@@ -183,19 +183,13 @@ export class ScheduleNodeService {
    * Check if timezone is valid
    */
   private static isValidTimezone(timezone: string): boolean {
-    const validTimezones = [
-      'UTC',
-      'America/New_York',
-      'America/Los_Angeles', 
-      'America/Chicago',
-      'Europe/London',
-      'Europe/Paris',
-      'Asia/Tokyo',
-      'Asia/Shanghai',
-      'Australia/Sydney'
-    ]
-    
-    return validTimezones.includes(timezone)
+    try {
+      // Throws if timezone is invalid
+      new Intl.DateTimeFormat('en-US', { timeZone: timezone }).format(new Date())
+      return true
+    } catch {
+      return false
+    }
   }
 
   /**
