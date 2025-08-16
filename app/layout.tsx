@@ -23,6 +23,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: '/nodey-social-preview.png',
+        width: 1200,
+        height: 630,
         alt: 'Nodey - Visual workflow automation builder',
       },
     ],
