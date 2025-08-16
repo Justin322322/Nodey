@@ -129,7 +129,7 @@ export default function Footer() {
             <span>for the automation community</span>
           </div>
           <div className="text-white/40 text-sm">
-            © 2024 Nodey. Open source under MIT License.
+            © {new Date().getFullYear()} Nodey. Open source under MIT License.
           </div>
         </div>
       </div>
