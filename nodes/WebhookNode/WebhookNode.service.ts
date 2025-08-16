@@ -168,13 +168,32 @@ export class WebhookNodeService {
   ): Promise<WebhookExecutionResult> {
     const timestamp = new Date()
 
-    // Check if method matches
-    if (request.method !== config.method) {
+    // Normalize method comparison (case-insensitive)
+    const expectedMethod = (config.method || 'POST').toUpperCase()
+    const receivedMethod = (request.method || '').toUpperCase()
+
+    // Normalize header keys for case-insensitive access
+    const lowerHeaderEntries = Object.entries(request.headers || {}).map(
+      ([k, v]) => [k.toLowerCase(), v] as const
+    )
+    const headersLower: Record<string, string> = Object.fromEntries(lowerHeaderEntries)
+    const signatureHeaderName = (config.signatureHeader || '').toLowerCase()
+
+    // Build sanitized headers without the signature header (any casing)
+    const sanitizedHeaders: Record<string, string> = {}
+    for (const [k, v] of Object.entries(request.headers || {})) {
+      if (k.toLowerCase() !== signatureHeaderName) {
+        sanitizedHeaders[k] = v
+      }
+    }
+
+    // Method mismatch
+    if (receivedMethod !== expectedMethod) {
       return {
         triggered: false,
         reason: `Method mismatch: expected ${config.method}, got ${request.method}`,
         method: request.method,
-        headers: request.headers,
+        headers: sanitizedHeaders,
         timestamp
       }
     }
@@ -182,18 +201,25 @@ export class WebhookNodeService {
     // Validate signature if secret is configured
     let signatureVerified = true
     if (config.secret && config.signatureHeader) {
-      const signature = request.headers[config.signatureHeader.toLowerCase()]
-      const payload = typeof request.body === 'string' ? request.body : JSON.stringify(request.body || {})
-      
-      const signatureResult = this.validateSignature(payload, signature || '', config.secret)
+      const signature = headersLower[signatureHeaderName]
+      const payload =
+        typeof request.body === 'string'
+          ? request.body
+          : JSON.stringify(request.body || {})
+
+      const signatureResult = this.validateSignature(
+        payload,
+        signature || '',
+        config.secret
+      )
       signatureVerified = signatureResult.isValid
-      
+
       if (!signatureVerified) {
         return {
           triggered: false,
           reason: `Signature verification failed: ${signatureResult.error}`,
           method: request.method,
-          headers: request.headers,
+          headers: sanitizedHeaders,
           body: request.body,
           timestamp,
           signatureVerified: false
@@ -204,7 +230,7 @@ export class WebhookNodeService {
     return {
       triggered: true,
       method: request.method,
-      headers: request.headers,
+      headers: sanitizedHeaders,
       body: request.body,
       timestamp,
       signatureVerified
