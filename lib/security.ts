@@ -9,30 +9,38 @@ import CryptoJS from 'crypto-js'
  * This creates a unique key per browser/device for credential encryption
  */
 function generateDeviceKey(): string {
-  // Try to get existing device key from sessionStorage first
-  const existingKey = sessionStorage.getItem('deviceKey')
-  if (existingKey) {
-    return existingKey
+  // SSR/RSC-safe guard
+  if (typeof window === 'undefined') {
+    // Do not attempt browser-specific operations on the server.
+    // Return a stable but unusable key that forces decrypt to no-op on server.
+    return 'server-device-key-unavailable'
   }
+  try {
+    const existingKey = window.sessionStorage?.getItem('deviceKey')
+    if (existingKey) return existingKey
 
-  // Create device fingerprint from available browser properties
-  const fingerprint = [
-    navigator.userAgent,
-    navigator.language,
-    screen.width,
-    screen.height,
-    new Date().getTimezoneOffset(),
-    // Add some randomness that persists for the session
-    crypto.randomUUID()
-  ].join('|')
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'na'
+    const language = typeof navigator !== 'undefined' ? navigator.language : 'na'
+    const width = typeof screen !== 'undefined' ? String(screen.width) : '0'
+    const height = typeof screen !== 'undefined' ? String(screen.height) : '0'
+    const tz = String(new Date().getTimezoneOffset())
+    const rand =
+      (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function')
+        ? (crypto as any).randomUUID()
+        : Math.random().toString(36).slice(2)
 
-  // Generate a key from the fingerprint
-  const deviceKey = CryptoJS.SHA256(fingerprint).toString()
-  
-  // Store in sessionStorage (cleared when browser closes)
-  sessionStorage.setItem('deviceKey', deviceKey)
-  
-  return deviceKey
+    const fingerprint = [userAgent, language, width, height, tz, rand].join('|')
+    const deviceKey = CryptoJS.SHA256(fingerprint).toString()
+    try {
+      window.sessionStorage?.setItem('deviceKey', deviceKey)
+    } catch {
+      // Ignore storage write failures (e.g., privacy mode)
+    }
+    return deviceKey
+  } catch {
+    // On any unexpected failure, return a sentinel
+    return 'device-key-generation-failed'
+  }
 }
 
 /**
