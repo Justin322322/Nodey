@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { ManualNodeService, executeManualNode } from './ManualNode.service'
 import { MANUAL_NODE_DEFINITION } from './ManualNode.schema'
-import { ManualNodeConfig } from './ManualNode.types'
+import { ManualNodeConfig, ManualExecutionResult } from './ManualNode.types'
 import { NodeExecutionContext } from '@/nodes/types'
 
 describe('ManualNode', () => {
@@ -21,8 +21,9 @@ describe('ManualNode', () => {
 
         expect(result.success).toBe(true)
         expect(result.output).toBeDefined()
-        expect(result.output.triggered).toBe(true)
-        expect(result.output.timestamp).toBeInstanceOf(Date)
+        const output = result.output as ManualExecutionResult
+        expect(output.triggered).toBe(true)
+        expect(output.timestamp).toBeInstanceOf(Date)
       })
 
       it('should execute successfully with valid config', async () => {
@@ -39,8 +40,9 @@ describe('ManualNode', () => {
         const result = await ManualNodeService.execute(context)
 
         expect(result.success).toBe(true)
-        expect(result.output?.triggered).toBe(true)
-        expect(result.output?.triggeredBy).toBe('workflow-1')
+        const output = result.output as ManualExecutionResult
+        expect(output?.triggered).toBe(true)
+        expect(output?.triggeredBy).toBe('workflow-1')
       })
     })
 

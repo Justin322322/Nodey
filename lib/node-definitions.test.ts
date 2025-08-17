@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { validateNodeBeforeExecute, findNodeDefinition } from './node-definitions'
-import { NodeType, ActionType, WorkflowNode } from '@/types/workflow'
+import { NodeType, ActionType, TriggerType, WorkflowNode } from '@/types/workflow'
 
 describe('node-definitions', () => {
   describe('validateNodeBeforeExecute', () => {
@@ -106,7 +106,7 @@ describe('node-definitions', () => {
         data: {
           label: 'Manual Trigger',
           nodeType: NodeType.TRIGGER,
-          triggerType: 'manual' as any,
+          triggerType: TriggerType.MANUAL,
           config: {}
         }
       }
@@ -147,7 +147,7 @@ describe('node-definitions', () => {
         data: {
           label: 'Unknown Action',
           nodeType: NodeType.ACTION,
-          actionType: 'unknown' as any,
+          actionType: 'unknown' as ActionType,
           config: {}
         }
       }

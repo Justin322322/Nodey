@@ -166,7 +166,7 @@ export const HTTP_NODE_DEFINITION: NodeDefinition = {
     // Validate body JSON if provided
     if (typed.body && typeof typed.body === "string") {
       try {
-        const parsed = JSON.parse(typed.body);
+        const parsed = JSON.parse(typed.body) as unknown;
         // Check size limit (e.g., 1MB)
         if (JSON.stringify(parsed).length > 1024 * 1024) {
           errors.push("Request body exceeds 1MB limit");

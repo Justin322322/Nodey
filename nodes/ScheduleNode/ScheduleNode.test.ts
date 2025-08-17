@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ScheduleNodeService } from './ScheduleNode.service'
-import { NodeExecutionContext } from '../types'
+import { NodeExecutionContext, createTestContext } from '../types'
 import { SCHEDULE_NODE_DEFINITION } from './ScheduleNode.schema'
-import { ScheduleNodeConfig } from './ScheduleNode.types'
+import { ScheduleNodeConfig, ScheduleExecutionResult } from './ScheduleNode.types'
 
 describe('ScheduleNode', () => {
   beforeEach(() => {
@@ -169,14 +169,13 @@ describe('ScheduleNode', () => {
 
   describe('Schedule Execution', () => {
     it('should execute schedule successfully with valid configuration', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           cron: '0 0 * * *',
           timezone: 'UTC',
           enabled: true
         }
-      }
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
@@ -184,7 +183,7 @@ describe('ScheduleNode', () => {
       expect(result.output).toBeDefined()
       expect(result.error).toBeUndefined()
 
-      const output = result.output as any
+      const output = result.output as ScheduleExecutionResult
       expect(output.triggered).toBe(true)
       expect(output.cronExpression).toBe('0 0 * * *')
       expect(output.timezone).toBe('UTC')
@@ -192,13 +191,12 @@ describe('ScheduleNode', () => {
     })
 
     it('should fail with invalid cron expression', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           cron: 'invalid-cron',
           timezone: 'UTC'
         }
-      }
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
@@ -208,12 +206,11 @@ describe('ScheduleNode', () => {
     })
 
     it('should fail with missing cron expression', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           timezone: 'UTC'
         }
-      }
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
@@ -223,10 +220,9 @@ describe('ScheduleNode', () => {
 
     it('should handle execution errors gracefully', async () => {
       // Mock an error by providing invalid config type
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
-        config: null as any
-      }
+      const context = createTestContext({
+        config: null as unknown as ScheduleNodeConfig
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
@@ -236,45 +232,42 @@ describe('ScheduleNode', () => {
     })
 
     it('should use default timezone when not specified', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           cron: '0 0 * * *'
         }
-      }
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
       expect(result.success).toBe(true)
-      const output = result.output as any
+      const output = result.output as ScheduleExecutionResult
       expect(output.timezone).toBe('UTC')
     })
 
     it('should handle different timezones', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           cron: '0 0 * * *',
           timezone: 'America/New_York'
         }
-      }
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
       expect(result.success).toBe(true)
-      const output = result.output as any
+      const output = result.output as ScheduleExecutionResult
       expect(output.timezone).toBe('America/New_York')
     })
 
     it('should short-circuit when schedule is disabled', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           cron: '0 0 * * *',
           timezone: 'UTC',
           enabled: false
         }
-      }
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
@@ -282,7 +275,7 @@ describe('ScheduleNode', () => {
       expect(result.output).toBeDefined()
       expect(result.error).toBeUndefined()
 
-      const output = result.output as any
+      const output = result.output as ScheduleExecutionResult
       expect(output.triggered).toBe(false)
       expect(output.reason).toBe('Schedule disabled')
       expect(output.cronExpression).toBe('0 0 * * *')
@@ -291,19 +284,18 @@ describe('ScheduleNode', () => {
     })
 
     it('should handle disabled schedule with custom timezone', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           cron: '*/15 * * * *',
           timezone: 'America/Los_Angeles',
           enabled: false
         }
-      }
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
       expect(result.success).toBe(true)
-      const output = result.output as any
+      const output = result.output as ScheduleExecutionResult
       expect(output.triggered).toBe(false)
       expect(output.reason).toBe('Schedule disabled')
       expect(output.cronExpression).toBe('*/15 * * * *')
@@ -311,18 +303,17 @@ describe('ScheduleNode', () => {
     })
 
     it('should handle disabled schedule with default timezone', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           cron: '0 12 * * 1-5',
           enabled: false
         }
-      }
+      })
 
       const result = await ScheduleNodeService.execute(context)
 
       expect(result.success).toBe(true)
-      const output = result.output as any
+      const output = result.output as ScheduleExecutionResult
       expect(output.triggered).toBe(false)
       expect(output.reason).toBe('Schedule disabled')
       expect(output.cronExpression).toBe('0 12 * * 1-5')

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { IfNodeService, executeIfNode } from './IfNode.service'
 import { IF_NODE_DEFINITION } from './IfNode.schema'
-import { IfNodeConfig } from './IfNode.types'
+import { IfNodeConfig, IfExecutionResult } from './IfNode.types'
 import { NodeExecutionContext } from '@/nodes/types'
 
 describe('IfNode', () => {
@@ -28,9 +28,10 @@ describe('IfNode', () => {
         const result = await IfNodeService.execute(context)
 
         expect(result.success).toBe(true)
-        expect(result.output?.conditionMet).toBe(true)
-        expect(result.output?.branch).toBe('true')
-        expect(result.output?.actualValue).toBe('John')
+        const output = result.output as IfExecutionResult
+        expect(output?.conditionMet).toBe(true)
+        expect(output?.branch).toBe('true')
+        expect(output?.actualValue).toBe('John')
       })
 
       it('should execute successfully with false condition', async () => {
@@ -54,9 +55,10 @@ describe('IfNode', () => {
         const result = await IfNodeService.execute(context)
 
         expect(result.success).toBe(true)
-        expect(result.output?.conditionMet).toBe(false)
-        expect(result.output?.branch).toBe('false')
-        expect(result.output?.actualValue).toBe('John')
+        const output = result.output as IfExecutionResult
+        expect(output?.conditionMet).toBe(false)
+        expect(output?.branch).toBe('false')
+        expect(output?.actualValue).toBe('John')
       })
 
       it('should fail with invalid config', async () => {
@@ -210,7 +212,8 @@ describe('IfNode', () => {
       const result = await executeIfNode(context)
 
       expect(result.success).toBe(true)
-      expect(result.output?.conditionMet).toBe(true)
+      const output = result.output as IfExecutionResult
+      expect(output?.conditionMet).toBe(true)
     })
   })
 

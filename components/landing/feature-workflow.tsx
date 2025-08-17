@@ -57,7 +57,7 @@ function GlassFeatureNode({ data }: { data: FeatureNodeData }) {
           <div className="relative">
             {/* Base icon */}
             <div className="relative">
-              {React.cloneElement(data.icon as React.ReactElement<any>, {
+              {React.cloneElement(data.icon as React.ReactElement<Record<string, unknown>>, {
                 className: "w-24 h-24 text-white/60",
                 strokeWidth: 1.5
               })}
@@ -66,7 +66,7 @@ function GlassFeatureNode({ data }: { data: FeatureNodeData }) {
             {/* Single energy trail flowing effect */}
             <div className="absolute inset-0">
               <div className="absolute inset-0">
-                {React.cloneElement(data.icon as React.ReactElement<any>, {
+                {React.cloneElement(data.icon as React.ReactElement<Record<string, unknown>>, {
                   className: "w-24 h-24 text-cyan-300",
                   strokeWidth: 1.5,
                   style: {

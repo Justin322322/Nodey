@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { FilterNodeService, executeFilterNode } from './FilterNode.service'
 import { FILTER_NODE_DEFINITION } from './FilterNode.schema'
-import { FilterNodeConfig } from './FilterNode.types'
+import { FilterNodeConfig, FilterExecutionResult } from './FilterNode.types'
 import { NodeExecutionContext } from '@/nodes/types'
 
 describe('FilterNode', () => {
@@ -34,11 +34,12 @@ describe('FilterNode', () => {
         const result = await FilterNodeService.execute(context)
 
         expect(result.success).toBe(true)
-        expect((result.output as any)?.originalCount).toBe(3)
-        expect((result.output as any)?.filteredCount).toBe(2)
-        expect((result.output as any)?.filteredItems).toHaveLength(2)
-        expect(result.output?.filteredItems[0]).toEqual({ id: 1, status: 'active', name: 'Item 1' })
-        expect(result.output?.filteredItems[1]).toEqual({ id: 3, status: 'active', name: 'Item 3' })
+        const output = result.output as FilterExecutionResult
+        expect(output?.originalCount).toBe(3)
+        expect(output?.filteredCount).toBe(2)
+        expect(output?.filteredItems).toHaveLength(2)
+        expect(output?.filteredItems[0]).toEqual({ id: 1, status: 'active', name: 'Item 1' })
+        expect(output?.filteredItems[1]).toEqual({ id: 3, status: 'active', name: 'Item 3' })
       })
 
       it('should handle object with array property', async () => {
@@ -71,8 +72,9 @@ describe('FilterNode', () => {
         const result = await FilterNodeService.execute(context)
 
         expect(result.success).toBe(true)
-        expect(result.output?.originalCount).toBe(3)
-        expect(result.output?.filteredCount).toBe(2)
+        const output = result.output as FilterExecutionResult
+        expect(output?.originalCount).toBe(3)
+        expect(output?.filteredCount).toBe(2)
       })
 
       it('should handle nested field paths', async () => {
@@ -102,9 +104,10 @@ describe('FilterNode', () => {
         const result = await FilterNodeService.execute(context)
 
         expect(result.success).toBe(true)
-        expect(result.output?.filteredCount).toBe(2)
-        expect(result.output?.filteredItems.every(item => 
-          (item as any).user.role === 'admin'
+                const output = result.output as FilterExecutionResult
+        expect(output?.filteredCount).toBe(2)
+        expect(output?.filteredItems.every(item =>
+          (item as { user: { role: string } }).user.role === 'admin'
         )).toBe(true)
       })
 
@@ -219,7 +222,7 @@ describe('FilterNode', () => {
       it('should fail with invalid operator', () => {
         const config = {
           condition: { field: 'test', operator: 'invalid', value: 'test' }
-        } as FilterNodeConfig
+        } as unknown as FilterNodeConfig
 
         const result = FilterNodeService.validateFilter(config)
         expect(result.isValid).toBe(false)
@@ -274,7 +277,8 @@ describe('FilterNode', () => {
       const result = await executeFilterNode(context)
 
       expect(result.success).toBe(true)
-      expect(result.output?.filteredCount).toBe(1)
+      const output = result.output as FilterExecutionResult
+      expect(output?.filteredCount).toBe(1)
     })
   })
 

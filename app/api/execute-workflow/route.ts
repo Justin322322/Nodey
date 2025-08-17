@@ -26,7 +26,7 @@ const executeBodySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const json = await req.json()
+    const json = await req.json() as unknown
     const parsed = executeBodySchema.parse(json)
     const workflowRaw = parsed.workflow as Workflow
     const workflow: Workflow = {

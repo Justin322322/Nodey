@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { executeEmailNode } from './EmailNode.service'
 import { NodeExecutionContext, createTestContext } from '../types'
 import { EMAIL_NODE_DEFINITION } from './EmailNode.schema'
-import { EmailNodeConfig } from './EmailNode.types'
+import { EmailNodeConfig, EmailExecutionResult } from './EmailNode.types'
 
 describe('EmailNode', () => {
   beforeEach(() => {
@@ -121,7 +121,7 @@ describe('EmailNode', () => {
       expect(result.output).toBeDefined()
       expect(result.error).toBeUndefined()
 
-      const output = result.output as any
+      const output = result.output as EmailExecutionResult
       expect(output.sent).toBe(true)
       expect(output.to).toEqual(['test@example.com'])
       expect(output.subject).toBe('Test Subject')
@@ -206,14 +206,14 @@ describe('EmailNode', () => {
       const result = await executeEmailNode(context)
 
       expect(result.success).toBe(true)
-      const output = result.output as any
+      const output = result.output as EmailExecutionResult
       expect(output.to).toEqual(['test1@example.com', 'test2@example.com'])
     })
 
     it('should handle execution errors gracefully', async () => {
       // Mock an error by providing invalid config type
       const context = createTestContext({
-        config: null as any
+        config: null as unknown as EmailNodeConfig
       })
 
       const result = await executeEmailNode(context)

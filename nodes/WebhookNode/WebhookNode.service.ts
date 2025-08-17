@@ -275,7 +275,7 @@ export class WebhookNodeService {
 
     let exampleResponse
     try {
-      exampleResponse = config.responseBody ? JSON.parse(config.responseBody) : { success: true }
+      exampleResponse = config.responseBody ? JSON.parse(config.responseBody) as unknown : { success: true }
     } catch {
       exampleResponse = { success: true }
     }

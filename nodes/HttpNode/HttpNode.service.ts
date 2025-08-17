@@ -44,7 +44,7 @@ export async function executeHttpNode(context: NodeExecutionContext): Promise<No
       let customHeaders: Record<string, string>
       if (typeof config.headers === 'string') {
         try {
-          customHeaders = JSON.parse(config.headers)
+          customHeaders = JSON.parse(config.headers) as Record<string, string>
         } catch {
           return {
             success: false,

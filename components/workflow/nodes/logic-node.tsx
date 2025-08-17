@@ -18,10 +18,12 @@ const logicIcons = {
 export const LogicNode = memo(({ id, data, selected }: NodeProps<LogicNodeData>) => {
   // Route to modular logic nodes
   if (data.logicType === LogicType.IF) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return <IfNode {...({ id, data, selected } as any)} />
   }
   
   if (data.logicType === LogicType.FILTER) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return <FilterNode {...({ id, data, selected } as any)} />
   }
   

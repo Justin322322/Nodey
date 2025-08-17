@@ -22,8 +22,11 @@ describe("HttpNode", () => {
       config: Partial<HttpNodeConfig>
     ): NodeExecutionContext => ({
       nodeId: "test-node",
+      workflowId: "test-workflow",
       config: config as Record<string, unknown>,
-      previousOutput: undefined,
+      input: {},
+      previousNodes: [],
+      executionId: "test-execution",
       signal: undefined,
     });
 
@@ -34,7 +37,7 @@ describe("HttpNode", () => {
         headers: new Map([["content-type", "application/json"]]),
         json: vi.fn().mockResolvedValue({ success: true }),
       };
-      mockResponse.headers.forEach = vi.fn((callback) => {
+      mockResponse.headers.forEach = vi.fn((callback: (value: string, key: string) => void) => {
         callback("application/json", "content-type");
       });
       mockFetch.mockResolvedValue(mockResponse);
@@ -59,7 +62,7 @@ describe("HttpNode", () => {
           method: "GET",
           headers: expect.objectContaining({
             "User-Agent": "Workflow-Engine/1.0",
-          }),
+          }) as Record<string, string>,
         })
       );
     });
@@ -71,7 +74,7 @@ describe("HttpNode", () => {
         headers: new Map([["content-type", "application/json"]]),
         json: vi.fn().mockResolvedValue({ id: 123 }),
       };
-      mockResponse.headers.forEach = vi.fn((callback) => {
+      mockResponse.headers.forEach = vi.fn((callback: (value: string, key: string) => void) => {
         callback("application/json", "content-type");
       });
       mockFetch.mockResolvedValue(mockResponse);
@@ -99,7 +102,7 @@ describe("HttpNode", () => {
           headers: expect.objectContaining({
             "Content-Type": "application/json",
             "Custom-Header": "value",
-          }),
+          }) as Record<string, string>,
         })
       );
     });
@@ -131,7 +134,7 @@ describe("HttpNode", () => {
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: "Bearer secret-token",
-          }),
+          }) as Record<string, string>,
         })
       );
     });
@@ -163,7 +166,7 @@ describe("HttpNode", () => {
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: "Basic dXNlcjpwYXNz",
-          }),
+          }) as Record<string, string>,
         })
       );
     });
@@ -195,7 +198,7 @@ describe("HttpNode", () => {
         expect.objectContaining({
           headers: expect.objectContaining({
             "X-API-Key": "api-key-123",
-          }),
+          }) as Record<string, string>,
         })
       );
     });
@@ -241,7 +244,7 @@ describe("HttpNode", () => {
       const context = createContext({
         method: "GET",
         url: "https://api.example.com/test",
-        headers: '{"invalid": json}' as any,
+        headers: '{"invalid": json}' as unknown as Record<string, string>,
       });
 
       const result = await executeHttpNode(context);

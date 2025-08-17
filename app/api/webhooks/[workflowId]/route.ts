@@ -31,7 +31,7 @@ export async function POST(
     const { workflowId } = await params
     
     // Parse request body
-    const body = await req.json()
+    const body = await req.json() as unknown
     
     // Validate payload
     const validatedData = webhookPayloadSchema.parse(body)
