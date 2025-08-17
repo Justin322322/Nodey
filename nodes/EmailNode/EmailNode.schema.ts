@@ -2,14 +2,15 @@ import { NodeType, ActionType } from '@/types/workflow'
 import { EmailNodeConfig } from './EmailNode.types'
 
 interface ParameterDefinition {
-  name: string
+  path: string
   label: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url'
+  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url' | 'password'
   required?: boolean
   defaultValue?: unknown
   options?: Array<{ label: string; value: string }>
   placeholder?: string
   description?: string
+  showIf?: Array<{ path: string; equals: string | number | boolean }>
 }
 
 interface NodeDefinition {
@@ -29,7 +30,7 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
   description: 'Send an email message',
   parameters: [
     { 
-      name: 'to',
+      path: 'to',
       label: 'To', 
       type: 'email', 
       required: true, 
@@ -38,7 +39,7 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
       placeholder: 'Enter email addresses'
     },
     { 
-      name: 'subject',
+      path: 'subject',
       label: 'Subject', 
       type: 'text', 
       required: true, 
@@ -47,7 +48,7 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
       placeholder: 'Enter email subject'
     },
     { 
-      name: 'body',
+      path: 'body',
       label: 'Body', 
       type: 'textarea', 
       required: true, 
@@ -56,12 +57,79 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
       placeholder: 'Enter email content'
     },
     {
-      name: 'from',
+      path: 'from',
       label: 'From',
       type: 'email',
       required: false,
       description: 'Sender email address (optional)',
       placeholder: 'sender@example.com'
+    },
+    // Email Service Configuration
+    {
+      path: 'emailService.type',
+      label: 'Email Provider',
+      type: 'select',
+      required: true,
+      defaultValue: 'gmail',
+      description: 'Choose your email service provider',
+      options: [
+        { label: 'Gmail', value: 'gmail' },
+        { label: 'Outlook', value: 'outlook' },
+        { label: 'SendGrid', value: 'sendgrid' },
+        { label: 'Custom SMTP', value: 'smtp' }
+      ]
+    },
+    {
+      path: 'emailService.auth.user',
+      label: 'Email Address',
+      type: 'email',
+      required: true,
+      description: 'Your email address',
+      placeholder: 'your.email@gmail.com'
+    },
+    {
+      path: 'emailService.auth.pass',
+      label: 'Password/App Password',
+      type: 'password',
+      required: true,
+      description: 'Your email password or app-specific password',
+      placeholder: 'Enter your app password'
+    },
+    {
+      path: 'emailService.apiKey',
+      label: 'SendGrid API Key',
+      type: 'password',
+      required: true,
+      description: 'Your SendGrid API key',
+      placeholder: 'SG.xxxxxxxx',
+      showIf: [{ path: 'emailService.type', equals: 'sendgrid' }]
+    },
+    {
+      path: 'emailService.host',
+      label: 'SMTP Host',
+      type: 'text',
+      required: true,
+      description: 'SMTP server hostname',
+      placeholder: 'smtp.example.com',
+      showIf: [{ path: 'emailService.type', equals: 'smtp' }]
+    },
+    {
+      path: 'emailService.port',
+      label: 'SMTP Port',
+      type: 'number',
+      required: false,
+      defaultValue: 587,
+      description: 'SMTP server port (587 for TLS, 465 for SSL)',
+      showIf: [{ path: 'emailService.type', equals: 'smtp' }]
+    },
+    {
+      path: 'emailService.secure',
+      label: 'Use SSL',
+      type: 'boolean',
+      required: false,
+      defaultValue: false,
+      description: 'Use SSL connection (true for port 465)',
+      showIf: [{ path: 'emailService.type', equals: 'smtp' }]
     }
   ],
   validate: (config: Record<string, unknown>): string[] => {
@@ -95,6 +163,37 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
         errors.push(`Invalid email format for sender: ${typed.from}`)
       }
     }
+
+    // Validate email service configuration
+    if (!typed.emailService) {
+      errors.push('Email service configuration is required')
+    } else {
+      if (!typed.emailService.type) {
+        errors.push('Email service type is required')
+      }
+
+      if (!typed.emailService.auth?.user) {
+        errors.push('Email address is required')
+      } else if (!isValidEmail(typed.emailService.auth.user)) {
+        errors.push('Invalid email address format')
+      }
+
+      if (typed.emailService.type === 'sendgrid') {
+        if (!typed.emailService.apiKey) {
+          errors.push('SendGrid API key is required')
+        }
+      } else {
+        if (!typed.emailService.auth?.pass) {
+          errors.push('Email password/app password is required')
+        }
+      }
+
+      if (typed.emailService.type === 'smtp') {
+        if (!typed.emailService.host) {
+          errors.push('SMTP host is required')
+        }
+      }
+    }
     
     return errors
   },
@@ -103,7 +202,14 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
     subject: '',
     body: '',
     from: undefined,
-    attachments: []
+    attachments: [],
+    emailService: {
+      type: 'gmail',
+      auth: {
+        user: '',
+        pass: ''
+      }
+    }
   })
 }
 

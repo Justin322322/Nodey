@@ -25,6 +25,10 @@ type ParameterType =
   | 'json'
   | 'textarea'
   | 'stringList'
+  | 'text'
+  | 'email'
+  | 'url'
+  | 'password'
 
 interface ParameterDefinition {
   // Label shown to users
@@ -34,6 +38,7 @@ interface ParameterDefinition {
   type: ParameterType
   required?: boolean
   description?: string
+  placeholder?: string
   options?: Array<{ label: string; value: string }>
   // Simple conditional display logic based on other config values
   showIf?: Array<{ path: string; equals: string | number | boolean }>
@@ -100,6 +105,13 @@ const NODE_DEFINITIONS: NodeDefinition[] = [
 
 export function findNodeDefinition(node: WorkflowNode): NodeDefinition | undefined {
   const data = node.data as WorkflowNode['data']
+  
+  // Special case for EmailNode - use the new definition
+  if (data.nodeType === NodeType.ACTION && (data as { actionType: ActionType }).actionType === ActionType.EMAIL) {
+    return EMAIL_NODE_DEFINITION as unknown as NodeDefinition
+  }
+  
+  // Use legacy system for other nodes
   switch (data.nodeType) {
     case NodeType.ACTION:
       return NODE_DEFINITIONS.find((d) => d.nodeType === NodeType.ACTION && d.subType === (data as { actionType: ActionType }).actionType)

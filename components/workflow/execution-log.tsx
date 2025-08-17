@@ -1,13 +1,20 @@
 "use client"
 
-import { AlertCircle, CheckCircle, Info, XCircle, List } from 'lucide-react'
+import { AlertCircle, CheckCircle, Info, XCircle, List, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { MobileSheet } from '@/components/ui/mobile-sheet'
 
 export function ExecutionLog() {
-  const { executionLogs, currentExecution, isLogsDialogOpen, setLogsDialogOpen } = useWorkflowStore()
+  const { 
+    executionLogs, 
+    currentExecution, 
+    isLogsDialogOpen, 
+    setLogsDialogOpen,
+    isLogsPanelCollapsed,
+    setLogsPanelCollapsed 
+  } = useWorkflowStore()
   const hasAny = Boolean(currentExecution) || executionLogs.length > 0
   
   const getLogIcon = (level: string) => {
@@ -71,27 +78,77 @@ export function ExecutionLog() {
     <>
       {/* Desktop Panel */}
       <div className="hidden sm:flex h-full flex-col">
-        {currentExecution && (
-          <div className="px-4 py-3 bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 border-b border-gray-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-white">Execution Log</h3>
-                <p className="text-sm text-white/70">
+        {/* Collapse Toggle Button - Always Visible */}
+        <div className="flex items-center justify-between px-2 py-2 bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 border-b border-gray-500">
+          {!isLogsPanelCollapsed && (
+            <div className="flex-1">
+              <h3 className="font-medium text-white text-sm">Execution Log</h3>
+              {currentExecution && (
+                <p className="text-xs text-white/70">
                   Started: {new Date(currentExecution.startedAt).toLocaleTimeString()}
                 </p>
-              </div>
+              )}
+            </div>
+          )}
+          {!isLogsPanelCollapsed && currentExecution && (
+            <div className="mr-2">
               {getStatusBadge()}
             </div>
-          </div>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLogsPanelCollapsed(!isLogsPanelCollapsed)}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-200 text-white border-0 flex-shrink-0 group"
+            title={isLogsPanelCollapsed ? "Expand execution logs" : "Collapse execution logs"}
+          >
+            <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 transition-all duration-200 flex items-center justify-center">
+              {isLogsPanelCollapsed ? (
+                <ChevronLeft className="w-3 h-3 group-hover:scale-110 transition-transform duration-200" />
+              ) : (
+                <ChevronRight className="w-3 h-3 group-hover:scale-110 transition-transform duration-200" />
+              )}
+            </div>
+          </Button>
+        </div>
+
+        {/* Panel Content - Hidden when collapsed */}
+        {!isLogsPanelCollapsed && (
+          <>
+            {hasAny ? (
+              <div className="flex-1 overflow-y-auto p-4">{renderLogsList()}</div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-white/50">
+                <div className="text-center">
+                  <Info className="w-12 h-12 mx-auto mb-2 text-white/30" />
+                  <p>No execution logs yet</p>
+                  <p className="text-sm text-white/40">Run a workflow to see logs here</p>
+                </div>
+              </div>
+            )}
+          </>
         )}
-        {hasAny ? (
-          <div className="flex-1 overflow-y-auto p-4">{renderLogsList()}</div>
-        ) : (
-          <div className="h-full flex items-center justify-center text-white/50">
-            <div className="text-center">
-              <Info className="w-12 h-12 mx-auto mb-2 text-white/30" />
-              <p>No execution logs yet</p>
-              <p className="text-sm text-white/40">Run a workflow to see logs here</p>
+
+        {/* Collapsed State - Show minimal info vertically */}
+        {isLogsPanelCollapsed && hasAny && (
+          <div className="flex-1 flex flex-col items-center justify-start pt-4 space-y-2">
+            {/* Status indicator when collapsed */}
+            {currentExecution && (
+              <div className="transform rotate-90 origin-center">
+                <div className={cn(
+                  'px-2 py-1 rounded text-xs font-medium',
+                  currentExecution.status === 'running' && 'bg-blue-100 text-blue-700',
+                  currentExecution.status === 'completed' && 'bg-green-100 text-green-700',
+                  currentExecution.status === 'failed' && 'bg-red-100 text-red-700',
+                  currentExecution.status === 'cancelled' && 'bg-gray-100 text-gray-700'
+                )}>
+                  {currentExecution.status.slice(0, 3).toUpperCase()}
+                </div>
+              </div>
+            )}
+            {/* Log count indicator */}
+            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="text-xs text-white font-medium">{executionLogs.length}</span>
             </div>
           </div>
         )}

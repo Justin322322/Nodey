@@ -42,7 +42,14 @@ describe('node-definitions', () => {
           config: {
             to: ['test@example.com'],
             subject: 'Test Subject',
-            body: 'Test Body'
+            body: 'Test Body',
+            emailService: {
+              type: 'gmail',
+              auth: {
+                user: 'test@example.com',
+                pass: 'testpassword'
+              }
+            }
           }
         }
       }
@@ -119,7 +126,7 @@ describe('node-definitions', () => {
   })
 
   describe('findNodeDefinition', () => {
-    it('should not find Email node definition in legacy NODE_DEFINITIONS (uses fallback)', () => {
+    it('should find Email node definition using new modular system', () => {
       const emailNode: WorkflowNode = {
         id: 'test-email-node',
         type: 'action',
@@ -134,9 +141,11 @@ describe('node-definitions', () => {
 
       const definition = findNodeDefinition(emailNode)
       
-      // Email nodes are not in the legacy NODE_DEFINITIONS array
-      // They use the fallback mechanism in validateNodeBeforeExecute
-      expect(definition).toBeUndefined()
+      // Email nodes now use the new modular definition system
+      expect(definition).toBeDefined()
+      expect(definition?.nodeType).toBe(NodeType.ACTION)
+      expect(definition?.subType).toBe(ActionType.EMAIL)
+      expect(definition?.label).toBe('Send Email')
     })
 
     it('should return undefined for unknown node types', () => {
