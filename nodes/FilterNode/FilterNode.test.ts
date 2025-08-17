@@ -34,9 +34,9 @@ describe('FilterNode', () => {
         const result = await FilterNodeService.execute(context)
 
         expect(result.success).toBe(true)
-        expect(result.output?.originalCount).toBe(3)
-        expect(result.output?.filteredCount).toBe(2)
-        expect(result.output?.filteredItems).toHaveLength(2)
+        expect((result.output as any)?.originalCount).toBe(3)
+        expect((result.output as any)?.filteredCount).toBe(2)
+        expect((result.output as any)?.filteredItems).toHaveLength(2)
         expect(result.output?.filteredItems[0]).toEqual({ id: 1, status: 'active', name: 'Item 1' })
         expect(result.output?.filteredItems[1]).toEqual({ id: 3, status: 'active', name: 'Item 3' })
       })

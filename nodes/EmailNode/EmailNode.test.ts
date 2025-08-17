@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { executeEmailNode } from './EmailNode.service'
-import { NodeExecutionContext } from '../types'
+import { NodeExecutionContext, createTestContext } from '../types'
 import { EMAIL_NODE_DEFINITION } from './EmailNode.schema'
 import { EmailNodeConfig } from './EmailNode.types'
 
@@ -107,14 +107,13 @@ describe('EmailNode', () => {
 
   describe('Email Execution', () => {
     it('should execute email successfully with valid configuration', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           to: ['test@example.com'],
           subject: 'Test Subject',
           body: 'Test body content'
         }
-      }
+      })
 
       const result = await executeEmailNode(context)
 
@@ -131,14 +130,13 @@ describe('EmailNode', () => {
     })
 
     it('should fail with missing recipients', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           to: [],
           subject: 'Test Subject',
           body: 'Test body content'
         }
-      }
+      })
 
       const result = await executeEmailNode(context)
 
@@ -148,14 +146,13 @@ describe('EmailNode', () => {
     })
 
     it('should fail with missing subject', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           to: ['test@example.com'],
           subject: '',
           body: 'Test body content'
         }
-      }
+      })
 
       const result = await executeEmailNode(context)
 
@@ -164,14 +161,13 @@ describe('EmailNode', () => {
     })
 
     it('should fail with missing body', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           to: ['test@example.com'],
           subject: 'Test Subject',
           body: ''
         }
-      }
+      })
 
       const result = await executeEmailNode(context)
 
@@ -183,15 +179,14 @@ describe('EmailNode', () => {
       const abortController = new AbortController()
       abortController.abort()
 
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           to: ['test@example.com'],
           subject: 'Test Subject',
           body: 'Test body content'
         },
         signal: abortController.signal
-      }
+      })
 
       const result = await executeEmailNode(context)
 
@@ -200,14 +195,13 @@ describe('EmailNode', () => {
     })
 
     it('should handle multiple recipients', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: {
           to: ['test1@example.com', 'test2@example.com'],
           subject: 'Test Subject',
           body: 'Test body content'
         }
-      }
+      })
 
       const result = await executeEmailNode(context)
 
@@ -218,10 +212,9 @@ describe('EmailNode', () => {
 
     it('should handle execution errors gracefully', async () => {
       // Mock an error by providing invalid config type
-      const context: NodeExecutionContext = {
-        nodeId: 'test-node',
+      const context = createTestContext({
         config: null as any
-      }
+      })
 
       const result = await executeEmailNode(context)
 
