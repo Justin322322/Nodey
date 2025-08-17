@@ -2,9 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: 
-      - main
-      - staging
+    branches: [main, staging]
   workflow_dispatch:
     inputs:
       environment:
@@ -12,21 +10,14 @@ on:
         required: true
         default: 'staging'
         type: choice
-        options:
-          - staging
-          - production
+        options: [staging, production]
 
 jobs:
-  # Only deploy from main to production, or staging branch to staging
-  deploy-staging:
-    name: Deploy to Staging
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
-    if: |
-      (github.ref == 'refs/heads/staging') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     environment:
-      name: staging
-      url: https://nodey-staging.vercel.app
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
     
     steps:
       - name: Checkout code
@@ -41,90 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Build for staging
-        run: npm run build
-        env:
-          NODE_ENV: production
-          NEXT_PUBLIC_ENV: staging
-          
-      # TODO: Re-enable once Vercel secrets are configured
-      # - name: Deploy to Vercel (Staging)
-      #   uses: amondnet/vercel-action@v25
-      #   with:
-      #     vercel-token: ${{ secrets.VERCEL_TOKEN }}
-      #     vercel-args: '--prebuilt'
-      #     vercel-org-id: ${{ secrets.ORG_ID }}
-      #     vercel-project-id: ${{ secrets.PROJECT_ID }}
-      #     working-directory: ./
-      #     alias-domains: |
-      #       nodey-staging.vercel.app
-      
-      - name: Deployment Placeholder (Staging)
-        run: |
-          echo "✅ Build completed successfully for staging"
-          echo "🚧 Vercel deployment is temporarily disabled"
-          echo "📁 Build artifacts are ready in .next directory"
-
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    if: |
-      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
-    environment:
-      name: production
-      url: https://nodey.vercel.app
-    needs: []  # Add staging deployment as dependency if needed
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Run tests and build
+        run: npm run test:ci
         
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Run full test suite
-        run: |
-          npm run typecheck
-          npm run lint
-          npm test
-          npm run build
-          
-      # TODO: Re-enable once Vercel secrets are configured
-      # - name: Deploy to Vercel (Production)
-      #   uses: amondnet/vercel-action@v25
-      #   with:
-      #     vercel-token: ${{ secrets.VERCEL_TOKEN }}
-      #     vercel-args: '--prod --prebuilt'
-      #     vercel-org-id: ${{ secrets.ORG_ID }}
-      #     vercel-project-id: ${{ secrets.PROJECT_ID }}
-      #     working-directory: ./
-      
-      - name: Deployment Placeholder (Production)
-        run: |
-          echo "✅ Build completed successfully for production"
-          echo "🚧 Vercel deployment is temporarily disabled"
-          echo "📁 Build artifacts are ready in .next directory"
-
-  # Prevent deployment from feature branches
-  block-feature-deployment:
-    name: Block Feature Branch Deployment
-    runs-on: ubuntu-latest
-    if: |
-      startsWith(github.ref, 'refs/heads/feature/') ||
-      startsWith(github.ref, 'refs/heads/fix/') ||
-      startsWith(github.ref, 'refs/heads/hotfix/')
-    
-    steps:
-      - name: Block deployment
-        run: |
-          echo "🚫 Deployment blocked for feature branch: ${{ github.ref }}"
-          echo "Feature branches cannot be deployed directly."
-          echo "Please create a PR to merge into main or staging branch."
-          exit 1
+      - name: Deployment placeholder
+        run: echo "✅ Build completed successfully"
