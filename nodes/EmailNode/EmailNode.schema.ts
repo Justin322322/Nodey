@@ -91,7 +91,7 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
       path: 'emailService.auth.pass',
       label: 'Password/App Password',
       type: 'password',
-      required: true,
+      required: false,
       description: 'Your email password or app-specific password',
       placeholder: 'Enter your app password'
     },
