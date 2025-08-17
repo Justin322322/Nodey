@@ -136,17 +136,16 @@ async function loadNodemailer(): Promise<NodemailerModule> {
   }
   
   try {
-    // Method 1: Try require if available (Node.js environment)
-    const globalAny = globalThis as Record<string, unknown>
-    const nodeRequire = (globalAny.require as NodeRequire) || (eval('require') as NodeRequire)
-    const nodemailerModule = nodeRequire('nodemailer') as NodemailerModule
-    return nodemailerModule
+    // Method 1: Node.js require using createRequire in ESM environments
+    const { createRequire } = await import('module')
+    const req = createRequire(import.meta.url)
+    const mod = req('nodemailer') as unknown as NodemailerModule
+    return (mod as any).default ?? mod
   } catch (requireError) {
     try {
-      // Method 2: Try dynamic import with string variable to avoid TypeScript checking
-      const moduleName = 'nodemailer'
-      const importResult = await eval(`import('${moduleName}')`) as NodemailerModule
-      return importResult
+      // Method 2: Dynamic import
+      const importResult = (await import('nodemailer')) as unknown as NodemailerModule
+      return (importResult as any).default ?? importResult
     } catch (importError) {
       // All methods failed
       throw new Error('Nodemailer not available')
