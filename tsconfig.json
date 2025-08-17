@@ -18,6 +18,10 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    // Strict type checking - ban any usage
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
     "plugins": [
       {
         "name": "next"

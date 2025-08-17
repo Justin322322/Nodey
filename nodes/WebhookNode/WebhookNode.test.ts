@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { WebhookNodeService } from './WebhookNode.service'
-import { NodeExecutionContext } from '../types'
+import { NodeExecutionContext, createTestContext } from '../types'
 import { WEBHOOK_NODE_DEFINITION, validateWebhookSignature, generateWebhookSignature } from './WebhookNode.schema'
-import { WebhookNodeConfig } from './WebhookNode.types'
+import { WebhookNodeConfig, WebhookExecutionResult } from './WebhookNode.types'
 
 describe('WebhookNode', () => {
   beforeEach(() => {
@@ -26,7 +26,7 @@ describe('WebhookNode', () => {
 
     it('should require HTTP method', () => {
       const config: WebhookNodeConfig = {
-        method: '' as any
+        method: '' as unknown as WebhookNodeConfig['method']
       }
 
       const errors = WEBHOOK_NODE_DEFINITION.validate(config as Record<string, unknown>)
@@ -35,7 +35,7 @@ describe('WebhookNode', () => {
 
     it('should validate HTTP method values', () => {
       const config: WebhookNodeConfig = {
-        method: 'INVALID' as any
+        method: 'INVALID' as unknown as WebhookNodeConfig['method']
       }
 
       const errors = WEBHOOK_NODE_DEFINITION.validate(config as Record<string, unknown>)
@@ -91,7 +91,7 @@ describe('WebhookNode', () => {
 
       const invalidConfig: WebhookNodeConfig = {
         method: 'POST',
-        responseMode: 'invalid' as any
+        responseMode: 'invalid' as unknown as WebhookNodeConfig['responseMode']
       }
 
       expect(WEBHOOK_NODE_DEFINITION.validate(validConfig as Record<string, unknown>)).toHaveLength(0)
@@ -297,13 +297,13 @@ describe('WebhookNode', () => {
 
   describe('Webhook Execution', () => {
     it('should execute webhook successfully with valid configuration', async () => {
-      const context: NodeExecutionContext = {
+      const context = createTestContext({
         nodeId: 'test-webhook-node',
         config: {
           method: 'POST',
           enabled: true
         }
-      }
+      })
 
       const result = await WebhookNodeService.execute(context)
 
@@ -311,7 +311,7 @@ describe('WebhookNode', () => {
       expect(result.output).toBeDefined()
       expect(result.error).toBeUndefined()
 
-      const output = result.output as any
+      const output = result.output as WebhookExecutionResult
       expect(output.triggered).toBe(true)
       expect(output.method).toBe('POST')
       expect(output.url).toContain('/api/webhooks/test-webhook-node')
@@ -319,31 +319,29 @@ describe('WebhookNode', () => {
     })
 
     it('should handle disabled webhook', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-webhook-node',
+      const context = createTestContext({
         config: {
           method: 'POST',
           enabled: false
         }
-      }
+      })
 
       const result = await WebhookNodeService.execute(context)
 
       expect(result.success).toBe(true)
-      const output = result.output as any
+      const output = result.output as WebhookExecutionResult
       expect(output.triggered).toBe(false)
       expect(output.reason).toBe('Webhook disabled')
     })
 
     it('should fail with invalid configuration', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-webhook-node',
+      const context = createTestContext({
         config: {
           method: 'INVALID',
           secret: 'test',
           signatureHeader: '' // Invalid: empty when secret provided
         }
-      }
+      })
 
       const result = await WebhookNodeService.execute(context)
 
@@ -352,10 +350,9 @@ describe('WebhookNode', () => {
     })
 
     it('should handle execution errors gracefully', async () => {
-      const context: NodeExecutionContext = {
-        nodeId: 'test-webhook-node',
-        config: null as any
-      }
+      const context = createTestContext({
+        config: null as unknown as WebhookNodeConfig
+      })
 
       const result = await WebhookNodeService.execute(context)
 
@@ -411,7 +408,7 @@ describe('WebhookNode', () => {
 
     it('should fail test with invalid configuration', async () => {
       const config: WebhookNodeConfig = {
-        method: 'INVALID' as any
+        method: 'INVALID' as unknown as WebhookNodeConfig['method']
       }
 
       const result = await WebhookNodeService.testWebhook(config, 'test-workflow')

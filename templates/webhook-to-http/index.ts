@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { NodeType, TriggerType, ActionType, WorkflowEdge, WorkflowNode } from '@/types/workflow'
-import { getDefaultConfigForNode } from '@/lib/node-definitions'
 import { HTTP_NODE_DEFINITION } from '@/nodes/HttpNode'
+import { WEBHOOK_NODE_DEFINITION } from '@/nodes/WebhookNode'
 import type { WorkflowTemplate } from '@/templates/types'
 
 const template: WorkflowTemplate = {
@@ -19,7 +19,7 @@ const template: WorkflowTemplate = {
         label: 'Webhook',
         nodeType: NodeType.TRIGGER,
         triggerType: TriggerType.WEBHOOK,
-        config: getDefaultConfigForNode(NodeType.TRIGGER, TriggerType.WEBHOOK) || {},
+        config: WEBHOOK_NODE_DEFINITION.getDefaults(),
       },
     }
     const action: WorkflowNode = {

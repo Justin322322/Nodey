@@ -8,9 +8,24 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:check-any": "eslint . --ext .ts,.tsx --rule '@typescript-eslint/no-explicit-any: error'",
+    "lint:warn-any": "eslint . --rule '@typescript-eslint/no-explicit-any: warn'",
+    "lint:strict": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
+    "typecheck:strict": "tsc --noEmit --strict --noImplicitAny",
     "test": "vitest run",
-    "changelog:release": "node scripts/release-changelog.js"
+    "test:ci": "npm run typecheck:strict && npm run lint:strict && npm run test",
+    "build:ci": "npm run typecheck:strict && npm run lint:strict && npm run build",
+    "precommit": "npm run typecheck:strict && npm run lint:strict",
+    "changelog:release": "node scripts/release-changelog.js",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "npm run typecheck:strict",
+      "eslint --max-warnings 0 --fix",
+      "npm run test -- --run --reporter=verbose"
+    ]
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.2",
@@ -42,10 +57,14 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@types/uuid": "^9.0.8",
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.4.6",
+    "husky": "^9.1.7",
     "knip": "^5.62.0",
+    "lint-staged": "^15.5.2",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.6.2",

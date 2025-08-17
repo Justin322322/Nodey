@@ -18,7 +18,7 @@ function WorkflowsInner() {
   
   
   useEffect(() => {
-    const savedWorkflows = JSON.parse(localStorage.getItem('workflows') || '[]')
+    const savedWorkflows = JSON.parse(localStorage.getItem('workflows') || '[]') as Workflow[]
     setWorkflows(savedWorkflows)
   }, [])
   
@@ -37,11 +37,19 @@ function WorkflowsInner() {
       if (!file) return
       try {
         const text = await file.text()
-        const imported = JSON.parse(text)
-        if (!imported || typeof imported !== 'object' || !imported.nodes || !imported.edges) {
+        const imported = JSON.parse(text) as unknown
+        
+        // Type guard for imported workflow
+        const isValidWorkflow = (obj: unknown): obj is Partial<Workflow> => {
+          return typeof obj === 'object' && obj !== null && 
+                 'nodes' in obj && 'edges' in obj
+        }
+        
+        if (!isValidWorkflow(imported)) {
           alert('Invalid workflow file')
           return
         }
+        
         const workflow: Workflow = {
           id: imported.id || crypto.randomUUID(),
           name: imported.name || 'Imported Workflow',
@@ -53,7 +61,7 @@ function WorkflowsInner() {
           updatedAt: new Date(),
           isActive: !!imported.isActive,
         }
-        const existing = JSON.parse(localStorage.getItem('workflows') || '[]')
+        const existing = JSON.parse(localStorage.getItem('workflows') || '[]') as Workflow[]
         const exists = existing.some((w: Workflow) => w.id === workflow.id)
         if (exists) {
           workflow.id = crypto.randomUUID()

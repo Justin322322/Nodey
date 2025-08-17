@@ -26,6 +26,7 @@ export async function executeWorkflow(workflow: Workflow, options?: { startNodeI
     const text = await response.text()
     throw new Error(text || 'Failed to execute workflow')
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return response.json()
 }
 

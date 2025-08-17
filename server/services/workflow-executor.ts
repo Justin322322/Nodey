@@ -17,6 +17,12 @@ import { ScheduleNodeService } from '@/nodes/ScheduleNode/ScheduleNode.service'
 import { executeHttpRequest } from '@/server/services/http-client'
 import { validateNodeBeforeExecute } from '@/lib/node-definitions'
 import { executeEmailNode } from '@/nodes/EmailNode'
+import { executeHttpNode } from '@/nodes/HttpNode'
+import { executeManualNode } from '@/nodes/ManualNode'
+import { executeIfNode } from '@/nodes/IfNode'
+import { executeFilterNode } from '@/nodes/FilterNode'
+import { WebhookNodeService } from '@/nodes/WebhookNode/WebhookNode.service'
+import { NodeExecutionContext } from '@/nodes/types'
 
 export class WorkflowExecutor {
   private workflow: Workflow
@@ -195,19 +201,33 @@ export class WorkflowExecutor {
   private async executeTriggerNode(node: WorkflowNode): Promise<unknown> {
     const { triggerType, config } = node.data as { triggerType: TriggerType; config: unknown }
     
+    const context: NodeExecutionContext = {
+      nodeId: node.id,
+      workflowId: this.workflow.id,
+      config: config as Record<string, unknown>,
+      input: this.getPreviousNodeOutput(node) || {},
+      previousNodes: this.getPreviousNodes(node),
+      executionId: this.execution.id
+    }
+    
     switch (triggerType) {
-      case TriggerType.MANUAL:
-        return { triggered: true, timestamp: new Date() }
+      case TriggerType.MANUAL: {
+        const result = await executeManualNode(context)
+        if (!result.success) {
+          throw new Error(result.error || 'Manual trigger execution failed')
+        }
+        return result.output
+      }
         
-      case TriggerType.WEBHOOK:
-        // In a real implementation, this would set up a webhook listener
-        return { triggered: true, method: 'POST', body: {} }
+      case TriggerType.WEBHOOK: {
+        const result = await WebhookNodeService.execute(context)
+        if (!result.success) {
+          throw new Error(result.error || 'Webhook trigger execution failed')
+        }
+        return result.output
+      }
         
       case TriggerType.SCHEDULE: {
-        const context = {
-          nodeId: node.id,
-          config: config as Record<string, unknown>
-        }
         const result = await ScheduleNodeService.execute(context)
         if (!result.success) {
           throw new Error(result.error || 'Schedule execution failed')
@@ -227,17 +247,26 @@ export class WorkflowExecutor {
   private async executeActionNode(node: WorkflowNode, signal?: AbortSignal): Promise<unknown> {
     const { actionType, config } = node.data as { actionType: ActionType; config: unknown }
     
+    const context: NodeExecutionContext = {
+      nodeId: node.id,
+      workflowId: this.workflow.id,
+      config: config as Record<string, unknown>,
+      input: this.getPreviousNodeOutput(node) || {},
+      previousNodes: this.getPreviousNodes(node),
+      executionId: this.execution.id
+    }
+    
     switch (actionType) {
-      case ActionType.HTTP:
-        return await this.executeHttpRequest(config as HttpNodeConfig, signal)
+      case ActionType.HTTP: {
+        const result = await executeHttpNode(context)
+        if (!result.success) {
+          throw new Error(result.error || 'HTTP execution failed')
+        }
+        return result.output
+      }
         
       case ActionType.EMAIL: {
-        const result = await executeEmailNode({
-          nodeId: node.id,
-          config: config as Record<string, unknown>,
-          previousOutput: this.getPreviousNodeOutput(node),
-          signal
-        })
+        const result = await executeEmailNode(context)
         if (!result.success) {
           throw new Error(result.error || 'Email execution failed')
         }
@@ -265,13 +294,23 @@ export class WorkflowExecutor {
   
   private async executeLogicNode(node: WorkflowNode): Promise<unknown> {
     const { logicType, config } = node.data as { logicType: LogicType; config: unknown }
-    const previousOutput = this.getPreviousNodeOutput(node)
+    
+    const context: NodeExecutionContext = {
+      nodeId: node.id,
+      workflowId: this.workflow.id,
+      config: config as Record<string, unknown>,
+      input: this.getPreviousNodeOutput(node) || {},
+      previousNodes: this.getPreviousNodes(node),
+      executionId: this.execution.id
+    }
     
     switch (logicType) {
       case LogicType.IF: {
-        const ifConfig = config as IfNodeConfig
-        const conditionMet = this.evaluateCondition(ifConfig.condition, previousOutput)
-        return { conditionMet, branch: conditionMet ? 'true' : 'false' }
+        const result = await executeIfNode(context)
+        if (!result.success) {
+          throw new Error(result.error || 'IF logic execution failed')
+        }
+        return result.output
       }
         
       case LogicType.SWITCH:
@@ -284,12 +323,11 @@ export class WorkflowExecutor {
       }
         
       case LogicType.FILTER: {
-        // Filter previous output (expects array or object with items array)
-        const items: unknown[] = this.extractArrayFromPrevious(previousOutput)
-        const { condition } = (config as { condition?: { field: string; operator: string; value: unknown } }) || {}
-        if (!condition) return { filtered: [], count: 0 }
-        const filtered = items.filter((item) => this.evaluateCondition(condition, item))
-        return { filtered, count: filtered.length }
+        const result = await executeFilterNode(context)
+        if (!result.success) {
+          throw new Error(result.error || 'Filter logic execution failed')
+        }
+        return result.output
       }
         
       default:
@@ -358,6 +396,12 @@ export class WorkflowExecutor {
     if (!incomingEdge) return null
     
     return this.nodeOutputs[incomingEdge.source] || null
+  }
+  
+  private getPreviousNodes(node: WorkflowNode): string[] {
+    // Find all nodes that connect to this node
+    const incomingEdges = this.workflow.edges.filter(edge => edge.target === node.id)
+    return incomingEdges.map(edge => edge.source)
   }
   
   private log(level: 'info' | 'warning' | 'error', nodeId: string, message: string, data?: unknown) {

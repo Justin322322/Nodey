@@ -324,7 +324,7 @@ export function NodeConfigPanel() {
                         const text = e.target.value
                         setJsonTextByPath((s) => ({ ...s, [path]: text }))
                         try {
-                          const parsed = JSON.parse(text)
+                          const parsed = JSON.parse(text) as unknown
                           handleConfigChange(path, parsed)
                         } catch {
                           // Keep editing buffer until valid
@@ -470,7 +470,7 @@ export function NodeConfigPanel() {
               value={JSON.stringify(config.headers || {}, null, 2)}
               onChange={(e) => {
                 try {
-                  const headers = JSON.parse(e.target.value)
+                  const headers = JSON.parse(e.target.value) as Record<string, string>
                   handleConfigChange('headers', headers)
                 } catch {
                   // no-op
@@ -489,7 +489,7 @@ export function NodeConfigPanel() {
                 value={JSON.stringify(config.body || {}, null, 2)}
                 onChange={(e) => {
                   try {
-                    const body = JSON.parse(e.target.value)
+                    const body = JSON.parse(e.target.value) as unknown
                     handleConfigChange('body', body)
                   } catch {
                     // no-op

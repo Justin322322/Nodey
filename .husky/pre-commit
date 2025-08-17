@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Check for any types in staged files
+echo "Checking for prohibited 'any' types..."
+npx lint-staged
+
+# Additional check to ensure no new 'any' types are being committed
+echo "Verifying no new 'any' types in staged TypeScript files..."
+git diff --cached --name-only | grep -E '\.(ts|tsx)$' | while read file; do
+  if [ -f "$file" ]; then
+    # Check if the staged version of the file contains 'any' without eslint-disable
+    if git show ":$file" | grep -n ': any\|as any\|<any>' | grep -v 'eslint-disable'; then
+      echo "❌ ERROR: Found prohibited 'any' types in $file"
+      echo "   Either add proper types or use eslint-disable comment for legitimate cases"
+      exit 1
+    fi
+  fi
+done
+
+echo "✅ Pre-commit checks passed!"

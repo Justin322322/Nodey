@@ -5,6 +5,8 @@ import { NodeProps } from 'reactflow'
 import { GitBranch, Shuffle, RotateCcw, Filter } from 'lucide-react'
 import { BaseNode } from './base-node'
 import { LogicNodeData, LogicType } from '@/types/workflow'
+import { IfNode } from '@/nodes/IfNode'
+import { FilterNode } from '@/nodes/FilterNode'
 
 const logicIcons = {
   [LogicType.IF]: <GitBranch className="w-4 h-4" />,
@@ -14,6 +16,17 @@ const logicIcons = {
 }
 
 export const LogicNode = memo(({ id, data, selected }: NodeProps<LogicNodeData>) => {
+  // Route to modular logic nodes
+  if (data.logicType === LogicType.IF) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return <IfNode {...({ id, data, selected } as any)} />
+  }
+  
+  if (data.logicType === LogicType.FILTER) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return <FilterNode {...({ id, data, selected } as any)} />
+  }
+  
   const icon = logicIcons[data.logicType] || <GitBranch className="w-4 h-4" />
   
   return (

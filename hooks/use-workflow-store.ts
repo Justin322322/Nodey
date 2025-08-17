@@ -140,7 +140,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     }
     
     // Save to localStorage for now
-    const workflows = JSON.parse(localStorage.getItem('workflows') || '[]')
+    const workflows = JSON.parse(localStorage.getItem('workflows') || '[]') as Workflow[]
     const index = workflows.findIndex((w: Workflow) => w.id === workflow.id)
     
     if (index >= 0) {
