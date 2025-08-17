@@ -5,6 +5,7 @@ import { applyNodeChanges, applyEdgeChanges, OnNodesChange, OnEdgesChange, Conne
 import { v4 as uuidv4 } from 'uuid'
 import { Workflow, WorkflowNode, WorkflowEdge, WorkflowExecution, ExecutionLog } from '@/types/workflow'
 import { executeWorkflow as executeWorkflowAction, stopWorkflowExecution } from '@/lib/workflow-actions'
+import { encryptEmailConfig, decryptEmailConfig, clearSensitiveData } from '@/lib/security'
 
 interface WorkflowStore {
   // Current workflow
@@ -43,6 +44,8 @@ interface WorkflowStore {
   clearPendingDelete: () => void
   isLogsDialogOpen: boolean
   setLogsDialogOpen: (open: boolean) => void
+  isLogsPanelCollapsed: boolean
+  setLogsPanelCollapsed: (collapsed: boolean) => void
 }
 
 export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
@@ -61,14 +64,31 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       try {
         const { workflow, nodes, edges } = get()
         if (!workflow) return
+        
+        // Encrypt sensitive data in nodes before saving
+        const encryptedNodes = nodes.map(node => {
+          if (node.data.config && typeof node.data.config === 'object') {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                config: encryptEmailConfig(node.data.config as Record<string, unknown>)
+              }
+            }
+          }
+          return node
+        })
+        
         const draft = {
           ...workflow,
-          nodes,
+          nodes: encryptedNodes,
           edges,
           updatedAt: new Date(),
         }
-        localStorage.setItem('workflowDraft', JSON.stringify(draft))
-        localStorage.setItem('lastOpenedWorkflowId', workflow.id)
+        
+        // Use sessionStorage instead of localStorage for better security
+        sessionStorage.setItem('workflowDraft', JSON.stringify(draft))
+        sessionStorage.setItem('lastOpenedWorkflowId', workflow.id)
       } catch (err) {
         console.debug('draft save failed', err)
       }
@@ -86,20 +106,50 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   isConfigPanelOpen: false,
   pendingDeleteNodeId: null,
   isLogsDialogOpen: false,
+  isLogsPanelCollapsed: false,
   
   // Workflow management
   setWorkflow: (workflow) => {
+    // Decrypt credentials when loading workflow
+    const decryptedNodes = workflow.nodes.map(node => {
+      if (node.data.config && typeof node.data.config === 'object') {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            config: decryptEmailConfig(node.data.config as Record<string, unknown>)
+          }
+        }
+      }
+      return node
+    })
+    
     set({
       workflow,
-      nodes: workflow.nodes,
+      nodes: decryptedNodes,
       edges: workflow.edges,
     })
     try {
-      localStorage.setItem('lastOpenedWorkflowId', workflow.id)
+      sessionStorage.setItem('lastOpenedWorkflowId', workflow.id)
       // initialize draft on load to ensure refresh survival until first change
       const { nodes, edges } = get()
-      const draft = { ...workflow, nodes, edges, updatedAt: new Date() }
-      localStorage.setItem('workflowDraft', JSON.stringify(draft))
+      
+      // Encrypt before storing
+      const encryptedNodes = nodes.map(node => {
+        if (node.data.config && typeof node.data.config === 'object') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              config: encryptEmailConfig(node.data.config as Record<string, unknown>)
+            }
+          }
+        }
+        return node
+      })
+      
+      const draft = { ...workflow, nodes: encryptedNodes, edges, updatedAt: new Date() }
+      sessionStorage.setItem('workflowDraft', JSON.stringify(draft))
     } catch (err) {
       console.debug('initialize draft failed', err)
     }
@@ -132,14 +182,28 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     const { workflow, nodes, edges } = get()
     if (!workflow) return
     
+    // Encrypt sensitive data before saving
+    const encryptedNodes = nodes.map(node => {
+      if (node.data.config && typeof node.data.config === 'object') {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            config: encryptEmailConfig(node.data.config as Record<string, unknown>)
+          }
+        }
+      }
+      return node
+    })
+    
     const updatedWorkflow: Workflow = {
       ...workflow,
-      nodes,
+      nodes: encryptedNodes,
       edges,
       updatedAt: new Date(),
     }
     
-    // Save to localStorage for now
+    // Save to localStorage for persistence (encrypted)
     const workflows = JSON.parse(localStorage.getItem('workflows') || '[]') as Workflow[]
     const index = workflows.findIndex((w: Workflow) => w.id === workflow.id)
     
@@ -150,7 +214,14 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     }
     
     localStorage.setItem('workflows', JSON.stringify(workflows))
-    set({ workflow: updatedWorkflow })
+    
+    // Keep the decrypted version in memory for UI
+    set({ workflow: { ...workflow, nodes, edges, updatedAt: new Date() } })
+    
+    // Clear sensitive data from forms after saving
+    setTimeout(() => {
+      clearSensitiveData()
+    }, 100)
 
     // Also sync to server registry so webhook routes can access it
     try {
@@ -304,4 +375,5 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   requestDeleteNode: (nodeId) => set({ pendingDeleteNodeId: nodeId }),
   clearPendingDelete: () => set({ pendingDeleteNodeId: null }),
   setLogsDialogOpen: (open) => set({ isLogsDialogOpen: open }),
+  setLogsPanelCollapsed: (collapsed) => set({ isLogsPanelCollapsed: collapsed }),
 }))

@@ -52,11 +52,6 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
-      {/* Mobile drag handle */}
-      <div className="py-3 flex-shrink-0 sm:hidden">
-        <div className="mx-auto h-1.5 w-10 rounded-full bg-gray-300" aria-hidden="true" />
-      </div>
-      
       {children}
       
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">

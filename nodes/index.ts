@@ -17,12 +17,13 @@ export type { NodeExecutionContext, NodeExecutionResult } from './types'
 export interface ParameterDefinition {
   name: string
   label: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url' | 'json'
+  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url' | 'json' | 'password'
   required?: boolean
   defaultValue?: unknown
   options?: Array<{ label: string; value: string }>
   placeholder?: string
   description?: string
+  showIf?: Array<{ path: string; equals: string | number | boolean }>
 }
 
 import type { ReactNode } from 'react'
@@ -105,7 +106,7 @@ import { IF_NODE_DEFINITION } from './IfNode'
 import { FILTER_NODE_DEFINITION } from './FilterNode'
 
 // Register all nodes on module load
-registerNode(EMAIL_NODE_DEFINITION)
+// EMAIL_NODE_DEFINITION is handled directly in findNodeDefinition for now
 registerNode(HTTP_NODE_DEFINITION)
 registerNode(SCHEDULE_NODE_DEFINITION)
 registerNode(WEBHOOK_NODE_DEFINITION)

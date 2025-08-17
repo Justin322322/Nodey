@@ -4,6 +4,25 @@ import { NodeExecutionContext, createTestContext } from '../types'
 import { EMAIL_NODE_DEFINITION } from './EmailNode.schema'
 import { EmailNodeConfig, EmailExecutionResult } from './EmailNode.types'
 
+// Helper function to create test email config with required emailService
+function createTestEmailConfig(overrides: Partial<EmailNodeConfig> = {}): EmailNodeConfig {
+  return {
+    to: ['test@example.com'],
+    subject: 'Test Subject',
+    body: 'Test body content',
+    from: undefined,
+    attachments: [],
+    emailService: {
+      type: 'gmail',
+      auth: {
+        user: 'test@example.com',
+        pass: 'test-password'
+      }
+    },
+    ...overrides
+  }
+}
+
 describe('EmailNode', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -11,79 +30,63 @@ describe('EmailNode', () => {
 
   describe('Schema Validation', () => {
     it('should validate valid email configuration', () => {
-      const config: EmailNodeConfig = {
-        to: ['test@example.com'],
-        subject: 'Test Subject',
-        body: 'Test body content',
+      const config = createTestEmailConfig({
         from: 'sender@example.com'
-      }
+      })
 
       const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
       expect(errors).toHaveLength(0)
     })
 
     it('should require at least one recipient', () => {
-      const config: EmailNodeConfig = {
-        to: [],
-        subject: 'Test Subject',
-        body: 'Test body content'
-      }
+      const config = createTestEmailConfig({
+        to: []
+      })
 
       const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
       expect(errors).toContain('At least one recipient (To) is required')
     })
 
     it('should require subject', () => {
-      const config: EmailNodeConfig = {
-        to: ['test@example.com'],
-        subject: '',
-        body: 'Test body content'
-      }
+      const config = createTestEmailConfig({
+        subject: ''
+      })
 
       const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
       expect(errors).toContain('Subject is required')
     })
 
     it('should require body', () => {
-      const config: EmailNodeConfig = {
-        to: ['test@example.com'],
-        subject: 'Test Subject',
+      const config = createTestEmailConfig({
         body: ''
-      }
+      })
 
       const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
       expect(errors).toContain('Email body is required')
     })
 
     it('should validate email format for recipients', () => {
-      const config: EmailNodeConfig = {
-        to: ['invalid-email'],
-        subject: 'Test Subject',
-        body: 'Test body content'
-      }
+      const config = createTestEmailConfig({
+        to: ['invalid-email']
+      })
 
       const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
       expect(errors).toContain('Invalid email format for recipient 1: invalid-email')
     })
 
     it('should validate email format for sender', () => {
-      const config: EmailNodeConfig = {
-        to: ['test@example.com'],
-        subject: 'Test Subject',
-        body: 'Test body content',
+      const config = createTestEmailConfig({
         from: 'invalid-sender-email'
-      }
+      })
 
       const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
       expect(errors).toContain('Invalid email format for sender: invalid-sender-email')
     })
 
     it('should handle multiple recipients', () => {
-      const config: EmailNodeConfig = {
-        to: ['test1@example.com', 'test2@example.com', 'invalid-email'],
-        subject: 'Test Subject',
-        body: 'Test body content'
-      }
+      const config = createTestEmailConfig({
+        to: ['test1@example.com', 'test2@example.com', 'invalid-email']
+      })
 
       const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
       expect(errors).toContain('Invalid email format for recipient 3: invalid-email')
@@ -100,20 +103,22 @@ describe('EmailNode', () => {
         subject: '',
         body: '',
         from: undefined,
-        attachments: []
+        attachments: [],
+        emailService: {
+          type: 'gmail',
+          auth: {
+            user: '',
+            pass: ''
+          }
+        }
       })
     })
   })
 
   describe('Email Execution', () => {
     it('should execute email successfully with valid configuration', async () => {
-      const context = createTestContext({
-        config: {
-          to: ['test@example.com'],
-          subject: 'Test Subject',
-          body: 'Test body content'
-        }
-      })
+      const config = createTestEmailConfig()
+      const context = createTestContext({ config })
 
       const result = await executeEmailNode(context)
 
@@ -130,13 +135,8 @@ describe('EmailNode', () => {
     })
 
     it('should fail with missing recipients', async () => {
-      const context = createTestContext({
-        config: {
-          to: [],
-          subject: 'Test Subject',
-          body: 'Test body content'
-        }
-      })
+      const config = createTestEmailConfig({ to: [] })
+      const context = createTestContext({ config })
 
       const result = await executeEmailNode(context)
 
@@ -146,13 +146,8 @@ describe('EmailNode', () => {
     })
 
     it('should fail with missing subject', async () => {
-      const context = createTestContext({
-        config: {
-          to: ['test@example.com'],
-          subject: '',
-          body: 'Test body content'
-        }
-      })
+      const config = createTestEmailConfig({ subject: '' })
+      const context = createTestContext({ config })
 
       const result = await executeEmailNode(context)
 
@@ -161,13 +156,8 @@ describe('EmailNode', () => {
     })
 
     it('should fail with missing body', async () => {
-      const context = createTestContext({
-        config: {
-          to: ['test@example.com'],
-          subject: 'Test Subject',
-          body: ''
-        }
-      })
+      const config = createTestEmailConfig({ body: '' })
+      const context = createTestContext({ config })
 
       const result = await executeEmailNode(context)
 
@@ -179,12 +169,9 @@ describe('EmailNode', () => {
       const abortController = new AbortController()
       abortController.abort()
 
+      const config = createTestEmailConfig()
       const context = createTestContext({
-        config: {
-          to: ['test@example.com'],
-          subject: 'Test Subject',
-          body: 'Test body content'
-        },
+        config,
         signal: abortController.signal
       })
 
@@ -195,13 +182,10 @@ describe('EmailNode', () => {
     })
 
     it('should handle multiple recipients', async () => {
-      const context = createTestContext({
-        config: {
-          to: ['test1@example.com', 'test2@example.com'],
-          subject: 'Test Subject',
-          body: 'Test body content'
-        }
+      const config = createTestEmailConfig({
+        to: ['test1@example.com', 'test2@example.com']
       })
+      const context = createTestContext({ config })
 
       const result = await executeEmailNode(context)
 

@@ -14,22 +14,26 @@ function EditorInner() {
   const searchParams = useSearchParams()
   const workflowId = searchParams.get('workflowId')
   const [mounted, setMounted] = useState(false)
-  const { createNewWorkflow, setWorkflow } = useWorkflowStore()
+  const { createNewWorkflow, setWorkflow, isLogsPanelCollapsed } = useWorkflowStore()
   
   useEffect(() => {
     const load = () => {
-      const draftRaw = typeof window !== 'undefined' ? localStorage.getItem('workflowDraft') : null
-      const lastId = typeof window !== 'undefined' ? localStorage.getItem('lastOpenedWorkflowId') : null
+      // Check sessionStorage first for current session drafts
+      const draftRaw = typeof window !== 'undefined' ? sessionStorage.getItem('workflowDraft') : null
+      const lastId = typeof window !== 'undefined' ? sessionStorage.getItem('lastOpenedWorkflowId') : null
       const parsedDraft: Workflow | null = draftRaw ? (() => { try { return JSON.parse(draftRaw) as Workflow } catch { return null } })() : null
+      
       if (parsedDraft && (!workflowId || workflowId === lastId)) {
         setWorkflow({ ...parsedDraft, createdAt: new Date(parsedDraft.createdAt || new Date()), updatedAt: new Date(parsedDraft.updatedAt || new Date()) })
         return
       }
+      
       if (workflowId) {
+        // Load from persistent storage (localStorage) - these are encrypted
         const workflows = JSON.parse(localStorage.getItem('workflows') || '[]') as Workflow[]
         const workflow = workflows.find((w: Workflow) => w.id === workflowId)
         if (workflow) {
-          setWorkflow(workflow)
+          setWorkflow(workflow) // setWorkflow will handle decryption
         } else {
           createNewWorkflow()
         }
@@ -53,7 +57,9 @@ function EditorInner() {
               <WorkflowEditor />
             </WorkflowEditorProvider>
           </div>
-          <div className="hidden sm:block w-96 bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 border-l border-gray-600">
+          <div className={`hidden sm:block transition-all duration-300 ease-in-out bg-gradient-to-b from-gray-600 via-gray-700 to-gray-800 border-l border-gray-600 ${
+            isLogsPanelCollapsed ? 'w-12' : 'w-96'
+          }`}>
             <ExecutionLog />
           </div>
         </div>

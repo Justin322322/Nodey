@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Info, Copy } from 'lucide-react'
+import { X, Info, Copy, ShieldCheck } from 'lucide-react'
 import { useEffect, useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +14,7 @@ import { WorkflowNode, NodeType, ActionType, TriggerType, HttpNodeConfig, Schedu
 import { EMAIL_NODE_DEFINITION, EmailNodeConfig } from '@/nodes/EmailNode'
 import { WebhookNodeConfig } from '@/nodes/WebhookNode'
 import { findNodeDefinition } from '@/lib/node-definitions'
+import { SECURITY_WARNINGS, getSecurityStatus } from '@/lib/security'
 
 export function NodeConfigPanel() {
   const { nodes, selectedNodeId, isConfigPanelOpen, setConfigPanelOpen, setSelectedNodeId, updateNode, deleteNode, pendingDeleteNodeId, clearPendingDelete } = useWorkflowStore()
@@ -167,6 +168,25 @@ export function NodeConfigPanel() {
       )
       return (
         <>
+          {/* Security warnings for email credentials */}
+          {selectedNode.data.nodeType === NodeType.ACTION && 
+           (selectedNode.data as { actionType: ActionType }).actionType === ActionType.EMAIL && (
+            <div className="mb-4 p-3 border border-gray-300 rounded-md">
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-gray-700">
+                  <p className="font-medium mb-1">Security Notice</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>• Your credentials are encrypted and stored locally on your device only</li>
+                    <li>• Use app-specific passwords instead of your main email password</li>
+                    <li>• Data is automatically cleared when you close the browser</li>
+                    <li>• Only use on trusted devices for maximum security</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {def.parameters.map((param) => {
             const shouldShow = !param.showIf || param.showIf.length === 0 
               ? true 
@@ -371,6 +391,58 @@ export function NodeConfigPanel() {
                       onChange={(e) => handleConfigChange(param.path, e.target.checked)}
                     />
                     <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                  </div>
+                )
+              case 'email':
+                return (
+                  <div key={param.path} className="space-y-1.5 sm:space-y-2">
+                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <Input
+                      type="email"
+                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
+                      onChange={(e) => handleConfigChange(param.path, e.target.value)}
+                      placeholder={param.placeholder || 'Enter email address'}
+                      className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+                    />
+                  </div>
+                )
+              case 'password':
+                return (
+                  <div key={param.path} className="space-y-1.5 sm:space-y-2">
+                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <Input
+                      type="password"
+                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
+                      onChange={(e) => handleConfigChange(param.path, e.target.value)}
+                      placeholder={param.placeholder || 'Enter password'}
+                      className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+                    />
+                  </div>
+                )
+              case 'url':
+                return (
+                  <div key={param.path} className="space-y-1.5 sm:space-y-2">
+                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <Input
+                      type="url"
+                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
+                      onChange={(e) => handleConfigChange(param.path, e.target.value)}
+                      placeholder={param.placeholder || 'Enter URL'}
+                      className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+                    />
+                  </div>
+                )
+              case 'text':
+                return (
+                  <div key={param.path} className="space-y-1.5 sm:space-y-2">
+                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <Input
+                      type="text"
+                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
+                      onChange={(e) => handleConfigChange(param.path, e.target.value)}
+                      placeholder={param.placeholder || param.description}
+                      className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+                    />
                   </div>
                 )
               default:

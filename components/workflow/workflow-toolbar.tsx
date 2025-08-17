@@ -7,6 +7,7 @@ import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { useToast } from '@/components/ui/toaster'
 import { MobileActionSheet } from '@/components/ui/mobile-sheet'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { SecurityStatus } from '@/components/ui/security-status'
 import { useState } from 'react'
 
 export function WorkflowToolbar() {
@@ -219,6 +220,11 @@ export function WorkflowToolbar() {
           <PlayCircle className="w-4 h-4 mr-1" />
           Run from node
         </Button>
+
+        {/* Security Status */}
+        <div className="hidden sm:block">
+          <SecurityStatus className="ml-2" />
+        </div>
 
         <MobileActionSheet 
           open={mobileMenuOpen}
