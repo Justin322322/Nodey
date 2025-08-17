@@ -118,26 +118,15 @@ Note: Save your workflow from the editor at least once to sync it to the server 
 
 ### Scripts
 ```bash
-# Development server
-npm run dev
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-
-# Run tests
-npm test
-
-# Run specific test file
-npm test -- --run nodes/HttpNode/HttpNode.test.ts
-
-# Build for production
-npm run build
+npm run dev              # Development server
+npm run typecheck        # TypeScript validation  
+npm run lint             # ESLint check
+npm test                 # Run all tests
+npm test -- --run nodes/HttpNode/HttpNode.test.ts  # Run specific test
+npm run build            # Production build
 ```
 
-For detailed development information, see [CONTRIBUTING.md](CONTRIBUTING.md).
+For contributing guidelines, project structure, and detailed development information, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Current Limitations
 
@@ -156,8 +145,9 @@ For detailed development information, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Contributing
 
-Contributions are welcome! Please read the contribution guidelines and policies:
+Contributions are welcome! Please read our comprehensive documentation:
 
-- See `CONTRIBUTING.md` for how to set up your environment, development guidelines, and PR process
-- See `CODE_OF_CONDUCT.md` for community standards
-- See `SECURITY.md` for reporting vulnerabilities
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development setup, contribution guidelines, and code standards
+- **[docs/](docs/)** - Complete documentation including TypeScript guidelines and development guides
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community standards and behavior guidelines  
+- **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting procedures

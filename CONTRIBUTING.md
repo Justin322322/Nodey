@@ -9,35 +9,13 @@ By participating in this project, you agree to abide by our Code of Conduct and 
 
 ## Quick Start
 
-1. **Fork and clone** the repository:
-   ```bash
-   git clone https://github.com/your-username/Nodey.git
-   cd Nodey
-   ```
+1. **Fork and clone** the repository
+2. **Create a feature branch**: `git checkout -b feat/your-feature-name`
+3. **Install dependencies**: `npm install`
+4. **Start development**: `npm run dev`
+5. **Run quality checks**: `npm run typecheck && npm run lint && npm test && npm run build`
 
-2. **Create a feature branch**:
-   ```bash
-   git checkout -b feat/your-feature-name
-   # or fix/issue-description, docs/section-name, etc.
-   ```
-
-3. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-4. **Start development server**:
-   ```bash
-   npm run dev
-   ```
-
-5. **Run quality checks** before submitting:
-   ```bash
-   npm run typecheck  # TypeScript validation
-   npm run lint       # ESLint rules
-   npm test          # Vitest test suite
-   npm run build     # Production build test
-   ```
+For detailed setup instructions, see the [README.md](README.md).
 
 ## Project Structure
 
@@ -156,44 +134,29 @@ describe('NodeName', () => {
 ## Code Style & Standards
 
 ### TypeScript Guidelines
-```typescript
-// ✅ Good: Explicit types for public APIs
-interface NodeConfig {
-  url: string
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
-  headers?: Record<string, string>
-}
 
-// ✅ Good: Proper error handling
-try {
-  const result = await executeNode(context)
-  return { success: true, data: result }
-} catch (error) {
-  return { success: false, error: error.message }
-}
+This project enforces strict TypeScript practices. See [docs/typescript-development-guide.md](docs/typescript-development-guide.md) for comprehensive guidelines including:
 
-// ❌ Avoid: Using 'any' type
-function processData(data: any) { /* avoid */ }
-
-// ✅ Better: Generic or specific types
-function processData<T>(data: T): ProcessedData<T> { /* good */ }
-```
+- Zero-tolerance `any` type policy
+- Type safety requirements
+- Best practices and patterns
+- Automated prevention system
 
 ### React Component Guidelines
 ```typescript
-// ✅ Good: Interface for props
+// Good: Interface for props
 interface ComponentProps {
   title: string
   onSubmit: (data: FormData) => void
   isLoading?: boolean
 }
 
-// ✅ Good: Named function component
+// Good: Named function component
 export function ComponentName({ title, onSubmit, isLoading = false }: ComponentProps) {
   // Component logic
 }
 
-// ✅ Good: Custom hooks for logic
+// Good: Custom hooks for logic
 function useWorkflowLogic() {
   const store = useWorkflowStore()
   // Hook logic
@@ -426,28 +389,15 @@ Context and motivation
 
 ## Development Scripts
 
-### Available Commands
+See [README.md](README.md) for complete script documentation. Key commands:
+
 ```bash
-# Development
-npm run dev              # Start dev server (localhost:3000)
-
-# Quality Assurance
-npm run typecheck        # TypeScript validation
-npm run lint             # ESLint check
-npm run lint:fix         # Auto-fix ESLint issues
-npm test                 # Run all tests
-npm test -- --watch     # Watch mode testing
-npm run build            # Production build
-
-# Utilities
-npm run changelog:release # Generate changelog
+npm run dev        # Development server
+npm run typecheck  # TypeScript validation
+npm run lint       # ESLint check
+npm test          # Run tests
+npm run build     # Production build
 ```
-
-### Environment Setup
-- **Node.js 18+** required
-- **npm 8+** recommended
-- **VSCode** with TypeScript and ESLint extensions
-- **Vitest** extension for test running
 
 ## Creating Workflow Templates
 
