@@ -204,11 +204,16 @@ export function getSecurityStatus(): {
   sessionBased: boolean
   deviceKey: boolean
 } {
-  return {
-    encrypted: !!sessionStorage.getItem('deviceKey'),
-    sessionBased: true, // Using sessionStorage
-    deviceKey: !!sessionStorage.getItem('deviceKey')
+  if (typeof window === 'undefined') {
+    return { encrypted: false, sessionBased: false, deviceKey: false }
   }
+  let hasKey = false
+  try {
+    hasKey = !!window.sessionStorage?.getItem('deviceKey')
+  } catch {
+    hasKey = false
+  }
+  return { encrypted: hasKey, sessionBased: true, deviceKey: hasKey }
 }
 
 /**
