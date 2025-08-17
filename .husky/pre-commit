@@ -1,14 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🔍 Running pre-commit checks..."
-
-# Run type checking
-echo "Running TypeScript type check..."
-npm run typecheck
-
-# Run linting with zero warnings
-echo "Running strict linting..."
-npm run lint:strict
-
-echo "✅ Pre-commit checks passed!"
+# Fast pre-commit: only lint staged files, skip typecheck (CI will catch type errors)
+npx lint-staged
