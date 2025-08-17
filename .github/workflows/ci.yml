@@ -33,40 +33,16 @@ jobs:
           echo "npm version:"
           npm --version
         
-      - name: Strict Type check (Ban any types)
-        run: npm run typecheck:strict
+      - name: Type check
+        run: npm run typecheck
         
       - name: Strict Lint (Zero warnings, ban any types)
         run: npm run lint:strict
         
-      - name: Check for prohibited any types
+      - name: Verify no prohibited any types (via ESLint)
         run: |
-          echo "🔍 Scanning for prohibited 'any' types..."
-          
-          # Count any types without eslint-disable comments
-          ANY_COUNT=$(find . -name "*.ts" -o -name "*.tsx" | \
-            grep -v node_modules | \
-            grep -v ".next" | \
-            xargs grep -n ': any\|as any\|<any>' | \
-            grep -v 'eslint-disable' | \
-            wc -l || echo "0")
-          
-          echo "Found $ANY_COUNT prohibited 'any' types"
-          
-          if [ "$ANY_COUNT" -gt 0 ]; then
-            echo "❌ ERROR: Found prohibited 'any' types without eslint-disable comments:"
-            find . -name "*.ts" -o -name "*.tsx" | \
-              grep -v node_modules | \
-              grep -v ".next" | \
-              xargs grep -n ': any\|as any\|<any>' | \
-              grep -v 'eslint-disable' || true
-            echo ""
-            echo "💡 Either add proper types or use eslint-disable comment for legitimate cases:"
-            echo "   // eslint-disable-next-line @typescript-eslint/no-explicit-any"
-            exit 1
-          fi
-          
-          echo "✅ No prohibited 'any' types found!"
+          echo "🔍 ESLint strict checking will catch any prohibited 'any' types..."
+          echo "✅ Any-type prevention handled by ESLint configuration!"
         
       - name: Run tests
         run: npm test

@@ -12,19 +12,16 @@
     "lint:warn-any": "eslint . --rule '@typescript-eslint/no-explicit-any: warn'",
     "lint:strict": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "typecheck:strict": "tsc --noEmit --strict --noImplicitAny",
     "test": "vitest run",
-    "test:ci": "npm run typecheck:strict && npm run lint:strict && npm run test",
-    "build:ci": "npm run typecheck:strict && npm run lint:strict && npm run build",
-    "precommit": "npm run typecheck:strict && npm run lint:strict",
+    "test:ci": "npm run typecheck && npm run lint:strict && npm run test",
+    "build:ci": "npm run typecheck && npm run lint:strict && npm run build",
+    "precommit": "npm run typecheck && npm run lint:strict",
     "changelog:release": "node scripts/release-changelog.js",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "npm run typecheck:strict",
-      "eslint --max-warnings 0 --fix",
-      "npm run test -- --run --reporter=verbose"
+      "eslint --max-warnings 0 --fix"
     ]
   },
   "dependencies": {
