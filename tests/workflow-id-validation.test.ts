@@ -10,11 +10,14 @@ import { isValidWorkflowId } from '@/lib/workflow-id-validation'
 
 describe('WorkflowId Validation', () => {
   describe('Valid inputs', () => {
-    it('should accept valid length alphanumeric strings (3+ characters)', () => {
+    it('should accept identifiers 3–64 chars long (alphanumeric, "-" or "_")', () => {
       expect(isValidWorkflowId('abc')).toBe(true)
       expect(isValidWorkflowId('ABC')).toBe(true)
       expect(isValidWorkflowId('123')).toBe(true)
       expect(isValidWorkflowId('a1b')).toBe(true)
+      expect(isValidWorkflowId('A1b')).toBe(true)
+      expect(isValidWorkflowId('my_id-123')).toBe(true)
+      expect(isValidWorkflowId('a'.repeat(64))).toBe(true)
     })
 
     it('should accept alphanumeric strings', () => {
