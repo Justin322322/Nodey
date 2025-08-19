@@ -47,7 +47,8 @@ describe('DatabaseNode', () => {
       }
       
       const errors = DATABASE_NODE_DEFINITION.validate(config)
-      expect(errors).toContain('Invalid configuration structure')
+      expect(errors.length).toBeGreaterThan(0)
+      expect(errors).toContain('Invalid parameters JSON: Unable to parse JSON string')
     })
 
     it('should pass validation with valid config', () => {
