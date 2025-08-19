@@ -31,11 +31,11 @@ function isValidWorkflowId(input: string): boolean {
 
 describe('WorkflowId Validation', () => {
   describe('Valid inputs', () => {
-    it('should accept single alphanumeric characters', () => {
-      expect(isValidWorkflowId('a')).toBe(true)
-      expect(isValidWorkflowId('A')).toBe(true)
-      expect(isValidWorkflowId('1')).toBe(true)
-      expect(isValidWorkflowId('9')).toBe(true)
+    it('should accept identifiers 3–64 chars long (alphanumeric, "-" or "_")', () => {
+      expect(isValidWorkflowId('abc')).toBe(true)
+      expect(isValidWorkflowId('A1b')).toBe(true)
+      expect(isValidWorkflowId('my_id-123')).toBe(true)
+      expect(isValidWorkflowId('a'.repeat(64))).toBe(true)
     })
 
     it('should accept alphanumeric strings', () => {
