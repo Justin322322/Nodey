@@ -18,55 +18,7 @@ import { WebhookNodeConfig } from '@/nodes/WebhookNode'
 import { findNodeDefinition } from '@/lib/node-definitions'
 import { SECURITY_WARNINGS, getSecurityStatus } from '@/lib/security'
 import { getArrayValue, getObjectValue, pathValueEquals, getTypedParameterValue, getSafeDescription, getSafePlaceholder, getValueAtPath, getSafeDefaultValue } from '@/lib/type-safe-utils'
-
-/**
- * Validates and sanitizes a workflowId parameter
- * @param workflowId - The workflowId to validate
- * @returns A safe workflowId string or '<workflowId>' fallback
- */
-function validateWorkflowId(workflowId: string | null): string {
-  if (!workflowId) {
-    return '<workflowId>'
-  }
-  
-  // Trim whitespace from input
-  const trimmed = workflowId.trim()
-  
-  // Check if empty after trimming
-  if (!trimmed) {
-    return '<workflowId>'
-  }
-  
-  // Check length constraints (min 3, max 64 characters)
-  if (trimmed.length < 3 || trimmed.length > 64) {
-    return '<workflowId>'
-  }
-  
-  // Reserved names to disallow
-  const reservedNames = new Set([
-    'api', 'app', 'www', 'admin', 'root', 'test', 'demo', 'config', 'settings',
-    'system', 'public', 'private', 'static', 'assets', 'lib', 'src', 'node_modules',
-    'null', 'undefined', 'true', 'false', 'new', 'delete', 'edit', 'create'
-  ])
-  
-  // Check for reserved names (case-insensitive)
-  if (reservedNames.has(trimmed.toLowerCase())) {
-    return '<workflowId>'
-  }
-  
-  // Comprehensive regex validation (browser-compatible):
-  // - Must start and end with alphanumeric character
-  // - Can contain alphanumeric, dash, or underscore in the middle
-  // - No consecutive special characters (-- __ -_ _-)
-  // - Uses negative lookaheads instead of lookbehind for browser compatibility
-  const validPattern = /^(?!.*[_-]{2})(?![_-])(?!.*[_-]$)[a-zA-Z0-9_-]+$/
-  
-  if (!validPattern.test(trimmed)) {
-    return '<workflowId>'
-  }
-  
-  return trimmed
-}
+import { validateWorkflowId } from '@/lib/workflow-id-validation'
 
 /**
  * Safely gets the workflowId from URL search params

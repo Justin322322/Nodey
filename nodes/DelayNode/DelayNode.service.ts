@@ -43,7 +43,11 @@ export async function executeDelayNode(context: NodeExecutionContext): Promise<N
         
       case 'random':
         const maxDelay = Math.max(0, config.maxDelayMs ?? (baseDelayMs * 2))
-        actualDelayMs = Math.random() * maxDelay
+        if (maxDelay <= baseDelayMs) {
+          actualDelayMs = baseDelayMs
+        } else {
+          actualDelayMs = baseDelayMs + Math.random() * (maxDelay - baseDelayMs)
+        }
         break
         
       case 'exponential':

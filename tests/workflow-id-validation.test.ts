@@ -1,41 +1,20 @@
 import { describe, it, expect } from 'vitest'
+import { isValidWorkflowId } from '@/lib/workflow-id-validation'
 
 /**
  * Test the workflowId validation regex pattern
  * This ensures our browser-compatible regex maintains the same validation rules
  */
 
-// Browser-compatible regex pattern (same as in node-config-panel.tsx)
-const validPattern = /^(?!.*[_-]{2})(?![_-])(?!.*[_-]$)[a-zA-Z0-9_-]+$/
-
-function isValidWorkflowId(input: string): boolean {
-  const trimmed = input.trim()
-  
-  if (!trimmed) {
-    return false
-  }
-
-  // Reserved names check (simplified for testing)
-  const reservedNames = new Set([
-    'api', 'app', 'www', 'admin', 'root', 'config', 'test', 'dev', 'prod',
-    'system', 'public', 'private', 'static', 'assets', 'lib', 'src', 'node_modules',
-    'null', 'undefined', 'true', 'false', 'new', 'delete', 'edit', 'create'
-  ])
-  
-  if (reservedNames.has(trimmed.toLowerCase())) {
-    return false
-  }
-
-  return validPattern.test(trimmed)
-}
+// Use the production validator to ensure we test real behavior
 
 describe('WorkflowId Validation', () => {
   describe('Valid inputs', () => {
-    it('should accept single alphanumeric characters', () => {
-      expect(isValidWorkflowId('a')).toBe(true)
-      expect(isValidWorkflowId('A')).toBe(true)
-      expect(isValidWorkflowId('1')).toBe(true)
-      expect(isValidWorkflowId('9')).toBe(true)
+    it('should accept valid length alphanumeric strings (3+ characters)', () => {
+      expect(isValidWorkflowId('abc')).toBe(true)
+      expect(isValidWorkflowId('ABC')).toBe(true)
+      expect(isValidWorkflowId('123')).toBe(true)
+      expect(isValidWorkflowId('a1b')).toBe(true)
     })
 
     it('should accept alphanumeric strings', () => {
@@ -62,6 +41,17 @@ describe('WorkflowId Validation', () => {
       expect(isValidWorkflowId('')).toBe(false)
       expect(isValidWorkflowId('   ')).toBe(false)
       expect(isValidWorkflowId('\t')).toBe(false)
+    })
+
+    it('should reject strings that are too short (< 3 characters)', () => {
+      expect(isValidWorkflowId('a')).toBe(false)
+      expect(isValidWorkflowId('12')).toBe(false)
+      expect(isValidWorkflowId('ab')).toBe(false)
+    })
+
+    it('should reject strings that are too long (> 64 characters)', () => {
+      const longString = 'a'.repeat(65) // 65 characters
+      expect(isValidWorkflowId(longString)).toBe(false)
     })
 
     it('should reject strings starting with underscore or hyphen', () => {
