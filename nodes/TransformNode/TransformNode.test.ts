@@ -130,9 +130,20 @@ describe('TransformNode', () => {
       expect(result.success).toBe(true)
       expect(result.output).toMatchObject({
         operation: 'filter',
-        transformedData: expect.arrayContaining([]) as unknown[],
+        originalData: [{ id: 1, name: 'Item 1' }, { id: 2, name: 'Item 2' }],
         itemsProcessed: 2
       })
+      
+      // Assert the exact filtered content (mock filter keeps truthy objects with properties)
+      const output = result.output as { transformedData: unknown[], itemsProcessed: number, operation: string }
+      expect(Array.isArray(output.transformedData)).toBe(true)
+      expect(output.transformedData).toHaveLength(2) // Both items pass the mock filter
+      expect(output.transformedData).toEqual([
+        { id: 1, name: 'Item 1' },
+        { id: 2, name: 'Item 2' }
+      ])
+      expect(output.itemsProcessed).toBe(2)
+      expect(output.operation).toBe('filter')
     })
 
     it('should execute REDUCE operation successfully', async () => {
@@ -167,12 +178,31 @@ describe('TransformNode', () => {
       expect(result.success).toBe(true)
       expect(result.output).toMatchObject({
         operation: 'sort',
-        transformedData: expect.arrayContaining([]) as unknown[],
+        originalData: [{ id: 1, name: 'Item 1' }, { id: 2, name: 'Item 2' }],
         itemsProcessed: 2
       })
+      
+      // Assert the exact sorted content (mock sort reverses the array)
+      const output = result.output as { transformedData: unknown[], itemsProcessed: number, operation: string }
+      expect(Array.isArray(output.transformedData)).toBe(true)
+      expect(output.transformedData).toHaveLength(2)
+      expect(output.transformedData).toEqual([
+        { id: 2, name: 'Item 2' }, // Reversed order
+        { id: 1, name: 'Item 1' }
+      ])
+      expect(output.itemsProcessed).toBe(2)
+      expect(output.operation).toBe('sort')
     })
 
     it('should execute GROUP operation successfully', async () => {
+      // Update mock input to include category values for proper grouping
+      mockContext.input = [
+        { id: 1, name: 'Item 1', category: 'electronics' },
+        { id: 2, name: 'Item 2', category: 'books' },
+        { id: 3, name: 'Item 3', category: 'electronics' },
+        { id: 4, name: 'Item 4', category: 'books' }
+      ]
+      
       mockContext.config = {
         operation: 'group',
         language: 'javascript',
@@ -184,9 +214,29 @@ describe('TransformNode', () => {
       expect(result.success).toBe(true)
       expect(result.output).toMatchObject({
         operation: 'group',
-        transformedData: expect.objectContaining({}) as unknown,
-        itemsProcessed: 2
+        originalData: [
+          { id: 1, name: 'Item 1', category: 'electronics' },
+          { id: 2, name: 'Item 2', category: 'books' },
+          { id: 3, name: 'Item 3', category: 'electronics' },
+          { id: 4, name: 'Item 4', category: 'books' }
+        ],
+        itemsProcessed: 4
       })
+      
+      // Verify proper grouping semantics (mock groups by typeof, not by script)
+      const output = result.output as { transformedData: Record<string, unknown[]>, itemsProcessed: number, operation: string }
+      expect(typeof output.transformedData).toBe('object')
+      expect(output.transformedData).toHaveProperty('object') // All items are objects
+      expect(Array.isArray(output.transformedData.object)).toBe(true)
+      expect(output.transformedData.object).toHaveLength(4) // All 4 items grouped under 'object'
+      expect(output.transformedData.object).toEqual([
+        { id: 1, name: 'Item 1', category: 'electronics' },
+        { id: 2, name: 'Item 2', category: 'books' },
+        { id: 3, name: 'Item 3', category: 'electronics' },
+        { id: 4, name: 'Item 4', category: 'books' }
+      ])
+      expect(output.itemsProcessed).toBe(4)
+      expect(output.operation).toBe('group')
     })
 
     it('should execute MERGE operation successfully', async () => {
@@ -246,10 +296,21 @@ describe('TransformNode', () => {
       expect(result.output).toMatchObject({
         transformedData: expect.objectContaining({
           result: expect.objectContaining({
-            transformed: expect.arrayContaining([]) as unknown[]
+            transformed: expect.any(Array) as unknown[]
           }) as unknown
         }) as unknown
       })
+      
+      // Verify the array contains the expected transformed elements
+      const output = result.output as { transformedData: { result: { transformed: unknown[] } } }
+      expect(Array.isArray(output.transformedData.result.transformed)).toBe(true)
+      expect(output.transformedData.result.transformed).toHaveLength(2)
+      expect(output.transformedData.result.transformed).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 1, name: 'Item 1', processed: true }),
+          expect.objectContaining({ id: 2, name: 'Item 2', processed: true })
+        ])
+      )
     })
 
     it('should handle missing script', async () => {

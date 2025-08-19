@@ -30,7 +30,7 @@ interface ParameterDefinition {
   label: string
   // JSON path inside node.data.config (e.g., 'authentication.type')
   path: string
-  type: ParameterType | 'credential' | 'stringList'
+  type: ParameterType
   required?: boolean
   description?: string
   placeholder?: string
@@ -74,17 +74,20 @@ export function findNodeDefinition(node: WorkflowNode): ImportedNodeDefinition |
 
   // Use the new registry system for all nodes
   switch (data.nodeType) {
-    case NodeType.ACTION:
+    case NodeType.ACTION: {
       const actionType = (data as { actionType: ActionType }).actionType
       return getNodeDefinition(NodeType.ACTION, actionType)
+    }
 
-    case NodeType.TRIGGER:
+    case NodeType.TRIGGER: {
       const triggerType = (data as { triggerType: TriggerType }).triggerType
       return getNodeDefinition(NodeType.TRIGGER, triggerType)
+    }
 
-    case NodeType.LOGIC:
+    case NodeType.LOGIC: {
       const logicType = (data as { logicType: LogicType }).logicType
       return getNodeDefinition(NodeType.LOGIC, logicType)
+    }
 
     default:
       return undefined

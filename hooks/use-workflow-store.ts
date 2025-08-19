@@ -5,7 +5,7 @@ import { applyNodeChanges, applyEdgeChanges, OnNodesChange, OnEdgesChange, Conne
 import { v4 as uuidv4 } from 'uuid'
 import { Workflow, WorkflowNode, WorkflowEdge, WorkflowExecution, ExecutionLog } from '@/types/workflow'
 import { executeWorkflow as executeWorkflowAction, stopWorkflowExecution } from '@/lib/workflow-actions'
-import { encryptEmailConfig, decryptEmailConfig, clearSensitiveData } from '@/lib/security'
+import { encryptEmailConfig, decryptEmailConfig, decryptDatabaseConfig, clearSensitiveData } from '@/lib/security'
 import { ActionType } from '@/types/workflow'
 import { migrateWorkflowNode } from '@/lib/migration-utils'
 
@@ -20,18 +20,21 @@ function encryptNodeConfig(node: WorkflowNode): WorkflowNode {
       const actionNode = node.data as { actionType: ActionType }
       switch (actionNode.actionType) {
         case ActionType.EMAIL:
-          encryptedConfig = encryptEmailConfig(config)
-          break
-        case ActionType.DATABASE:
           try {
-            // Database configs don't need encryption here since they use credentialId references
-            // Keep the config as-is (the actual connection string is encrypted in credential store)
-            encryptedConfig = { ...config }
+            encryptedConfig = encryptEmailConfig(config)
           } catch {
-            encryptedConfig = config
+            encryptedConfig = { ...config }
           }
           break
-        // Add other action types as needed
+        case ActionType.DATABASE:
+          // Database configs don't need encryption here since they use credentialId references
+          // Keep the config as-is (the actual connection string is encrypted in credential store)
+          encryptedConfig = { ...config }
+          break
+        default:
+          // For unknown/unsupported action types, preserve the original config
+          encryptedConfig = { ...config }
+          break
       }
     }
     
@@ -49,29 +52,65 @@ function encryptNodeConfig(node: WorkflowNode): WorkflowNode {
 // Helper function to decrypt node configs based on their type and handle migration
 function decryptNodeConfig(node: WorkflowNode): WorkflowNode {
   // First, apply any necessary migrations
-  let migratedNode = migrateWorkflowNode(node)
+  const migratedNode = migrateWorkflowNode(node)
   
   if (migratedNode.data.config && typeof migratedNode.data.config === 'object') {
     const config = migratedNode.data.config as Record<string, unknown>
-    let decryptedConfig: Record<string, unknown> = config
+    let decryptedConfig: Record<string, unknown> = { ...config }
     
     // Apply type-specific decryption
     if (migratedNode.data.nodeType === 'action') {
       const actionNode = migratedNode.data as { actionType: ActionType }
       switch (actionNode.actionType) {
         case ActionType.EMAIL:
-          decryptedConfig = decryptEmailConfig(config)
+          try {
+            decryptedConfig = decryptEmailConfig(config)
+          } catch (error) {
+            console.warn('Failed to decrypt email config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
           break
         case ActionType.DATABASE:
           try {
-            // Database configs don't need decryption here since they use credentialId references
-            // Keep the config as-is (the actual connection string is decrypted in service when needed)
+            decryptedConfig = decryptDatabaseConfig(config)
+          } catch (error) {
+            console.warn('Failed to decrypt database config, using fallback:', error)
             decryptedConfig = { ...config }
-          } catch {
-            decryptedConfig = config
           }
           break
-        // Add other action types as needed
+        case ActionType.HTTP:
+          try {
+            // HTTP configs may contain sensitive headers or auth data
+            // For now, keep the config as-is since there's no specific HTTP decryption
+            decryptedConfig = { ...config }
+          } catch (error) {
+            console.warn('Failed to process HTTP config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
+          break
+        case ActionType.TRANSFORM:
+          try {
+            // Transform configs typically don't contain sensitive data
+            decryptedConfig = { ...config }
+          } catch (error) {
+            console.warn('Failed to process transform config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
+          break
+        case ActionType.DELAY:
+          try {
+            // Delay configs typically don't contain sensitive data
+            decryptedConfig = { ...config }
+          } catch (error) {
+            console.warn('Failed to process delay config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
+          break
+        default:
+          // Fallback for unknown action types - always provide a safe config
+          console.warn('Unknown action type encountered, using safe config fallback:', actionNode.actionType)
+          decryptedConfig = { ...config }
+          break
       }
     }
     

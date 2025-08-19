@@ -39,7 +39,14 @@ export async function executeTransformNode(context: NodeExecutionContext): Promi
     // Simulate transformation delay
     await new Promise(resolve => setTimeout(resolve, 50))
     
-    const duration = Date.now() - startTime
+    // Check for abort signal immediately after delay
+    if (context.signal?.aborted) {
+      return {
+        success: false,
+        error: 'Execution was cancelled'
+      }
+    }
+    
     let transformedData: unknown
     let itemsProcessed = 0
     
@@ -148,6 +155,17 @@ export async function executeTransformNode(context: NodeExecutionContext): Promi
       setNestedValue(outputContainer, config.outputPath, transformedData)
       finalOutput = outputContainer
     }
+    
+    // Check for abort signal before building result
+    if (context.signal?.aborted) {
+      return {
+        success: false,
+        error: 'Execution was cancelled'
+      }
+    }
+    
+    // Calculate final duration after all transformation work is complete
+    const duration = Date.now() - startTime
     
     const result: TransformExecutionResult = {
       operation: config.operation,

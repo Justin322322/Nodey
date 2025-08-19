@@ -1,7 +1,5 @@
 "use client"
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
-
 import { X, Info, Copy, ShieldCheck } from 'lucide-react'
 import { useEffect, useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
@@ -56,11 +54,12 @@ function validateWorkflowId(workflowId: string | null): string {
     return '<workflowId>'
   }
   
-  // Comprehensive regex validation:
+  // Comprehensive regex validation (browser-compatible):
   // - Must start and end with alphanumeric character
   // - Can contain alphanumeric, dash, or underscore in the middle
   // - No consecutive special characters (-- __ -_ _-)
-  const validPattern = /^[a-zA-Z0-9](?:[a-zA-Z0-9]|(?<![_-])[_-](?![_-]))*[a-zA-Z0-9]$|^[a-zA-Z0-9]$/
+  // - Uses negative lookaheads instead of lookbehind for browser compatibility
+  const validPattern = /^(?!.*[_-]{2})(?![_-])(?!.*[_-]$)[a-zA-Z0-9_-]+$/
   
   if (!validPattern.test(trimmed)) {
     return '<workflowId>'
@@ -182,7 +181,7 @@ export function NodeConfigPanel() {
   }
   
   const handleConfigChange = (path: string, value: unknown) => {
-    const setDeep = (obj: Record<string, unknown>, p: string, v: unknown) => {
+    const setDeep = (obj: Record<string, unknown>, p: string, v: unknown): Record<string, unknown> => {
       const parts = p.split('.')
       
       // Validate path segments to prevent prototype pollution
@@ -193,7 +192,13 @@ export function NodeConfigPanel() {
         }
       }
       
+      // Type guard to check if value is a valid object  
+      const isValidObject = (val: unknown): val is Record<string, unknown> => {
+        return val !== null && typeof val === 'object' && !Array.isArray(val)
+      }
+      
       // Create a safe clone using Object.create(null) for the root to avoid prototype chain
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Object.create(null) creates object without prototype
       const clone: Record<string, unknown> = Object.create(null)
       
       // Safely copy properties from the original object
@@ -207,13 +212,15 @@ export function NodeConfigPanel() {
       for (let i = 0; i < parts.length - 1; i += 1) {
         const key = parts[i]
         const next = cur[key]
-        if (typeof next !== 'object' || next === null) {
+        if (!isValidObject(next)) {
           // Create safe object without prototype chain
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Object.create(null) creates object without prototype
           cur[key] = Object.create(null)
         } else {
           // Safely clone the nested object
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Object.create(null) creates object without prototype
           const nestedClone: Record<string, unknown> = Object.create(null)
-          for (const [nestedKey, nestedVal] of Object.entries(next as Record<string, unknown>)) {
+          for (const [nestedKey, nestedVal] of Object.entries(next)) {
             if (Object.prototype.hasOwnProperty.call(next, nestedKey)) {
               nestedClone[nestedKey] = nestedVal
             }
@@ -273,13 +280,29 @@ export function NodeConfigPanel() {
     const { data } = selectedNode
     const def = findNodeDefinition(selectedNode)
     if (def?.parameters && def.parameters.length > 0) {
-      // Type assertion to use extended parameter definition with path and default properties
-      type ExtendedParameterDefinition = typeof def.parameters[0] & {
+      // Define a proper interface for parameter definition
+      interface ExtendedParameterDefinition {
+        type: string
+        label: string
         path: string
         default?: unknown
+        description?: unknown
+        placeholder?: unknown
+        options?: Array<{ label: string; value: string }> | (() => Array<{ label: string; value: string }>)
+        showIf?: Array<{ path?: string; name?: string; equals: string | number | boolean }>
         credentialType?: CredentialType
       }
-      const parameters = def.parameters as ExtendedParameterDefinition[]
+      
+      // Type guard function to check if parameter has required properties
+      const isValidParameter = (param: unknown): param is ExtendedParameterDefinition => {
+        if (!param || typeof param !== 'object') return false
+        const p = param as Record<string, unknown>
+        return typeof p.type === 'string' && 
+               typeof p.label === 'string' && 
+               typeof p.path === 'string'
+      }
+      
+      const parameters = def.parameters.filter(isValidParameter) as ExtendedParameterDefinition[]
       const FieldLabel = ({ text, description, htmlFor }: { text: string; description?: string; htmlFor?: string }) => (
         <div className="inline-flex items-center gap-1">
           <Label htmlFor={htmlFor}>{text}</Label>
@@ -317,22 +340,60 @@ export function NodeConfigPanel() {
             </div>
           )}
           
-          {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */}
           {parameters.map((param) => {
-            // ESLint disable for param properties - these are safe with our type assertion above
-            const shouldShow = !param.showIf || param.showIf.length === 0 
-              ? true 
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-              : param.showIf.some((cond) => pathValueEquals(selectedNode.data.config as Record<string, unknown>, cond.path || cond.name || '', cond.equals))
+            // Type-safe showIf condition checking with runtime guards
+            const shouldShow = (() => {
+              // Check if showIf exists and is an array
+              if (!Array.isArray(param.showIf) || param.showIf.length === 0) {
+                return true
+              }
+              
+              // Safely assert selectedNode.data.config exists
+              const config = selectedNode?.data?.config
+              if (!config || typeof config !== 'object') {
+                return true // Show by default if config is invalid
+              }
+              
+              // Check if any condition matches with safe predicate
+              return param.showIf.some((cond) => {
+                // Verify cond is an object and has required properties
+                if (!cond || typeof cond !== 'object') {
+                  return false
+                }
+                
+                // Type guard for condition structure
+                const isValidCondition = (c: unknown): c is { path?: string; name?: string; equals: string | number | boolean } => {
+                  if (!c || typeof c !== 'object') return false
+                  const condition = c as Record<string, unknown>
+                  
+                  // Must have either path or name (but not both) as strings
+                  const hasPath = typeof condition.path === 'string'
+                  const hasName = typeof condition.name === 'string'
+                  const hasEquals = condition.equals !== undefined
+                  
+                  return (hasPath || hasName) && hasEquals && !(hasPath && hasName)
+                }
+                
+                if (!isValidCondition(cond)) {
+                  return false
+                }
+                
+                // Extract the path or name safely
+                const pathToCheck = cond.path || cond.name || ''
+                if (!pathToCheck) {
+                  return false
+                }
+                
+                return pathValueEquals(config as Record<string, unknown>, pathToCheck, cond.equals)
+              })
+            })()
+            
             if (!shouldShow) return null
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             switch (param.type) {
               case 'select': {
                 const config = (selectedNode.data.config as Record<string, unknown>) || {}
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                const paramPath = typeof param.path === 'string' ? param.path : ''
+                const paramPath = param.path
                 const currentValue = getValueAtPath(config, paramPath)
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
                 const defaultVal = getSafeDefaultValue(param.default, 'string')
                 const value = typeof currentValue === 'string' ? currentValue : defaultVal
                 const description = getSafeDescription(param.description)
@@ -358,11 +419,8 @@ export function NodeConfigPanel() {
               case 'string':
               case 'text': {
                 // Allow both 'string' and 'text' parameter types for compatibility
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                const paramPath = typeof param.path === 'string' ? param.path : ''
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                const paramPath = param.path
                 const value = getParamValue(paramPath, 'string', param.default)
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
                 const description = getSafeDescription(param.description)
                 return (
                   <div key={paramPath} className="space-y-1.5 sm:space-y-2">

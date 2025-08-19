@@ -184,6 +184,20 @@ describe('DatabaseNode', () => {
       expect(result.error).toBe('Database credential is required')
     })
 
+    it('should handle whitespace-only credential ID', async () => {
+      mockContext.config = {
+        operation: 'select',
+        credentialId: '   ',  // whitespace-only
+        connectionString: '',
+        query: 'SELECT *'
+      } as DatabaseNodeConfig
+
+      const result = await executeDatabaseNode(mockContext)
+      
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Connection string is required')
+    })
+
     it('should handle missing query', async () => {
       mockContext.config = {
         operation: 'select',

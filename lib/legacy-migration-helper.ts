@@ -5,14 +5,15 @@
 
 import { Workflow, WorkflowNode, ActionType } from '@/types/workflow'
 import { DatabaseNodeConfig } from '@/nodes/DatabaseNode/DatabaseNode.types'
-import { needsDatabaseMigration, migrateWorkflowNode } from './migration-utils'
+import { DelayNodeConfig } from '@/nodes/DelayNode/DelayNode.types'
+import { needsDatabaseMigration, needsDelayMigration, migrateWorkflowNode } from './migration-utils'
 
 export interface LegacyConfigReport {
   workflowId: string
   workflowName: string
   nodeId: string
   nodeLabel: string
-  configType: 'database' | 'email' | 'other'
+  configType: 'database' | 'delay' | 'email' | 'other'
   issue: string
   canAutoMigrate: boolean
 }
@@ -74,6 +75,41 @@ function scanNodeForLegacyConfigs(workflowId: string, workflowName: string, node
       break
     }
     
+    case ActionType.DELAY: {
+      const config = actionNode.config as DelayNodeConfig & Record<string, unknown>
+      
+      // Check for legacy delayMs config (inline check to avoid ESLint issues)
+      const hasValueAndUnit = typeof config.value === 'number' && config.unit
+      const hasLegacyDelayMs = typeof config.delayMs === 'number'
+      
+      // Needs migration if it has delayMs but missing value/unit
+      if (hasLegacyDelayMs && !hasValueAndUnit) {
+        return {
+          workflowId,
+          workflowName,
+          nodeId: node.id,
+          nodeLabel: node.data.label || 'Delay Node',
+          configType: 'delay',
+          issue: 'Uses legacy delayMs instead of value+unit pattern',
+          canAutoMigrate: true
+        }
+      }
+      
+      // Check for legacy delayMs that should be cleaned up
+      if (hasValueAndUnit && hasLegacyDelayMs) {
+        return {
+          workflowId,
+          workflowName,
+          nodeId: node.id,
+          nodeLabel: node.data.label || 'Delay Node',
+          configType: 'delay',
+          issue: 'Contains both value+unit and legacy delayMs fields',
+          canAutoMigrate: true
+        }
+      }
+      break
+    }
+    
     case ActionType.EMAIL: {
       // Add email legacy config checks here if needed
       break
@@ -95,9 +131,10 @@ export function migrateWorkflowLegacyConfigs(workflow: Workflow): {
 } {
   const errors: string[] = []
   let migrationsApplied = 0
+  let migratedNodes: WorkflowNode[] = workflow.nodes
   
   try {
-    const migratedNodes = workflow.nodes.map(node => {
+    migratedNodes = workflow.nodes.map(node => {
       const originalNode = node
       const migratedNode = migrateWorkflowNode(node)
       
@@ -123,8 +160,12 @@ export function migrateWorkflowLegacyConfigs(workflow: Workflow): {
   } catch (error) {
     errors.push(`Migration failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     return {
-      migratedWorkflow: workflow,
-      migrationsApplied: 0,
+      migratedWorkflow: {
+        ...workflow,
+        nodes: migratedNodes,
+        updatedAt: migrationsApplied > 0 ? new Date() : workflow.updatedAt
+      },
+      migrationsApplied,
       errors
     }
   }

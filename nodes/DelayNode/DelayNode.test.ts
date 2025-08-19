@@ -98,7 +98,6 @@ describe('DelayNode', () => {
       const defaults = DELAY_NODE_DEFINITION.getDefaults()
       expect(defaults).toEqual({
         delayType: 'fixed',
-        delayMs: 1000,
         unit: 'seconds',
         value: 1,
         passthrough: true

@@ -1,4 +1,4 @@
-import { DelayNodeConfig, DelayExecutionResult } from './DelayNode.types'
+import { DelayNodeConfig, DelayExecutionResult, getDelayMs } from './DelayNode.types'
 import { NodeExecutionContext, NodeExecutionResult } from '../types'
 
 export async function executeDelayNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
@@ -23,27 +23,14 @@ export async function executeDelayNode(context: NodeExecutionContext): Promise<N
       }
     }
     
-    // Convert delay value to milliseconds
-    const multipliers = {
-      milliseconds: 1,
-      seconds: 1000,
-      minutes: 60 * 1000,
-      hours: 60 * 60 * 1000,
-    } as const
-
-    const unitMultiplier = multipliers[config.unit as keyof typeof multipliers]
-    if (unitMultiplier === undefined) {
+    // Convert delay value to milliseconds using helper function
+    let baseDelayMs: number
+    try {
+      baseDelayMs = getDelayMs({ value: config.value, unit: config.unit })
+    } catch (error) {
       return {
         success: false,
-        error: `Invalid unit: ${String(config.unit)}`
-      }
-    }
-
-    const baseDelayMs = config.value * unitMultiplier
-    if (!Number.isFinite(baseDelayMs)) {
-      return {
-        success: false,
-        error: 'Invalid computed delay value'
+        error: error instanceof Error ? error.message : 'Invalid delay configuration'
       }
     }
 
@@ -55,8 +42,8 @@ export async function executeDelayNode(context: NodeExecutionContext): Promise<N
         break
         
       case 'random':
-        const maxDelay = config.maxDelayMs || baseDelayMs * 2
-        actualDelayMs = Math.random() * Math.min(maxDelay, baseDelayMs * 2)
+        const maxDelay = Math.max(0, config.maxDelayMs ?? (baseDelayMs * 2))
+        actualDelayMs = Math.random() * maxDelay
         break
         
       case 'exponential':

@@ -57,7 +57,7 @@ function isDatabaseNodeConfig(obj: Record<string, unknown>): obj is DatabaseNode
 
   // Check optional parameters field
   if (obj.parameters !== undefined && 
-      (typeof obj.parameters !== 'object' || obj.parameters === null || Array.isArray(obj.parameters))) {
+      (typeof obj.parameters !== 'string' && (typeof obj.parameters !== 'object' || obj.parameters === null || Array.isArray(obj.parameters)))) {
     return false;
   }
 

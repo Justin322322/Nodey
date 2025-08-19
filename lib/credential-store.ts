@@ -2,7 +2,7 @@
  * Secure credential store for managing database connection strings and other secrets
  */
 
-import { encryptCredential, decryptCredential } from './security'
+import { encryptCredential, decryptCredential, isEncrypted } from './security'
 import { CredentialType } from '@/types/credentials'
 
 export interface StoredCredential {
@@ -76,7 +76,16 @@ class CredentialStore {
     if (!credential) return null
     
     try {
-      return decryptCredential(credential.encryptedValue)
+      const decrypted = decryptCredential(credential.encryptedValue)
+      
+      // Fail closed: if the decrypted value still looks like ciphertext, 
+      // it means decryption failed silently
+      if (isEncrypted(decrypted)) {
+        console.error('Failed to decrypt credential - result still appears encrypted')
+        return null
+      }
+      
+      return decrypted
     } catch (error) {
       console.error('Failed to decrypt credential:', error)
       return null
@@ -95,6 +104,14 @@ class CredentialStore {
   ): string {
     try {
       const encryptedValue = encryptCredential(value)
+      
+      // Security check: detect encryption failure
+      // If encryption failed, encryptCredential returns the original plaintext
+      if (!encryptedValue || encryptedValue === value || !isEncrypted(encryptedValue)) {
+        console.error('Failed to encrypt credential - refusing to store plaintext')
+        throw new Error('Credential encryption failed - cannot store plaintext secrets')
+      }
+      
       const id = `cred_${crypto.randomUUID()}`
       const now = new Date()
       
@@ -152,17 +169,33 @@ class CredentialStore {
    */
   updateCredentialValue(id: string, newValue: string): boolean {
     try {
+      // Step 1: Encrypt the new value BEFORE any mutation
+      const encryptedValue = encryptCredential(newValue)
+      
+      // Step 2: Validate encryption success BEFORE any mutation
+      // If encryption failed, encryptCredential returns the original plaintext
+      if (!encryptedValue || encryptedValue === newValue || !isEncrypted(encryptedValue)) {
+        console.error('Failed to encrypt credential value - refusing to store plaintext')
+        throw new Error('Credential encryption failed - cannot store plaintext secrets')
+      }
+      
+      // Step 3: Only after successful encryption, retrieve and modify credentials
       const credentials = this.getAllCredentialsWithValues()
       const index = credentials.findIndex(c => c.id === id)
       
       if (index === -1) return false
       
-      credentials[index] = {
+      // Step 4: Prepare the complete new credential object atomically
+      const updatedCredential: StoredCredential = {
         ...credentials[index],
-        encryptedValue: encryptCredential(newValue),
+        encryptedValue,
         updatedAt: new Date()
       }
       
+      // Step 5: Atomically replace the credential in the array
+      credentials[index] = updatedCredential
+      
+      // Step 6: Persist to storage
       sessionStorage.setItem(this.storageKey, JSON.stringify(credentials))
       return true
     } catch (error) {
@@ -274,7 +307,7 @@ export function migrateConnectionStringToCredential(
  */
 export function resolveConnectionString(credentialIdOrPlainString: string): string | null {
   if (!credentialIdOrPlainString || credentialIdOrPlainString.trim().length === 0) {
-    return null
+    throw new Error('Connection string is required')
   }
   
   // Check if it's a credential reference

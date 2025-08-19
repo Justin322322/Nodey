@@ -90,6 +90,14 @@ describe('Workflow Execution Integration', () => {
     })
 
     it('should execute a database action node (placeholder)', async () => {
+      // This test uses mocked database operations - no live database required
+      const testConnectionString = process.env.TEST_DB_URL || 'postgresql://mock:mock@localhost:5432/mockdb'
+      
+      // Early validation - fail fast if running in CI without proper test setup
+      if (!process.env.TEST_DB_URL && process.env.CI === 'true') {
+        expect.fail('TEST_DB_URL environment variable is required for database tests in CI environment')
+      }
+
       const nodeId = uuidv4()
       const node: WorkflowNode = {
         id: nodeId,
@@ -101,7 +109,7 @@ describe('Workflow Execution Integration', () => {
           actionType: ActionType.DATABASE,
           config: {
             operation: 'select',
-            connectionString: 'postgresql://test:test@localhost:5432/testdb',
+            connectionString: testConnectionString,
             query: 'SELECT * FROM users'
           }
         }
@@ -111,12 +119,15 @@ describe('Workflow Execution Integration', () => {
       const executor = new WorkflowExecutor(mockWorkflow)
       const result = await executor.execute({ startNodeId: nodeId })
 
+      // Note: DatabaseNode service uses mock implementation, no actual DB connection is made
       expect(result.status).toBe('completed')
       expect(result.nodeOutputs[nodeId]).toBeDefined()
       
       const dbResult = result.nodeOutputs[nodeId] as DatabaseExecutionResult
       expect(dbResult.operation).toBe('select')
       expect(dbResult.rows).toBeDefined()
+      // Verify we get mock data (indicating successful mock execution)
+      expect(Array.isArray(dbResult.rows)).toBe(true)
     })
 
     it('should execute a transform action node (placeholder)', async () => {
@@ -471,4 +482,5 @@ describe('Workflow Execution Integration', () => {
       expect(['cancelled', 'completed']).toContain(result.status)
       expect(result.completedAt).toBeDefined()
     })
-  })})
+  })
+})

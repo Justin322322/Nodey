@@ -1,50 +1,24 @@
 import { NodeType, ActionType } from "@/types/workflow";
 import { TransformNodeConfig } from "./TransformNode.types";
+import { NodeDefinition, ParameterDefinition } from "../index";
 import { parse } from "espree";
 
-interface ParameterDefinition {
-  name: string;
-  label: string;
-  type:
-    | "text"
-    | "textarea"
-    | "select"
-    | "number"
-    | "boolean"
-    | "email"
-    | "url"
-    | "json"
-    | "password";
-  required?: boolean;
-  defaultValue?: unknown;
-  options?: Array<{ label: string; value: string }>;
-  placeholder?: string;
-  description?: string;
-  showIf?: Array<{ path: string; equals: string | number | boolean }>;
-}
 
-interface NodeDefinition {
-  nodeType: NodeType;
-  subType: ActionType;
-  label: string;
-  description: string;
-  parameters: ParameterDefinition[];
-  validate: (config: Record<string, unknown>) => string[];
-  getDefaults: () => TransformNodeConfig;
-}
 
-export const TRANSFORM_NODE_DEFINITION: NodeDefinition = {
+
+
+export const TRANSFORM_NODE_DEFINITION: NodeDefinition<TransformNodeConfig> = {
   nodeType: NodeType.ACTION,
   subType: ActionType.TRANSFORM,
   label: "Data Transform",
   description: "Transform data using JavaScript or JSONPath (placeholder implementation)",
   parameters: [
     {
-      name: "operation",
+      path: "operation",
       label: "Operation",
       type: "select",
       required: true,
-      defaultValue: "map",
+      default: "map",
       options: [
         { label: "Map (Transform each item)", value: "map" },
         { label: "Filter (Select items)", value: "filter" },
@@ -56,11 +30,11 @@ export const TRANSFORM_NODE_DEFINITION: NodeDefinition = {
       description: "Type of data transformation to perform",
     },
     {
-      name: "language",
+      path: "language",
       label: "Script Language",
       type: "select",
       required: true,
-      defaultValue: "javascript",
+      default: "javascript",
       options: [
         { label: "JavaScript", value: "javascript" },
         { label: "JSONPath", value: "jsonpath" },
@@ -68,29 +42,29 @@ export const TRANSFORM_NODE_DEFINITION: NodeDefinition = {
       description: "Language for transformation script",
     },
     {
-      name: "script",
+      path: "script",
       label: "Transformation Script",
       type: "textarea",
       required: true,
-      defaultValue: "",
+      default: "",
       placeholder: "// For map operation:\nreturn { ...item, processed: true }",
       description: "Script to transform the data",
     },
     {
-      name: "inputPath",
+      path: "inputPath",
       label: "Input Path",
       type: "text",
       required: false,
-      defaultValue: "",
+      default: "",
       placeholder: "data.items",
       description: "JSONPath to extract input data (optional)",
     },
     {
-      name: "outputPath",
+      path: "outputPath",
       label: "Output Path",
       type: "text",
       required: false,
-      defaultValue: "",
+      default: "",
       placeholder: "result.transformed",
       description: "Path to store transformed data (optional)",
     },

@@ -1,5 +1,5 @@
 import { NodeType, ActionType } from "@/types/workflow";
-import { DelayNodeConfig } from "./DelayNode.types";
+import { DelayNodeConfig, getDelayMs } from "./DelayNode.types";
 
 interface ParameterDefinition {
   name: string;
@@ -118,22 +118,17 @@ export const DELAY_NODE_DEFINITION: NodeDefinition = {
 
     // Calculate delay in milliseconds for validation
     if (typeof typed.value === "number" && typed.unit) {
-      const multipliers = {
-        milliseconds: 1,
-        seconds: 1000,
-        minutes: 60 * 1000,
-        hours: 60 * 60 * 1000,
-      };
-      
-      const delayMs = typed.value * multipliers[typed.unit as keyof typeof multipliers];
-      
-      // Validate reasonable delay limits
-      if (delayMs > 24 * 60 * 60 * 1000) { // 24 hours
-        errors.push("Delay cannot exceed 24 hours");
-      }
-      
-      if (delayMs < 0) {
-        errors.push("Delay must be non-negative");
+      try {
+        const delayMs = getDelayMs({ value: typed.value, unit: typed.unit });
+        
+        // Validate reasonable delay limits
+        if (delayMs > 24 * 60 * 60 * 1000) { // 24 hours
+          errors.push("Delay cannot exceed 24 hours");
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          errors.push(error.message);
+        }
       }
     }
 
@@ -150,7 +145,6 @@ export const DELAY_NODE_DEFINITION: NodeDefinition = {
   },
   getDefaults: (): DelayNodeConfig => ({
     delayType: "fixed",
-    delayMs: 1000,
     unit: "seconds",
     value: 1,
     passthrough: true,

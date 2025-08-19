@@ -2,6 +2,31 @@ import { DatabaseNodeConfig, DatabaseExecutionResult } from './DatabaseNode.type
 import { NodeExecutionContext, NodeExecutionResult } from '../types'
 import { resolveConnectionString, migrateConnectionStringToCredential } from '@/lib/credential-store'
 
+/**
+ * Creates an abortable delay that respects AbortSignal
+ */
+async function abortableDelay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      const error = new Error('The operation was aborted')
+      error.name = 'AbortError'
+      reject(error)
+      return
+    }
+
+    const timeoutId = setTimeout(() => {
+      resolve()
+    }, ms)
+
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timeoutId)
+      const error = new Error('The operation was aborted')
+      error.name = 'AbortError'
+      reject(error)
+    })
+  })
+}
+
 export async function executeDatabaseNode(context: NodeExecutionContext): Promise<NodeExecutionResult> {
   const startTime = Date.now()
   
@@ -19,12 +44,19 @@ export async function executeDatabaseNode(context: NodeExecutionContext): Promis
     let connectionString: string | null = null
     
     // Check if we have credentialId (new approach)
-    if (config.credentialId && typeof config.credentialId === 'string' && config.credentialId.trim().length > 0) {
-      connectionString = resolveConnectionString(config.credentialId)
-      if (!connectionString) {
+    if (config.credentialId && typeof config.credentialId === 'string') {
+      try {
+        connectionString = resolveConnectionString(config.credentialId)
+        if (!connectionString) {
+          return {
+            success: false,
+            error: 'Failed to resolve database credential'
+          }
+        }
+      } catch (error) {
         return {
           success: false,
-          error: 'Failed to resolve database credential'
+          error: error instanceof Error ? error.message : 'Failed to resolve database credential'
         }
       }
     }
@@ -42,7 +74,7 @@ export async function executeDatabaseNode(context: NodeExecutionContext): Promis
         error: 'Database credential is required'
       }
     }    
-    if (!config.query || config.query.trim().length === 0) {
+    if (!config.query || typeof config.query !== 'string' || config.query.trim().length === 0) {
       return {
         success: false,
         error: 'SQL query is required'
@@ -64,9 +96,10 @@ export async function executeDatabaseNode(context: NodeExecutionContext): Promis
     // 3. Return actual results
     // 
     // Note: connectionString is now securely resolved from credential store
+    void connectionString; // Mark as intentionally used to avoid linter warnings
     
     // Simulate database operation delay
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await abortableDelay(100, context.signal)
     
     const duration = Date.now() - startTime
     
