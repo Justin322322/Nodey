@@ -77,8 +77,8 @@ describe('TransformNode', () => {
         operation: 'map',
         language: 'javascript',
         script: '',
-        inputPath: undefined,
-        outputPath: undefined
+        inputPath: '',
+        outputPath: ''
       })
     })
   })
