@@ -1,29 +1,8 @@
 import { NodeType, ActionType } from '@/types/workflow'
 import { EmailNodeConfig } from './EmailNode.types'
+import { ParameterDefinition, NodeDefinition } from '../index'
 
-interface ParameterDefinition {
-  path: string
-  label: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url' | 'password'
-  required?: boolean
-  defaultValue?: unknown
-  options?: Array<{ label: string; value: string }>
-  placeholder?: string
-  description?: string
-  showIf?: Array<{ path: string; equals: string | number | boolean }>
-}
-
-interface NodeDefinition {
-  nodeType: NodeType
-  subType: ActionType
-  label: string
-  description: string
-  parameters: ParameterDefinition[]
-  validate: (config: Record<string, unknown>) => string[]
-  getDefaults: () => EmailNodeConfig
-}
-
-export const EMAIL_NODE_DEFINITION: NodeDefinition = {
+export const EMAIL_NODE_DEFINITION: NodeDefinition<EmailNodeConfig> = {
   nodeType: NodeType.ACTION,
   subType: ActionType.EMAIL,
   label: 'Send Email',
@@ -32,7 +11,7 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
     { 
       path: 'to',
       label: 'To', 
-      type: 'email', 
+      type: 'stringList', 
       required: true, 
       defaultValue: [],
       description: 'Email recipients',
@@ -134,7 +113,7 @@ export const EMAIL_NODE_DEFINITION: NodeDefinition = {
   ],
   validate: (config: Record<string, unknown>): string[] => {
     const errors: string[] = []
-    const typed = config as unknown as EmailNodeConfig
+    const typed = config as EmailNodeConfig
     
     if (!Array.isArray(typed.to) || typed.to.length === 0) {
       errors.push('At least one recipient (To) is required')

@@ -85,6 +85,28 @@ export function decryptCredential(encryptedValue: string): string {
 }
 
 /**
+ * Encrypt database node configuration
+ */
+export function encryptDatabaseConfig(config: Record<string, unknown>): Record<string, unknown> {
+  // For database nodes, we don't need to encrypt here since credentialId is just a reference
+  // The actual connection string is encrypted in the credential store
+  // However, trigger migration for legacy connectionString if present
+  if (config.connectionString && typeof config.connectionString === 'string' && !config.credentialId) {
+    console.warn('Found legacy connectionString in database config. Migration should be handled at the workflow level.');
+  }
+  return config;
+}
+
+/**
+ * Decrypt database node configuration
+ */
+export function decryptDatabaseConfig(config: Record<string, unknown>): Record<string, unknown> {
+  // For database nodes, we don't need to decrypt here since credentialId is just a reference
+  // The actual connection string is decrypted in the service when needed
+  return config;
+}
+
+/**
  * Encrypt email service configuration
  */
 export function encryptEmailConfig(config: Record<string, unknown>): Record<string, unknown> {

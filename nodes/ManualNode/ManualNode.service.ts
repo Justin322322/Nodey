@@ -22,7 +22,7 @@ export class ManualNodeService {
       const result: ManualExecutionResult = {
         triggered: true,
         timestamp: new Date(),
-        triggeredBy: context.workflowId || 'unknown',
+        triggeredBy: context.nodeId || 'unknown',
         reason: 'Manual execution triggered'
       }
 

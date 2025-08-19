@@ -49,6 +49,7 @@
     "zustand": "^4.5.3"
   },
   "devDependencies": {
+    "@types/espree": "^10.1.0",
     "@types/node": "^22.7.4",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
@@ -58,6 +59,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.4.6",
+    "espree": "^10.4.0",
     "husky": "^9.1.7",
     "knip": "^5.62.0",
     "lint-staged": "^15.5.2",

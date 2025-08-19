@@ -121,7 +121,11 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName
 export {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogFooter,
   DialogTitle,
 }
+
+// Also export DialogTrigger from Radix for external use
+export const DialogTrigger = DialogPrimitive.Trigger

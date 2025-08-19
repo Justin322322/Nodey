@@ -21,6 +21,9 @@ import { executeHttpNode } from '@/nodes/HttpNode'
 import { executeManualNode } from '@/nodes/ManualNode'
 import { executeIfNode } from '@/nodes/IfNode'
 import { executeFilterNode } from '@/nodes/FilterNode'
+import { executeDatabaseNode } from '@/nodes/DatabaseNode'
+import { executeTransformNode } from '@/nodes/TransformNode'
+import { executeDelayNode } from '@/nodes/DelayNode'
 import { WebhookNodeService } from '@/nodes/WebhookNode/WebhookNode.service'
 import { NodeExecutionContext } from '@/nodes/types'
 
@@ -188,17 +191,17 @@ export class WorkflowExecutor {
     // Execute based on node type
     switch (node.data.nodeType) {
       case NodeType.TRIGGER:
-        return await this.executeTriggerNode(node)
+        return await this.executeTriggerNode(node, signal)
       case NodeType.ACTION:
         return await this.executeActionNode(node, signal)
       case NodeType.LOGIC:
-        return await this.executeLogicNode(node)
+        return await this.executeLogicNode(node, signal)
       default:
         throw new Error('Unknown node type')
     }
   }
   
-  private async executeTriggerNode(node: WorkflowNode): Promise<unknown> {
+  private async executeTriggerNode(node: WorkflowNode, signal?: AbortSignal): Promise<unknown> {
     const { triggerType, config } = node.data as { triggerType: TriggerType; config: unknown }
     
     const context: NodeExecutionContext = {
@@ -207,7 +210,8 @@ export class WorkflowExecutor {
       config: config as Record<string, unknown>,
       input: this.getPreviousNodeOutput(node) || {},
       previousNodes: this.getPreviousNodes(node),
-      executionId: this.execution.id
+      executionId: this.execution.id,
+      signal
     }
     
     switch (triggerType) {
@@ -253,7 +257,8 @@ export class WorkflowExecutor {
       config: config as Record<string, unknown>,
       input: this.getPreviousNodeOutput(node) || {},
       previousNodes: this.getPreviousNodes(node),
-      executionId: this.execution.id
+      executionId: this.execution.id,
+      signal
     }
     
     switch (actionType) {
@@ -273,18 +278,28 @@ export class WorkflowExecutor {
         return result.output
       }
         
-      case ActionType.DATABASE:
-        // Mock database query
-        return { rows: [], affected: 0 }
+      case ActionType.DATABASE: {
+        const result = await executeDatabaseNode(context)
+        if (!result.success) {
+          throw new Error(result.error || 'Database execution failed')
+        }
+        return result.output
+      }
         
-      case ActionType.TRANSFORM:
-        // Mock data transformation
-        return { transformed: this.getPreviousNodeOutput(node) }
+      case ActionType.TRANSFORM: {
+        const result = await executeTransformNode(context)
+        if (!result.success) {
+          throw new Error(result.error || 'Transform execution failed')
+        }
+        return result.output
+      }
         
       case ActionType.DELAY: {
-        const delayMs = (config as { delayMs?: number }).delayMs || 1000
-        await new Promise(resolve => setTimeout(resolve, delayMs))
-        return { delayed: delayMs }
+        const result = await executeDelayNode(context)
+        if (!result.success) {
+          throw new Error(result.error || 'Delay execution failed')
+        }
+        return result.output
       }
         
       default:
@@ -292,7 +307,7 @@ export class WorkflowExecutor {
     }
   }
   
-  private async executeLogicNode(node: WorkflowNode): Promise<unknown> {
+  private async executeLogicNode(node: WorkflowNode, signal?: AbortSignal): Promise<unknown> {
     const { logicType, config } = node.data as { logicType: LogicType; config: unknown }
     
     const context: NodeExecutionContext = {
@@ -301,7 +316,8 @@ export class WorkflowExecutor {
       config: config as Record<string, unknown>,
       input: this.getPreviousNodeOutput(node) || {},
       previousNodes: this.getPreviousNodes(node),
-      executionId: this.execution.id
+      executionId: this.execution.id,
+      signal
     }
     
     switch (logicType) {

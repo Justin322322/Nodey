@@ -34,7 +34,7 @@ describe('EmailNode', () => {
         from: 'sender@example.com'
       })
 
-      const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
+      const errors = EMAIL_NODE_DEFINITION.validate(config)
       expect(errors).toHaveLength(0)
     })
 
@@ -43,7 +43,7 @@ describe('EmailNode', () => {
         to: []
       })
 
-      const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
+      const errors = EMAIL_NODE_DEFINITION.validate(config)
       expect(errors).toContain('At least one recipient (To) is required')
     })
 
@@ -52,7 +52,7 @@ describe('EmailNode', () => {
         subject: ''
       })
 
-      const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
+      const errors = EMAIL_NODE_DEFINITION.validate(config)
       expect(errors).toContain('Subject is required')
     })
 
@@ -61,7 +61,7 @@ describe('EmailNode', () => {
         body: ''
       })
 
-      const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
+      const errors = EMAIL_NODE_DEFINITION.validate(config)
       expect(errors).toContain('Email body is required')
     })
 
@@ -70,7 +70,7 @@ describe('EmailNode', () => {
         to: ['invalid-email']
       })
 
-      const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
+      const errors = EMAIL_NODE_DEFINITION.validate(config)
       expect(errors).toContain('Invalid email format for recipient 1: invalid-email')
     })
 
@@ -79,7 +79,7 @@ describe('EmailNode', () => {
         from: 'invalid-sender-email'
       })
 
-      const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
+      const errors = EMAIL_NODE_DEFINITION.validate(config)
       expect(errors).toContain('Invalid email format for sender: invalid-sender-email')
     })
 
@@ -88,7 +88,7 @@ describe('EmailNode', () => {
         to: ['test1@example.com', 'test2@example.com', 'invalid-email']
       })
 
-      const errors = EMAIL_NODE_DEFINITION.validate(config as Record<string, unknown>)
+      const errors = EMAIL_NODE_DEFINITION.validate(config)
       expect(errors).toContain('Invalid email format for recipient 3: invalid-email')
       expect(errors).toHaveLength(1)
     })

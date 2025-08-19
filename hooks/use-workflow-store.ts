@@ -6,6 +6,85 @@ import { v4 as uuidv4 } from 'uuid'
 import { Workflow, WorkflowNode, WorkflowEdge, WorkflowExecution, ExecutionLog } from '@/types/workflow'
 import { executeWorkflow as executeWorkflowAction, stopWorkflowExecution } from '@/lib/workflow-actions'
 import { encryptEmailConfig, decryptEmailConfig, clearSensitiveData } from '@/lib/security'
+import { ActionType } from '@/types/workflow'
+import { migrateWorkflowNode } from '@/lib/migration-utils'
+
+// Helper function to encrypt node configs based on their type
+function encryptNodeConfig(node: WorkflowNode): WorkflowNode {
+  if (node.data.config && typeof node.data.config === 'object') {
+    const config = node.data.config as Record<string, unknown>
+    let encryptedConfig: Record<string, unknown> = config
+    
+    // Apply type-specific encryption
+    if (node.data.nodeType === 'action') {
+      const actionNode = node.data as { actionType: ActionType }
+      switch (actionNode.actionType) {
+        case ActionType.EMAIL:
+          encryptedConfig = encryptEmailConfig(config)
+          break
+        case ActionType.DATABASE:
+          try {
+            // Database configs don't need encryption here since they use credentialId references
+            // Keep the config as-is (the actual connection string is encrypted in credential store)
+            encryptedConfig = { ...config }
+          } catch {
+            encryptedConfig = config
+          }
+          break
+        // Add other action types as needed
+      }
+    }
+    
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        config: encryptedConfig
+      }
+    }
+  }
+  return node
+}
+
+// Helper function to decrypt node configs based on their type and handle migration
+function decryptNodeConfig(node: WorkflowNode): WorkflowNode {
+  // First, apply any necessary migrations
+  let migratedNode = migrateWorkflowNode(node)
+  
+  if (migratedNode.data.config && typeof migratedNode.data.config === 'object') {
+    const config = migratedNode.data.config as Record<string, unknown>
+    let decryptedConfig: Record<string, unknown> = config
+    
+    // Apply type-specific decryption
+    if (migratedNode.data.nodeType === 'action') {
+      const actionNode = migratedNode.data as { actionType: ActionType }
+      switch (actionNode.actionType) {
+        case ActionType.EMAIL:
+          decryptedConfig = decryptEmailConfig(config)
+          break
+        case ActionType.DATABASE:
+          try {
+            // Database configs don't need decryption here since they use credentialId references
+            // Keep the config as-is (the actual connection string is decrypted in service when needed)
+            decryptedConfig = { ...config }
+          } catch {
+            decryptedConfig = config
+          }
+          break
+        // Add other action types as needed
+      }
+    }
+    
+    return {
+      ...migratedNode,
+      data: {
+        ...migratedNode.data,
+        config: decryptedConfig
+      }
+    }
+  }
+  return migratedNode
+}
 
 interface WorkflowStore {
   // Current workflow
@@ -66,18 +145,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         if (!workflow) return
         
         // Encrypt sensitive data in nodes before saving
-        const encryptedNodes = nodes.map(node => {
-          if (node.data.config && typeof node.data.config === 'object') {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                config: encryptEmailConfig(node.data.config as Record<string, unknown>)
-              }
-            }
-          }
-          return node
-        })
+        const encryptedNodes = nodes.map(encryptNodeConfig)
         
         const draft = {
           ...workflow,
@@ -111,18 +179,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   // Workflow management
   setWorkflow: (workflow) => {
     // Decrypt credentials when loading workflow
-    const decryptedNodes = workflow.nodes.map(node => {
-      if (node.data.config && typeof node.data.config === 'object') {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            config: decryptEmailConfig(node.data.config as Record<string, unknown>)
-          }
-        }
-      }
-      return node
-    })
+    const decryptedNodes = workflow.nodes.map(decryptNodeConfig)
     
     set({
       workflow,
@@ -135,18 +192,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       const { nodes, edges } = get()
       
       // Encrypt before storing
-      const encryptedNodes = nodes.map(node => {
-        if (node.data.config && typeof node.data.config === 'object') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              config: encryptEmailConfig(node.data.config as Record<string, unknown>)
-            }
-          }
-        }
-        return node
-      })
+      const encryptedNodes = nodes.map(encryptNodeConfig)
       
       const draft = { ...workflow, nodes: encryptedNodes, edges, updatedAt: new Date() }
       sessionStorage.setItem('workflowDraft', JSON.stringify(draft))
@@ -171,8 +217,8 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       edges: [],
     })
     try {
-      localStorage.setItem('lastOpenedWorkflowId', newWorkflow.id)
-      localStorage.setItem('workflowDraft', JSON.stringify(newWorkflow))
+      sessionStorage.setItem('lastOpenedWorkflowId', newWorkflow.id)
+      sessionStorage.setItem('workflowDraft', JSON.stringify(newWorkflow))
     } catch (err) {
       console.debug('create draft failed', err)
     }
@@ -183,18 +229,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     if (!workflow) return
     
     // Encrypt sensitive data before saving
-    const encryptedNodes = nodes.map(node => {
-      if (node.data.config && typeof node.data.config === 'object') {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            config: encryptEmailConfig(node.data.config as Record<string, unknown>)
-          }
-        }
-      }
-      return node
-    })
+    const encryptedNodes = nodes.map(encryptNodeConfig)
     
     const updatedWorkflow: Workflow = {
       ...workflow,
