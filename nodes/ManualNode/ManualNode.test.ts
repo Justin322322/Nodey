@@ -42,7 +42,7 @@ describe('ManualNode', () => {
         expect(result.success).toBe(true)
         const output = result.output as ManualExecutionResult
         expect(output?.triggered).toBe(true)
-        expect(output?.triggeredBy).toBe('workflow-1')
+        expect(output?.triggeredBy).toBe('manual-1')
       })
     })
 

@@ -1,5 +1,6 @@
 // Central node registry and exports
 import { NodeType } from '../types/workflow'
+import { CredentialType } from '../types/credentials'
 import type { NodeExecutionContext, NodeExecutionResult } from './types'
 
 // Import all nodes
@@ -10,20 +11,37 @@ export * from './WebhookNode'
 export * from './ManualNode'
 export * from './IfNode'
 export * from './FilterNode'
+export * from './DatabaseNode'
+export * from './TransformNode'
+export * from './DelayNode'
 
 // Base interfaces for all nodes
 export type { NodeExecutionContext, NodeExecutionResult } from './types'
 
-export interface ParameterDefinition {
-  name: string
+// Discriminated union to require exactly one of 'path' or 'name'
+export type ParameterAddress = 
+  | { path: string; name?: never }
+  | { name: string; path?: never }
+
+// Discriminated union for showIf conditions to require exactly one of 'path' or 'name'
+export type ShowIfCondition = 
+  | { path: string; name?: never; equals: string | number | boolean }
+  | { name: string; path?: never; equals: string | number | boolean }
+
+export type ParameterDefinition = ParameterAddress & {
   label: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url' | 'json' | 'password'
+  type: 'string' | 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url' | 'json' | 'password' | 'credential' | 'stringList'
   required?: boolean
+  // Default value for this parameter
+  default?: unknown
+  // Legacy support for defaultValue
   defaultValue?: unknown
-  options?: Array<{ label: string; value: string }>
+  options?: Array<{ label: string; value: string }> | (() => Array<{ label: string; value: string }>)
   placeholder?: string
   description?: string
-  showIf?: Array<{ path: string; equals: string | number | boolean }>
+  showIf?: ShowIfCondition[]
+  // For credential type parameters
+  credentialType?: CredentialType
 }
 
 import type { ReactNode } from 'react'
@@ -43,7 +61,7 @@ export interface NodeDefinition<TConfig = Record<string, unknown>> {
   parameters: ParameterDefinition[]
   
   // Validation
-  validate: (config: TConfig) => string[]
+  validate: (config: Record<string, unknown>) => string[]
   
   // Defaults
   getDefaults: () => TConfig
@@ -55,9 +73,49 @@ export interface NodeDefinition<TConfig = Record<string, unknown>> {
 // Node registry for dynamic discovery
 export const NODE_REGISTRY: Map<string, NodeDefinition> = new Map()
 
+// Runtime validation helpers
+function validateParameterAddress(param: ParameterDefinition, paramIndex: number): void {
+  const hasPath = 'path' in param && param.path !== undefined && param.path !== null
+  const hasName = 'name' in param && param.name !== undefined && param.name !== null
+  
+  if (!hasPath && !hasName) {
+    throw new Error(`Parameter at index ${paramIndex} must have either 'path' or 'name' defined, but has neither`)
+  }
+  
+  if (hasPath && hasName) {
+    throw new Error(`Parameter at index ${paramIndex} cannot have both 'path' and 'name' defined, must have exactly one`)
+  }
+}
+
+function validateShowIfCondition(condition: ShowIfCondition, paramIndex: number, conditionIndex: number): void {
+  const hasPath = 'path' in condition && condition.path !== undefined && condition.path !== null
+  const hasName = 'name' in condition && condition.name !== undefined && condition.name !== null
+  
+  if (!hasPath && !hasName) {
+    throw new Error(`ShowIf condition at index ${conditionIndex} for parameter at index ${paramIndex} must have either 'path' or 'name' defined, but has neither`)
+  }
+  
+  if (hasPath && hasName) {
+    throw new Error(`ShowIf condition at index ${conditionIndex} for parameter at index ${paramIndex} cannot have both 'path' and 'name' defined, must have exactly one`)
+  }
+}
+
 // Utility functions for node registry management
 export function registerNode(definition: NodeDefinition): void {
   const key = `${definition.nodeType}-${definition.subType}`
+  
+  // Runtime validation of parameter definitions
+  definition.parameters.forEach((param, paramIndex) => {
+    validateParameterAddress(param, paramIndex)
+    
+    // Validate showIf conditions if present
+    if (param.showIf) {
+      param.showIf.forEach((condition, conditionIndex) => {
+        validateShowIfCondition(condition, paramIndex, conditionIndex)
+      })
+    }
+  })
+  
   if (NODE_REGISTRY.has(key)) {
     console.warn(`Warning: Overwriting existing node definition for key "${key}"`)
   }
@@ -104,15 +162,21 @@ import { WEBHOOK_NODE_DEFINITION } from './WebhookNode'
 import { MANUAL_NODE_DEFINITION } from './ManualNode'
 import { IF_NODE_DEFINITION } from './IfNode'
 import { FILTER_NODE_DEFINITION } from './FilterNode'
+import { DATABASE_NODE_DEFINITION } from './DatabaseNode'
+import { TRANSFORM_NODE_DEFINITION } from './TransformNode'
+import { DELAY_NODE_DEFINITION } from './DelayNode'
 
 // Register all nodes on module load
-// EMAIL_NODE_DEFINITION is handled directly in findNodeDefinition for now
+registerNode(EMAIL_NODE_DEFINITION)
 registerNode(HTTP_NODE_DEFINITION)
 registerNode(SCHEDULE_NODE_DEFINITION)
 registerNode(WEBHOOK_NODE_DEFINITION)
 registerNode(MANUAL_NODE_DEFINITION)
 registerNode(IF_NODE_DEFINITION)
 registerNode(FILTER_NODE_DEFINITION)
+registerNode(DATABASE_NODE_DEFINITION)
+registerNode(TRANSFORM_NODE_DEFINITION)
+registerNode(DELAY_NODE_DEFINITION)
 
 // Export types for external use
 export type { NodeType } from '../types/workflow'

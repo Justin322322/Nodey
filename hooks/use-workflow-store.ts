@@ -5,7 +5,125 @@ import { applyNodeChanges, applyEdgeChanges, OnNodesChange, OnEdgesChange, Conne
 import { v4 as uuidv4 } from 'uuid'
 import { Workflow, WorkflowNode, WorkflowEdge, WorkflowExecution, ExecutionLog } from '@/types/workflow'
 import { executeWorkflow as executeWorkflowAction, stopWorkflowExecution } from '@/lib/workflow-actions'
-import { encryptEmailConfig, decryptEmailConfig, clearSensitiveData } from '@/lib/security'
+import { encryptEmailConfig, decryptEmailConfig, decryptDatabaseConfig, clearSensitiveData } from '@/lib/security'
+import { ActionType } from '@/types/workflow'
+import { migrateWorkflowNode } from '@/lib/migration-utils'
+
+// Helper function to encrypt node configs based on their type
+function encryptNodeConfig(node: WorkflowNode): WorkflowNode {
+  if (node.data.config && typeof node.data.config === 'object') {
+    const config = node.data.config as Record<string, unknown>
+    let encryptedConfig: Record<string, unknown> = config
+    
+    // Apply type-specific encryption
+    if (node.data.nodeType === 'action') {
+      const actionNode = node.data as { actionType: ActionType }
+      switch (actionNode.actionType) {
+        case ActionType.EMAIL:
+          try {
+            encryptedConfig = encryptEmailConfig(config)
+          } catch {
+            encryptedConfig = { ...config }
+          }
+          break
+        case ActionType.DATABASE:
+          // Database configs don't need encryption here since they use credentialId references
+          // Keep the config as-is (the actual connection string is encrypted in credential store)
+          encryptedConfig = { ...config }
+          break
+        default:
+          // For unknown/unsupported action types, preserve the original config
+          encryptedConfig = { ...config }
+          break
+      }
+    }
+    
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        config: encryptedConfig
+      }
+    }
+  }
+  return node
+}
+
+// Helper function to decrypt node configs based on their type and handle migration
+function decryptNodeConfig(node: WorkflowNode): WorkflowNode {
+  // First, apply any necessary migrations
+  const migratedNode = migrateWorkflowNode(node)
+  
+  if (migratedNode.data.config && typeof migratedNode.data.config === 'object') {
+    const config = migratedNode.data.config as Record<string, unknown>
+    let decryptedConfig: Record<string, unknown> = { ...config }
+    
+    // Apply type-specific decryption
+    if (migratedNode.data.nodeType === 'action') {
+      const actionNode = migratedNode.data as { actionType: ActionType }
+      switch (actionNode.actionType) {
+        case ActionType.EMAIL:
+          try {
+            decryptedConfig = decryptEmailConfig(config)
+          } catch (error) {
+            console.warn('Failed to decrypt email config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
+          break
+        case ActionType.DATABASE:
+          try {
+            decryptedConfig = decryptDatabaseConfig(config)
+          } catch (error) {
+            console.warn('Failed to decrypt database config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
+          break
+        case ActionType.HTTP:
+          try {
+            // HTTP configs may contain sensitive headers or auth data
+            // For now, keep the config as-is since there's no specific HTTP decryption
+            decryptedConfig = { ...config }
+          } catch (error) {
+            console.warn('Failed to process HTTP config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
+          break
+        case ActionType.TRANSFORM:
+          try {
+            // Transform configs typically don't contain sensitive data
+            decryptedConfig = { ...config }
+          } catch (error) {
+            console.warn('Failed to process transform config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
+          break
+        case ActionType.DELAY:
+          try {
+            // Delay configs typically don't contain sensitive data
+            decryptedConfig = { ...config }
+          } catch (error) {
+            console.warn('Failed to process delay config, using fallback:', error)
+            decryptedConfig = { ...config }
+          }
+          break
+        default:
+          // Fallback for unknown action types - always provide a safe config
+          console.warn('Unknown action type encountered, using safe config fallback:', actionNode.actionType)
+          decryptedConfig = { ...config }
+          break
+      }
+    }
+    
+    return {
+      ...migratedNode,
+      data: {
+        ...migratedNode.data,
+        config: decryptedConfig
+      }
+    }
+  }
+  return migratedNode
+}
 
 interface WorkflowStore {
   // Current workflow
@@ -66,18 +184,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         if (!workflow) return
         
         // Encrypt sensitive data in nodes before saving
-        const encryptedNodes = nodes.map(node => {
-          if (node.data.config && typeof node.data.config === 'object') {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                config: encryptEmailConfig(node.data.config as Record<string, unknown>)
-              }
-            }
-          }
-          return node
-        })
+        const encryptedNodes = nodes.map(encryptNodeConfig)
         
         const draft = {
           ...workflow,
@@ -111,18 +218,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   // Workflow management
   setWorkflow: (workflow) => {
     // Decrypt credentials when loading workflow
-    const decryptedNodes = workflow.nodes.map(node => {
-      if (node.data.config && typeof node.data.config === 'object') {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            config: decryptEmailConfig(node.data.config as Record<string, unknown>)
-          }
-        }
-      }
-      return node
-    })
+    const decryptedNodes = workflow.nodes.map(decryptNodeConfig)
     
     set({
       workflow,
@@ -135,18 +231,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       const { nodes, edges } = get()
       
       // Encrypt before storing
-      const encryptedNodes = nodes.map(node => {
-        if (node.data.config && typeof node.data.config === 'object') {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              config: encryptEmailConfig(node.data.config as Record<string, unknown>)
-            }
-          }
-        }
-        return node
-      })
+      const encryptedNodes = nodes.map(encryptNodeConfig)
       
       const draft = { ...workflow, nodes: encryptedNodes, edges, updatedAt: new Date() }
       sessionStorage.setItem('workflowDraft', JSON.stringify(draft))
@@ -171,8 +256,8 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       edges: [],
     })
     try {
-      localStorage.setItem('lastOpenedWorkflowId', newWorkflow.id)
-      localStorage.setItem('workflowDraft', JSON.stringify(newWorkflow))
+      sessionStorage.setItem('lastOpenedWorkflowId', newWorkflow.id)
+      sessionStorage.setItem('workflowDraft', JSON.stringify(newWorkflow))
     } catch (err) {
       console.debug('create draft failed', err)
     }
@@ -183,18 +268,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     if (!workflow) return
     
     // Encrypt sensitive data before saving
-    const encryptedNodes = nodes.map(node => {
-      if (node.data.config && typeof node.data.config === 'object') {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            config: encryptEmailConfig(node.data.config as Record<string, unknown>)
-          }
-        }
-      }
-      return node
-    })
+    const encryptedNodes = nodes.map(encryptNodeConfig)
     
     const updatedWorkflow: Workflow = {
       ...workflow,

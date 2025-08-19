@@ -6,15 +6,35 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CredentialSelector } from '@/components/ui/credential-selector'
 import { useWorkflowStore } from '@/hooks/use-workflow-store'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { MobileSheet } from '@/components/ui/mobile-sheet'
 import { useToast } from '@/components/ui/toaster'
 import { WorkflowNode, NodeType, ActionType, TriggerType, HttpNodeConfig, ScheduleNodeConfig } from '@/types/workflow'
 import { EMAIL_NODE_DEFINITION, EmailNodeConfig } from '@/nodes/EmailNode'
+import { CredentialType, toCredentialType } from '@/types/credentials'
 import { WebhookNodeConfig } from '@/nodes/WebhookNode'
 import { findNodeDefinition } from '@/lib/node-definitions'
 import { SECURITY_WARNINGS, getSecurityStatus } from '@/lib/security'
+import { getArrayValue, getObjectValue, pathValueEquals, getTypedParameterValue, getSafeDescription, getSafePlaceholder, getValueAtPath, getSafeDefaultValue } from '@/lib/type-safe-utils'
+import { validateWorkflowId } from '@/lib/workflow-id-validation'
+
+/**
+ * Safely gets the workflowId from URL search params
+ * @returns A validated and URI-encoded workflowId
+ */
+function getSafeWorkflowIdFromUrl(): string {
+  if (typeof window === 'undefined') {
+    return encodeURIComponent('<workflowId>')
+  }
+  
+  const urlParams = new URLSearchParams(window.location.search)
+  const workflowId = urlParams.get('workflowId')
+  const validatedWorkflowId = validateWorkflowId(workflowId)
+  
+  return encodeURIComponent(validatedWorkflowId)
+}
 
 export function NodeConfigPanel() {
   const { nodes, selectedNodeId, isConfigPanelOpen, setConfigPanelOpen, setSelectedNodeId, updateNode, deleteNode, pendingDeleteNodeId, clearPendingDelete } = useWorkflowStore()
@@ -113,21 +133,59 @@ export function NodeConfigPanel() {
   }
   
   const handleConfigChange = (path: string, value: unknown) => {
-    const setDeep = (obj: Record<string, unknown>, p: string, v: unknown) => {
+    const setDeep = (obj: Record<string, unknown>, p: string, v: unknown): Record<string, unknown> => {
       const parts = p.split('.')
-      const clone: Record<string, unknown> = { ...obj }
+      
+      // Validate path segments to prevent prototype pollution
+      const dangerousSegments = ['__proto__', 'constructor', 'prototype']
+      for (const part of parts) {
+        if (dangerousSegments.includes(part.toLowerCase())) {
+          throw new Error(`Invalid path segment: "${part}" - potential prototype pollution attempt`)
+        }
+      }
+      
+      // Type guard to check if value is a valid object  
+      const isValidObject = (val: unknown): val is Record<string, unknown> => {
+        return val !== null && typeof val === 'object' && !Array.isArray(val)
+      }
+      
+      // Create a safe clone using Object.create(null) for the root to avoid prototype chain
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Object.create(null) creates object without prototype
+      const clone: Record<string, unknown> = Object.create(null)
+      
+      // Safely copy properties from the original object
+      for (const [key, val] of Object.entries(obj)) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          clone[key] = val
+        }
+      }
+      
       let cur: Record<string, unknown> = clone
       for (let i = 0; i < parts.length - 1; i += 1) {
         const key = parts[i]
         const next = cur[key]
-        if (typeof next !== 'object' || next === null) {
-          cur[key] = {}
+        if (!isValidObject(next)) {
+          // Create safe object without prototype chain
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Object.create(null) creates object without prototype
+          cur[key] = Object.create(null)
         } else {
-          cur[key] = { ...(next as Record<string, unknown>) }
+          // Safely clone the nested object
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Object.create(null) creates object without prototype
+          const nestedClone: Record<string, unknown> = Object.create(null)
+          for (const [nestedKey, nestedVal] of Object.entries(next)) {
+            if (Object.prototype.hasOwnProperty.call(next, nestedKey)) {
+              nestedClone[nestedKey] = nestedVal
+            }
+          }
+          cur[key] = nestedClone
         }
         cur = cur[key] as Record<string, unknown>
       }
-      cur[parts[parts.length - 1]] = v
+      
+      // Set the final value only if the key is safe
+      const finalKey = parts[parts.length - 1]
+      cur[finalKey] = v
+      
       return clone
     }
     const nextConfig = setDeep((selectedNode.data.config as Record<string, unknown>) || {}, path, value)
@@ -136,20 +194,67 @@ export function NodeConfigPanel() {
     })
   }
 
-  const getValueAtPath = (obj: Record<string, unknown> | undefined, path: string): unknown => {
-    if (!obj) return undefined
-    return path.split('.').reduce((acc: unknown, part: string) => {
-      if (acc && typeof acc === 'object') {
-        return (acc as Record<string, unknown>)[part]
+  // Type-safe path utilities are now imported from lib/type-safe-utils
+  
+  // Inline type-safe parameter helpers to avoid ESLint unsafe operations
+  const safeString = (value: unknown): string => typeof value === 'string' ? value : ''
+  const safeNumber = (value: unknown): number => typeof value === 'number' ? value : 0
+  const safeBoolean = (value: unknown): boolean => typeof value === 'boolean' ? value : false
+  const safeObject = (value: unknown): Record<string, unknown> => 
+    (value && typeof value === 'object' && !Array.isArray(value)) ? value as Record<string, unknown> : {}
+  
+  const getParamValue = (path: string, paramType: 'string' | 'number' | 'boolean', defaultVal: unknown): string | number | boolean => {
+    const config = (selectedNode.data.config as Record<string, unknown>) || {}
+    try {
+      if (paramType === 'string') {
+        return getTypedParameterValue(config, path, defaultVal, 'string')
+      } else if (paramType === 'number') {
+        return getTypedParameterValue(config, path, defaultVal, 'number')
+      } else {
+        return getTypedParameterValue(config, path, defaultVal, 'boolean')
       }
-      return undefined
-    }, obj)
+    } catch {
+      // Fallback for type safety
+      switch (paramType) {
+        case 'string':
+          return ''
+        case 'number':
+          return 0
+        case 'boolean':
+          return false
+        default:
+          return ''
+      }
+    }
   }
   
   const renderConfig = () => {
     const { data } = selectedNode
     const def = findNodeDefinition(selectedNode)
     if (def?.parameters && def.parameters.length > 0) {
+      // Define a proper interface for parameter definition
+      interface ExtendedParameterDefinition {
+        type: string
+        label: string
+        path: string
+        default?: unknown
+        description?: unknown
+        placeholder?: unknown
+        options?: Array<{ label: string; value: string }> | (() => Array<{ label: string; value: string }>)
+        showIf?: Array<{ path?: string; name?: string; equals: string | number | boolean }>
+        credentialType?: CredentialType
+      }
+      
+      // Type guard function to check if parameter has required properties
+      const isValidParameter = (param: unknown): param is ExtendedParameterDefinition => {
+        if (!param || typeof param !== 'object') return false
+        const p = param as Record<string, unknown>
+        return typeof p.type === 'string' && 
+               typeof p.label === 'string' && 
+               typeof p.path === 'string'
+      }
+      
+      const parameters = def.parameters.filter(isValidParameter) as ExtendedParameterDefinition[]
       const FieldLabel = ({ text, description, htmlFor }: { text: string; description?: string; htmlFor?: string }) => (
         <div className="inline-flex items-center gap-1">
           <Label htmlFor={htmlFor}>{text}</Label>
@@ -187,78 +292,139 @@ export function NodeConfigPanel() {
             </div>
           )}
           
-          {def.parameters.map((param) => {
-            const shouldShow = !param.showIf || param.showIf.length === 0 
-              ? true 
-              : param.showIf.some((cond) => getValueAtPath(data.config as Record<string, unknown>, cond.path) === cond.equals)
+          {parameters.map((param) => {
+            // Type-safe showIf condition checking with runtime guards
+            const shouldShow = (() => {
+              // Check if showIf exists and is an array
+              if (!Array.isArray(param.showIf) || param.showIf.length === 0) {
+                return true
+              }
+              
+              // Safely assert selectedNode.data.config exists
+              const config = selectedNode?.data?.config
+              if (!config || typeof config !== 'object') {
+                return true // Show by default if config is invalid
+              }
+              
+              // Check if any condition matches with safe predicate
+              return param.showIf.some((cond) => {
+                // Verify cond is an object and has required properties
+                if (!cond || typeof cond !== 'object') {
+                  return false
+                }
+                
+                // Type guard for condition structure
+                const isValidCondition = (c: unknown): c is { path?: string; name?: string; equals: string | number | boolean } => {
+                  if (!c || typeof c !== 'object') return false
+                  const condition = c as Record<string, unknown>
+                  
+                  // Must have either path or name (but not both) as strings
+                  const hasPath = typeof condition.path === 'string'
+                  const hasName = typeof condition.name === 'string'
+                  const hasEquals = condition.equals !== undefined
+                  
+                  return (hasPath || hasName) && hasEquals && !(hasPath && hasName)
+                }
+                
+                if (!isValidCondition(cond)) {
+                  return false
+                }
+                
+                // Extract the path or name safely
+                const pathToCheck = cond.path || cond.name || ''
+                if (!pathToCheck) {
+                  return false
+                }
+                
+                return pathValueEquals(config as Record<string, unknown>, pathToCheck, cond.equals)
+              })
+            })()
+            
             if (!shouldShow) return null
-            const value = getValueAtPath(data.config as Record<string, unknown>, param.path)
             switch (param.type) {
-              case 'select':
+              case 'select': {
+                const config = (selectedNode.data.config as Record<string, unknown>) || {}
+                const paramPath = param.path
+                const currentValue = getValueAtPath(config, paramPath)
+                const defaultVal = getSafeDefaultValue(param.default, 'string')
+                const value = typeof currentValue === 'string' ? currentValue : defaultVal
+                const description = getSafeDescription(param.description)
                 return (
-                  <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} />
+                  <div key={paramPath} className="space-y-1.5 sm:space-y-2">
+                    <FieldLabel text={param.label} description={description} />
             <Select
-              value={(value as string) ?? (param.default as string) ?? ''}
-              onValueChange={(v) => handleConfigChange(param.path, v)}
+              value={value}
+              onValueChange={(v) => handleConfigChange(paramPath, v)}
             >
               <SelectTrigger className="bg-white text-gray-900 border-gray-300">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(param.options || []).map((opt) => (
+                        {(typeof param.options === 'function' ? param.options() : param.options || []).map((opt: { label: string; value: string }) => (
                           <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 )
+              }
               case 'string':
+              case 'text': {
+                // Allow both 'string' and 'text' parameter types for compatibility
+                const paramPath = param.path
+                const value = getParamValue(paramPath, 'string', param.default)
+                const description = getSafeDescription(param.description)
                 return (
-                  <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                  <div key={paramPath} className="space-y-1.5 sm:space-y-2">
+                    <FieldLabel text={param.label} description={description} htmlFor={paramPath} />
                     <Input
-                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
-                      onChange={(e) => handleConfigChange(param.path, e.target.value)}
-                      placeholder={param.description}
+                      value={String(value)}
+                      onChange={(e) => handleConfigChange(paramPath, e.target.value)}
+                      placeholder={description}
                       className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
                     />
                   </div>
                 )
-              case 'textarea':
+              }
+              case 'textarea': {
+                const value = getParamValue(param.path, 'string', param.default)
+                const description = getSafeDescription(param.description)
                 return (
                   <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <FieldLabel text={param.label} description={description} htmlFor={param.path} />
                     <textarea
                       className="w-full p-2 border rounded-md bg-white text-gray-900 border-gray-300"
                       rows={6}
-                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
+                      value={String(value)}
                       onChange={(e) => handleConfigChange(param.path, e.target.value)}
-                      placeholder={param.description}
+                      placeholder={description}
                     />
                   </div>
                 )
+              }
               case 'json': {
-                const path = param.path
+                const paramPath = param.path
                 // Friendly editors for headers/body
-                const isHeaders = path === 'headers'
-                const isBody = path === 'body'
+                const isHeaders = paramPath === 'headers'
+                const isBody = paramPath === 'body'
                 if (isHeaders || isBody) {
-                  const initialRows = Array.isArray(kvStateByPath[path])
-                    ? kvStateByPath[path]
-                    : Object.entries(((value as Record<string, string>) || {})).map(([k, v]) => ({ id: `${k}-${Math.random().toString(36).slice(2)}`, key: k, value: String(v) }))
+                  const objectValue = getObjectValue<Record<string, string>>(selectedNode.data.config as Record<string, unknown>, param.path, {})
+                  const existingKvState = kvStateByPath[paramPath as keyof typeof kvStateByPath]
+                  const initialRows = Array.isArray(existingKvState)
+                    ? existingKvState
+                    : Object.entries(objectValue).map(([k, v]) => ({ id: `${k}-${Math.random().toString(36).slice(2)}`, key: k, value: String(v) }))
                   let rows = initialRows
                   if (!rows || rows.length === 0) {
                     rows = [{ id: 'new', key: '', value: '' }]
                   }
                   const setRows = (next: { id: string; key: string; value: string }[]) => {
-                    setKvStateByPath((s) => ({ ...s, [path]: next }))
+                    setKvStateByPath((s) => ({ ...s, [paramPath]: next }))
                     const obj: Record<string, string> = {}
                     next.forEach((r) => {
                       const k = r.key.trim()
                       if (k) obj[k] = r.value
                     })
-                    handleConfigChange(path, obj)
+                    handleConfigChange(paramPath, obj)
                   }
                   const addRow = () => setRows([...(rows || []), { id: Math.random().toString(36).slice(2), key: '', value: '' }])
                   const removeRow = (id: string) => setRows((rows || []).filter((r) => r.id !== id))
@@ -270,7 +436,7 @@ export function NodeConfigPanel() {
                   })
                   return (
                     <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                      <FieldLabel text={param.label} description={param.description} />
+                      <FieldLabel text={param.label} description={getSafeDescription(param.description)} />
                       <div className="space-y-2">
                         {(rows || []).map((row) => (
                           <div key={row.id} className="flex gap-2">
@@ -317,7 +483,53 @@ export function NodeConfigPanel() {
                             <button
                               type="button"
                               className="absolute top-2 right-2 inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); try { navigator.clipboard?.writeText(JSON.stringify(previewObj, null, 2)) } catch (err) { console.debug('copy failed', err) } }}
+                              onClick={async (e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                
+                                const textToCopy = JSON.stringify(previewObj, null, 2)
+                                
+                                try {
+                                  // Try modern clipboard API first
+                                  if (navigator.clipboard && window.isSecureContext) {
+                                    await navigator.clipboard.writeText(textToCopy)
+                                    toast({ 
+                                      title: 'Copied to clipboard', 
+                                      description: 'JSON data copied successfully',
+                                      variant: 'success' 
+                                    })
+                                  } else {
+                                    // Fallback to document.execCommand for older browsers or non-secure contexts
+                                    const textarea = document.createElement('textarea')
+                                    textarea.value = textToCopy
+                                    textarea.style.position = 'fixed'
+                                    textarea.style.left = '-999999px'
+                                    textarea.style.top = '-999999px'
+                                    document.body.appendChild(textarea)
+                                    textarea.focus()
+                                    textarea.select()
+                                    
+                                    if (document.execCommand('copy')) {
+                                      toast({ 
+                                        title: 'Copied to clipboard', 
+                                        description: 'JSON data copied successfully',
+                                        variant: 'success' 
+                                      })
+                                    } else {
+                                      throw new Error('Fallback copy method failed')
+                                    }
+                                    
+                                    document.body.removeChild(textarea)
+                                  }
+                                } catch (err) {
+                                  console.error('Copy failed:', err)
+                                  toast({ 
+                                    title: 'Copy failed', 
+                                    description: 'Unable to copy JSON data to clipboard',
+                                    variant: 'destructive' 
+                                  })
+                                }
+                              }}
                               aria-label="Copy JSON"
                               title="Copy JSON"
                             >
@@ -329,122 +541,152 @@ export function NodeConfigPanel() {
                     </div>
                   )
                 }
+                const defaultValue = getSafeDefaultValue(param.default, 'object')
+                const jsonValue = getObjectValue(selectedNode.data.config as Record<string, unknown>, param.path, defaultValue)
+                const existingJsonText = jsonTextByPath[paramPath as keyof typeof jsonTextByPath]
                 const displayText =
-                  typeof jsonTextByPath[path] === 'string'
-                    ? jsonTextByPath[path]
-                    : JSON.stringify(value ?? param.default ?? {}, null, 2)
+                  typeof existingJsonText === 'string'
+                    ? existingJsonText
+                    : JSON.stringify(jsonValue, null, 2)
                 return (
                   <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} />
+                    <FieldLabel text={param.label} description={getSafeDescription(param.description)} />
                     <textarea
                       className="w-full p-2 border rounded-md text-sm font-mono bg-white text-gray-900 border-gray-300"
                       rows={6}
                       value={displayText}
                       onChange={(e) => {
                         const text = e.target.value
-                        setJsonTextByPath((s) => ({ ...s, [path]: text }))
+                        setJsonTextByPath((s) => ({ ...s, [paramPath]: text }))
                         try {
                           const parsed = JSON.parse(text) as unknown
-                          handleConfigChange(path, parsed)
+                          handleConfigChange(paramPath, parsed)
                         } catch {
                           // Keep editing buffer until valid
                         }
                       }}
-                      placeholder={param.description || '{}'}
+                      placeholder={getSafeDescription(param.description) || '{}'}
                     />
                   </div>
                 )
               }
-              case 'stringList':
+              case 'stringList': {
+                const arrayValue = getArrayValue<string>(selectedNode.data.config as Record<string, unknown>, param.path, [])
+                const description = getSafeDescription(param.description)
                 return (
                   <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <FieldLabel text={param.label} description={description} htmlFor={param.path} />
                     <Input
-                      value={Array.isArray(value) ? (value as string[]).join(', ') : ''}
+                      value={arrayValue.map(String).join(', ')}
                       onChange={(e) => handleConfigChange(param.path, e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
-                      placeholder={param.description || 'first@email.com, next@email.com'}
+                      placeholder={description || 'first@email.com, next@email.com'}
                       className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
                     />
                   </div>
                 )
-              case 'number':
+              }
+              case 'number': {
+                const numberValue = getParamValue(param.path, 'number', param.default)
+                const description = getSafeDescription(param.description)
                 return (
                   <div key={param.path} className="space-y-2">
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <FieldLabel text={param.label} description={description} htmlFor={param.path} />
                     <Input
                       type="number"
-                      value={typeof value === 'number' ? value : ''}
+                      value={numberValue === 0 ? '' : String(numberValue)}
                       onChange={(e) => handleConfigChange(param.path, Number(e.target.value || 0))}
-                      placeholder={param.description}
+                      placeholder={description}
                       className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
                     />
                   </div>
                 )
-              case 'boolean':
+              }
+              case 'boolean': {
+                const booleanValue = getParamValue(param.path, 'boolean', param.default)
+                const description = getSafeDescription(param.description)
                 return (
                   <div key={param.path} className="flex items-center gap-2">
                     <input
                       id={param.path}
                       type="checkbox"
                       className="h-4 w-4"
-                      checked={Boolean(value)}
+                      checked={Boolean(booleanValue)}
                       onChange={(e) => handleConfigChange(param.path, e.target.checked)}
                     />
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <FieldLabel text={param.label} description={description} htmlFor={param.path} />
                   </div>
                 )
-              case 'email':
+              }
+              case 'email': {
+                const emailValue = getParamValue(param.path, 'string', param.default)
+                const description = getSafeDescription(param.description)
+                const placeholder = getSafePlaceholder(param.placeholder)
                 return (
                   <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <FieldLabel text={param.label} description={description} htmlFor={param.path} />
                     <Input
                       type="email"
-                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
+                      value={String(emailValue)}
                       onChange={(e) => handleConfigChange(param.path, e.target.value)}
-                      placeholder={param.placeholder || 'Enter email address'}
+                      placeholder={placeholder || 'Enter email address'}
                       className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
                     />
                   </div>
                 )
-              case 'password':
+              }
+              case 'password': {
+                const passwordValue = getParamValue(param.path, 'string', param.default)
+                const description = getSafeDescription(param.description)
+                const placeholder = getSafePlaceholder(param.placeholder)
                 return (
                   <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <FieldLabel text={param.label} description={description} htmlFor={param.path} />
                     <Input
                       type="password"
-                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
+                      value={String(passwordValue)}
                       onChange={(e) => handleConfigChange(param.path, e.target.value)}
-                      placeholder={param.placeholder || 'Enter password'}
+                      placeholder={placeholder || 'Enter password'}
                       className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
                     />
                   </div>
                 )
-              case 'url':
+              }
+              case 'url': {
+                const urlValue = getParamValue(param.path, 'string', param.default)
+                const description = getSafeDescription(param.description)
+                const placeholder = getSafePlaceholder(param.placeholder)
                 return (
                   <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
+                    <FieldLabel text={param.label} description={description} htmlFor={param.path} />
                     <Input
                       type="url"
-                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
+                      value={String(urlValue)}
                       onChange={(e) => handleConfigChange(param.path, e.target.value)}
-                      placeholder={param.placeholder || 'Enter URL'}
+                      placeholder={placeholder || 'Enter URL'}
                       className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
                     />
                   </div>
                 )
-              case 'text':
+              }
+
+              case 'credential': {
+                const credentialValue = getParamValue(param.path, 'string', param.default)
+                const description = getSafeDescription(param.description)
+                const placeholder = getSafePlaceholder(param.placeholder)
+                const credentialType = toCredentialType(param.credentialType)
                 return (
                   <div key={param.path} className="space-y-1.5 sm:space-y-2">
-                    <FieldLabel text={param.label} description={param.description} htmlFor={param.path} />
-                    <Input
-                      type="text"
-                      value={typeof value === 'string' ? value : (param.default as string) ?? ''}
-                      onChange={(e) => handleConfigChange(param.path, e.target.value)}
-                      placeholder={param.placeholder || param.description}
-                      className="bg-white text-gray-900 placeholder:text-gray-400 border-gray-300"
+                    <FieldLabel text={param.label} description={description} />
+                    <CredentialSelector
+                      value={String(credentialValue)}
+                      onChange={(credentialId) => handleConfigChange(param.path, credentialId)}
+                      credentialType={credentialType}
+                      placeholder={placeholder || 'Select a credential'}
+                      className="w-full"
                     />
                   </div>
                 )
+              }
               default:
                 return null
             }
@@ -763,7 +1005,7 @@ export function NodeConfigPanel() {
           <div className="space-y-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
             <p className="font-medium">Webhook URL:</p>
             <pre className="text-xs bg-white text-gray-800 p-2 rounded border overflow-x-auto">
-              {`${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/${typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('workflowId') || '<workflowId>') : '<workflowId>'}`}
+              {`${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/${getSafeWorkflowIdFromUrl()}`}
             </pre>
             <p className="text-xs text-gray-500">
               Send {config.method || 'POST'} requests to this URL to trigger the workflow.
@@ -931,7 +1173,7 @@ export function NodeConfigPanel() {
           <p className="text-sm text-gray-500 mt-1">{selectedNode.data.label}</p>
         </div>
         
-        <div className="p-4">
+        <div className="px-3 py-4">
           {renderConfigContent()}
         </div>
       </div>
