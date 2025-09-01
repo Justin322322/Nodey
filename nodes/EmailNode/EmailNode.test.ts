@@ -4,6 +4,28 @@ import { NodeExecutionContext, createTestContext } from '../types'
 import { EMAIL_NODE_DEFINITION } from './EmailNode.schema'
 import { EmailNodeConfig, EmailExecutionResult } from './EmailNode.types'
 
+// Mock the email provider functions
+vi.mock('./email-providers', () => ({
+  sendWithNodemailer: vi.fn().mockImplementation((config: EmailNodeConfig) => Promise.resolve({
+    sent: true,
+    to: config.to,
+    subject: config.subject,
+    messageId: 'test-message-id',
+    timestamp: new Date(),
+    provider: 'Gmail'
+  })),
+  sendWithSendGrid: vi.fn().mockImplementation((config: EmailNodeConfig) => Promise.resolve({
+    sent: true,
+    to: config.to,
+    subject: config.subject,
+    messageId: 'test-message-id',
+    timestamp: new Date(),
+    provider: 'SendGrid'
+  }))
+}))
+
+// Mock the email provider functions to avoid actual email sending in tests
+
 // Helper function to create test email config with required emailService
 function createTestEmailConfig(overrides: Partial<EmailNodeConfig> = {}): EmailNodeConfig {
   return {

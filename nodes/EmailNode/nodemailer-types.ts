@@ -48,6 +48,7 @@ export interface Transporter {
 export interface NodemailerModule {
   createTransporter: (options: TransportOptions) => Transporter
   createTransport?: (options: TransportOptions) => Transporter
+  default?: NodemailerModule
 }
 
 export interface NodeRequire {

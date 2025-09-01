@@ -3,18 +3,36 @@ import { EmailTriggerConfig, EMAIL_TRIGGER_NODE_IS_SERVER_ONLY } from './EmailTr
 import type { NodeDefinition, ParameterDefinition } from '@/nodes'
 
 // Import service only on server side to avoid client-side bundling
-let EmailTriggerService: typeof import('@/server/services/email-trigger.service').EmailTriggerService | undefined
-if (typeof window === 'undefined') {
-  try {
-    // Server-side only
+interface EmailTriggerServiceType {
+  new (): {
+    connect(config: EmailTriggerConfig): Promise<void>
+    disconnect(): Promise<void>
+    fetchEmails(config: EmailTriggerConfig, lastMessageId?: number): Promise<unknown[]>
+    markAsRead(messageId: number): Promise<void>
+    getLastMessageId(): Promise<number | undefined>
+    isConnectedToServer(): boolean
+    getConnection(): unknown
+  }
+}
+
+let EmailTriggerService: EmailTriggerServiceType | undefined
+
+// Try to load EmailTriggerService dynamically, but don't fail if it's not available
+try {
+  if (typeof window === 'undefined') {
+    // Server-side only - use relative path for better test compatibility
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const serviceModule = require('@/server/services/email-trigger.service')
+    const serviceModule = require('../../server/services/email-trigger.service')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
     EmailTriggerService = serviceModule.EmailTriggerService
-  } catch (error) {
-    // Service not available (e.g., in test environment)
+  }
+} catch (error) {
+  // Service not available (e.g., in test environment or when dependencies are missing)
+  // This is expected and shouldn't cause test failures
+  if (process.env.NODE_ENV !== 'test') {
     console.warn('EmailTriggerService not available:', error)
   }
+  EmailTriggerService = undefined
 }
 
 export const EMAIL_TRIGGER_NODE_DEFINITION: NodeDefinition = {

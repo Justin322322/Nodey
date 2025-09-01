@@ -1,12 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { EmailNodeConfig, EmailExecutionResult } from './EmailNode.types'
-import { 
-  NodemailerModule, 
-  Transporter, 
-  MailOptions, 
-  SendMailResult,
-  NodeRequire 
-} from './nodemailer-types'
+import { Transporter, MailOptions, SendMailResult } from './nodemailer-types'
+import type { Transporter as NodemailerTransporter } from 'nodemailer'
 
 /**
  * Email provider utilities with graceful fallback when packages aren't installed
@@ -14,21 +9,11 @@ import {
 
 export async function sendWithNodemailer(config: EmailNodeConfig, provider: string): Promise<EmailExecutionResult> {
   const { emailService, to, subject, body, from } = config
-  
-  try {
-    // Try to load nodemailer dynamically
-    let nodemailer: NodemailerModule
-    
-    try {
-      // This will fail gracefully if nodemailer isn't installed
-      nodemailer = await loadNodemailer()
-    } catch (error) {
-      // Fallback to simulation
-      return simulateEmailSending(config, provider)
-    }
 
-    // Create transporter
-    const transporter: Transporter = nodemailer.createTransporter({
+  try {
+    // Create transporter using the loaded nodemailer module
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transporter: NodemailerTransporter = await getNodemailerTransporter({
       host: emailService.host,
       port: emailService.port || 587,
       secure: emailService.secure || false,
@@ -36,7 +21,8 @@ export async function sendWithNodemailer(config: EmailNodeConfig, provider: stri
         user: emailService.auth.user,
         pass: emailService.auth.pass
       }
-    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
 
     // Prepare email options
     const mailOptions: MailOptions = {
@@ -47,7 +33,8 @@ export async function sendWithNodemailer(config: EmailNodeConfig, provider: stri
     }
 
     // Send email
-    const info: SendMailResult = await transporter.sendMail(mailOptions)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const info: SendMailResult = await transporter.sendMail(mailOptions) as SendMailResult
 
     return {
       sent: true,
@@ -127,29 +114,15 @@ function simulateEmailSending(config: EmailNodeConfig, provider: string): EmailE
   }
 }
 
-async function loadNodemailer(): Promise<NodemailerModule> {
-  // Try different methods to load nodemailer without causing build issues
-  
-  // Check if we're in Node.js environment
-  if (typeof window !== 'undefined') {
-    throw new Error('Nodemailer only works in Node.js environment')
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+let nodemailer: typeof import('nodemailer') | null = null
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getNodemailerTransporter(options: any): Promise<NodemailerTransporter> {
+  if (!nodemailer) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    nodemailer = require('nodemailer') as typeof import('nodemailer')
   }
-  
-  try {
-    // Method 1: Try require if available (Node.js environment)
-    const globalAny = globalThis as Record<string, unknown>
-    const nodeRequire = (globalAny.require as NodeRequire) || (eval('require') as NodeRequire)
-    const nodemailerModule = nodeRequire('nodemailer') as NodemailerModule
-    return nodemailerModule
-  } catch (requireError) {
-    try {
-      // Method 2: Try dynamic import with string variable to avoid TypeScript checking
-      const moduleName = 'nodemailer'
-      const importResult = await eval(`import('${moduleName}')`) as NodemailerModule
-      return importResult
-    } catch (importError) {
-      // All methods failed
-      throw new Error('Nodemailer not available')
-    }
-  }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return nodemailer.createTransport(options)
 }

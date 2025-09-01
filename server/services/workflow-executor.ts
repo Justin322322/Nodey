@@ -11,11 +11,11 @@ import {
   ScheduleNodeConfig,
   IfNodeConfig,
   LogicNodeData
-} from '@/types/workflow'
+} from '../../types/workflow'
 import { v4 as uuidv4 } from 'uuid'
-import { ScheduleNodeService } from '@/nodes/ScheduleNode/ScheduleNode.service'
-import { executeHttpRequest } from '@/server/services/http-client'
-import { validateNodeBeforeExecute } from '@/lib/node-definitions'
+import { ScheduleNodeService } from '../../nodes/ScheduleNode/ScheduleNode.service'
+import { executeHttpRequest } from './http-client'
+import { validateNodeBeforeExecute } from '../../lib/node-definitions'
 import { executeEmailNode } from '@/nodes/EmailNode'
 import { executeHttpNode } from '@/nodes/HttpNode'
 import { executeManualNode } from '@/nodes/ManualNode'
@@ -24,8 +24,8 @@ import { executeFilterNode } from '@/nodes/FilterNode'
 import { executeDatabaseNode } from '@/nodes/DatabaseNode'
 import { executeTransformNode } from '@/nodes/TransformNode'
 import { executeDelayNode } from '@/nodes/DelayNode'
-import { WebhookNodeService } from '@/nodes/WebhookNode/WebhookNode.service'
-import { NodeExecutionContext } from '@/nodes/types'
+import { WebhookNodeService } from '../../nodes/WebhookNode/WebhookNode.service'
+import { NodeExecutionContext } from '../../nodes/types'
 
 export class WorkflowExecutor {
   private workflow: Workflow
