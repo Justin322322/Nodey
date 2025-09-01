@@ -221,7 +221,7 @@ export function formatMigrationReport(report: ReturnType<typeof generateMigratio
   lines.push('')
   
   if (report.totalIssues === 0) {
-    lines.push('✅ No legacy configurations found. All workflows are up to date!')
+    lines.push('No legacy configurations found. All workflows are up to date!')
     return lines.join('\n')
   }
   
@@ -232,9 +232,9 @@ export function formatMigrationReport(report: ReturnType<typeof generateMigratio
   lines.push('')
   
   if (report.canAutoMigrateAll) {
-    lines.push('✅ All issues can be automatically migrated.')
+    lines.push('All issues can be automatically migrated.')
   } else {
-    lines.push('⚠️  Some issues require manual intervention.')
+    lines.push('Some issues require manual intervention.')
   }
   lines.push('')
   

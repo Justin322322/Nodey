@@ -10,6 +10,7 @@ This directory contains comprehensive documentation for the Nodey workflow autom
 
 ### Development Guides
 - **[typescript-development-guide.md](typescript-development-guide.md)** - TypeScript best practices, type safety requirements, and any-type prevention system
+- **[workflow.md](workflow.md)** - Comprehensive workflow creation, configuration, and execution guide
 
 ### Project Policies
 - **[CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)** - Community guidelines and behavior standards
@@ -26,11 +27,13 @@ This directory contains comprehensive documentation for the Nodey workflow autom
 1. Start with [README.md](../README.md) for project overview
 2. Read [CONTRIBUTING.md](../CONTRIBUTING.md) for development setup
 3. Review [typescript-development-guide.md](typescript-development-guide.md) for coding standards
+4. Check [workflow.md](workflow.md) for workflow development patterns
 
 ### For Users
 1. [README.md](../README.md) - Installation and usage instructions
-2. Project features and capabilities
-3. API documentation (webhooks, workflows)
+2. [workflow.md](workflow.md) - Complete workflow creation and management guide
+3. Project features and capabilities
+4. API documentation (webhooks, workflows)
 
 ### For Maintainers
 1. [CONTRIBUTING.md](../CONTRIBUTING.md) - Review process and standards
