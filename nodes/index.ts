@@ -69,6 +69,9 @@ export interface NodeDefinition<TConfig = Record<string, unknown>> {
   
   // Execution
   executeNode?: (context: NodeExecutionContext) => Promise<NodeExecutionResult>
+  
+  // Runtime Environment
+  serverSideOnly?: boolean
 }
 
 // Node registry for dynamic discovery

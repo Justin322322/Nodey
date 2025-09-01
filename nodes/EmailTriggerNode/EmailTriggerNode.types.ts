@@ -1,5 +1,8 @@
 import { TriggerNodeData, TriggerType } from '@/types/workflow'
 
+// This node is server-side only due to IMAP dependencies
+export const EMAIL_TRIGGER_NODE_IS_SERVER_ONLY = true
+
 export interface EmailTriggerConfig extends Record<string, unknown> {
   // IMAP Connection Settings
   host: string

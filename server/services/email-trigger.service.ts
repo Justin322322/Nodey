@@ -1,7 +1,7 @@
 import { ImapSimple, ImapSimpleOptions, Message } from 'imap-simple'
 import { connect } from 'imap-simple'
 import { simpleParser, ParsedMail } from 'mailparser'
-import { EmailTriggerConfig, EmailMessage, EmailAttachment, EmailAddress } from './EmailTriggerNode.types'
+import { EmailTriggerConfig, EmailMessage, EmailAttachment, EmailAddress } from '@/nodes/EmailTriggerNode/EmailTriggerNode.types'
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 

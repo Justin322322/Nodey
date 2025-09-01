@@ -1,36 +1,29 @@
 import { NodeType, TriggerType } from '@/types/workflow'
-import { EmailTriggerConfig } from './EmailTriggerNode.types'
+import { EmailTriggerConfig, EMAIL_TRIGGER_NODE_IS_SERVER_ONLY } from './EmailTriggerNode.types'
+import type { NodeDefinition, ParameterDefinition } from '@/nodes'
 
-interface ParameterDefinition {
-  name: string
-  label: string
-  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'email' | 'url' | 'password'
-  required?: boolean
-  defaultValue?: unknown
-  options?: Array<{ label: string; value: string }>
-  placeholder?: string
-  description?: string
-  showIf?: Array<{
-    name: string
-    equals: string | number | boolean
-  }>
-}
-
-interface NodeDefinition {
-  nodeType: NodeType
-  subType: TriggerType
-  label: string
-  description: string
-  parameters: ParameterDefinition[]
-  validate: (config: Record<string, unknown>) => string[]
-  getDefaults: () => EmailTriggerConfig
+// Import service only on server side to avoid client-side bundling
+let EmailTriggerService: typeof import('@/server/services/email-trigger.service').EmailTriggerService | undefined
+if (typeof window === 'undefined') {
+  try {
+    // Server-side only
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const serviceModule = require('@/server/services/email-trigger.service')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+    EmailTriggerService = serviceModule.EmailTriggerService
+  } catch (error) {
+    // Service not available (e.g., in test environment)
+    console.warn('EmailTriggerService not available:', error)
+  }
 }
 
 export const EMAIL_TRIGGER_NODE_DEFINITION: NodeDefinition = {
   nodeType: NodeType.TRIGGER,
   subType: TriggerType.EMAIL,
   label: 'Email Trigger',
-  description: 'Triggers workflow when new emails are received via IMAP',
+  description: 'Triggers workflow when new emails are received via IMAP (Server-side only)',
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  serverSideOnly: EMAIL_TRIGGER_NODE_IS_SERVER_ONLY,
   parameters: [
     // IMAP Connection Settings
     {

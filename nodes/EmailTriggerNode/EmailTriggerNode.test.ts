@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { ImapSimple } from 'imap-simple'
-import { EmailTriggerService } from './EmailTriggerNode.service'
+import { EmailTriggerService } from '@/server/services/email-trigger.service'
 import { EmailTriggerConfig } from './EmailTriggerNode.types'
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
