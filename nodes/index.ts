@@ -5,6 +5,7 @@ import type { NodeExecutionContext, NodeExecutionResult } from './types'
 
 // Import all nodes
 export * from './EmailNode'
+export * from './EmailTriggerNode'
 export * from './HttpNode'
 export * from './ScheduleNode'
 export * from './WebhookNode'
@@ -156,6 +157,7 @@ export function getRegistryKey(nodeType: NodeType, subType: string | number): st
 
 // Auto-register nodes
 import { EMAIL_NODE_DEFINITION } from './EmailNode'
+import { EMAIL_TRIGGER_NODE_DEFINITION } from './EmailTriggerNode'
 import { HTTP_NODE_DEFINITION } from './HttpNode'
 import { SCHEDULE_NODE_DEFINITION } from './ScheduleNode'
 import { WEBHOOK_NODE_DEFINITION } from './WebhookNode'
@@ -168,6 +170,7 @@ import { DELAY_NODE_DEFINITION } from './DelayNode'
 
 // Register all nodes on module load
 registerNode(EMAIL_NODE_DEFINITION)
+registerNode(EMAIL_TRIGGER_NODE_DEFINITION)
 registerNode(HTTP_NODE_DEFINITION)
 registerNode(SCHEDULE_NODE_DEFINITION)
 registerNode(WEBHOOK_NODE_DEFINITION)

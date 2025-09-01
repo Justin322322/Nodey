@@ -16,15 +16,15 @@ describe('Node Registry Integration', () => {
     it('should have all expected nodes registered', () => {
       const allNodes = getAllNodeDefinitions()
       
-      // Should have all 10 node types
-      expect(allNodes).toHaveLength(10)
+      // Should have all 11 node types (including EmailTriggerNode)
+      expect(allNodes).toHaveLength(11)
       
       // Check that we have the right number of each type
       const triggerNodes = getNodesByType(NodeType.TRIGGER)
       const actionNodes = getNodesByType(NodeType.ACTION)
       const logicNodes = getNodesByType(NodeType.LOGIC)
       
-      expect(triggerNodes).toHaveLength(3) // MANUAL, SCHEDULE, WEBHOOK
+      expect(triggerNodes).toHaveLength(4) // MANUAL, SCHEDULE, WEBHOOK, EMAIL
       expect(actionNodes).toHaveLength(5) // EMAIL, HTTP, DATABASE, TRANSFORM, DELAY
       expect(logicNodes).toHaveLength(2) // IF, FILTER
     })
