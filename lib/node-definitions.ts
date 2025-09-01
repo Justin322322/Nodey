@@ -4,9 +4,9 @@ import {
   ActionType,
   LogicType,
   WorkflowNode,
-} from '@/types/workflow'
-import { getNodeDefinition, NodeDefinition as ImportedNodeDefinition } from '@/nodes'
-import { CredentialType } from '@/types/credentials'
+} from '../types/workflow'
+import { getNodeDefinition, NodeDefinition as ImportedNodeDefinition } from '../nodes'
+import { CredentialType } from '../types/credentials'
 
 // Minimal, n8n-inspired parameter schema for nodes.
 // This powers defaults and validation and can later drive dynamic UIs.
