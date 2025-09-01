@@ -8,6 +8,11 @@ import type { Transporter as NodemailerTransporter } from 'nodemailer'
  */
 
 export async function sendWithNodemailer(config: EmailNodeConfig, provider: string): Promise<EmailExecutionResult> {
+  // Only allow on server side
+  if (typeof window !== 'undefined') {
+    throw new Error('Email sending can only be performed on the server side')
+  }
+  
   const { emailService, to, subject, body, from } = config
 
   try {
@@ -50,6 +55,11 @@ export async function sendWithNodemailer(config: EmailNodeConfig, provider: stri
 }
 
 export async function sendWithSendGrid(config: EmailNodeConfig): Promise<EmailExecutionResult> {
+  // Only allow on server side
+  if (typeof window !== 'undefined') {
+    throw new Error('Email sending can only be performed on the server side')
+  }
+  
   const { emailService, to, subject, body, from } = config
   
   if (!emailService.apiKey) {
@@ -119,9 +129,18 @@ let nodemailer: typeof import('nodemailer') | null = null
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getNodemailerTransporter(options: any): Promise<NodemailerTransporter> {
+  // Only load nodemailer on the server side
+  if (typeof window !== 'undefined') {
+    throw new Error('Nodemailer can only be used on the server side')
+  }
+  
   if (!nodemailer) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    nodemailer = require('nodemailer') as typeof import('nodemailer')
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      nodemailer = require('nodemailer') as typeof import('nodemailer')
+    } catch (error) {
+      throw new Error('Failed to load nodemailer module')
+    }
   }
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   return nodemailer.createTransport(options)
