@@ -112,7 +112,7 @@ function simulateEmailSending(config: EmailNodeConfig, provider: string): EmailE
   console.log(`To: ${to.join(', ')}`)
   console.log(`Subject: ${subject}`)
   console.log(`Body: ${body}`)
-  console.log('💡 To send real emails, install: npm install nodemailer @types/nodemailer')
+  console.log('To send real emails, install: npm install nodemailer @types/nodemailer')
   
   return {
     sent: true,
